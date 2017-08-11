@@ -68,7 +68,7 @@ module.exports = function(conn) {
   });
 
   route.get('/test', function(req, res, next) {
-    res.send('Hello FEED100');
+    res.send('hello test');
   });
 
 

@@ -1,16 +1,19 @@
 var app = require('./config/express')();
 var conn = require('./config/db')(app);
 
+var authMiddleware = require('./middlewares/auth');
+
 var auth = require('./routes/auth')(conn);
 var api = require('./routes/api')(conn);
 
 app.use('/auth/', auth);
+app.use('/api/', authMiddleware);
 app.use('/api/', api);
 
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
+  const err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
