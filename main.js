@@ -6,6 +6,10 @@ var authMiddleware = require('./middlewares/auth');
 var auth = require('./routes/auth')(conn);
 var api = require('./routes/api')(conn);
 
+var cors = require('cors')();
+ 
+app.use(cors);
+
 app.use('/auth/', auth);
 app.use('/api/', authMiddleware);
 app.use('/api/', api);
