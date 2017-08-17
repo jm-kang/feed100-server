@@ -3,10 +3,10 @@ var jwt = require('jsonwebtoken')
 var authMiddleware = (req, res, next) => {
     // read the token from header or url
     var token = req.headers['x-access-token'] || req.query.token;
-
+    console.log('req', req.headers);
     // token does not exist
     if(!token) {
-      return res.status(403).json({
+      return res.json({
         "success" : false,
         "message" : 'not logged in'
       });
@@ -16,16 +16,18 @@ var authMiddleware = (req, res, next) => {
     function verifyAccessToken() {
       return new Promise(
         (resolve, reject) => {
-          jwt.verify(token, req.app.get('jwt-secret'), (err, decoded) => {
+          jwt.verify(token, req.app.get('jwt-secret'), { subject : 'accessToken' }, (err, decoded) => {
             if(err) reject(err);
-            resolve(decoded);
+            else {
+              resolve(decoded);
+            }
           });
         }
       );
     }
     // if it has failed to verify, it will return an error message
     function onError(error) {
-      res.status(403).json({
+      res.json({
         "success" : false,
         "message" : error.message
       });

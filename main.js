@@ -7,7 +7,7 @@ var auth = require('./routes/auth')(conn);
 var api = require('./routes/api')(conn);
 
 var cors = require('cors')();
- 
+
 app.use(cors);
 
 app.use('/auth/', auth);

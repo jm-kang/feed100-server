@@ -6,11 +6,10 @@ module.exports = function(conn) {
 
   route.post('/refresh', (req, res, next) => {
     var secret = req.app.get('jwt-secret');
-    var accessToken = req.headers['x-access-token'] || req.query.accessToken;
     var refreshToken = req.headers['x-refresh-token'] || req.query.refreshToken;
 
-    if(!accessToken || !refreshToken) {
-      return res.status(403).json({
+    if(!refreshToken) {
+      return res.json({
           "success" : false,
           "message" : 'not logged in'
       })
@@ -21,14 +20,16 @@ module.exports = function(conn) {
         (resolve, reject) => {
           jwt.verify(refreshToken, secret, { subject : 'refreshToken' }, (err, decoded) => {
             if(err) reject(err);
-            resolve([secret, decoded.user_id, decoded.role]);
-          })
+            else {
+              resolve([secret, decoded.user_id, decoded.role]);
+            }
+          });
         }
       );
     }
     // if it has failed to verify, it will return an error message
     function onError(error) {
-      res.status(403).json({
+      res.json({
         "success" : false,
         "message" : error.message
       });
@@ -49,6 +50,40 @@ module.exports = function(conn) {
     })
     .catch(onError);
   })
+
+  route.delete('/device-token/:uuid', (req, res, next) => {
+    var uuid = req.params.uuid;
+
+    function deleteDeviceToken() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM users_token_table WHERE uuid = ?
+          `;
+          conn.write.query(sql, uuid, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    deleteDeviceToken()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
 
   route.post('/login', (req, res, next) => {
     var secret = req.app.get('jwt-secret');
@@ -366,7 +401,7 @@ module.exports = function(conn) {
         },
         secret,
         {
-          expiresIn : '60s',
+          expiresIn : '1m',
           issuer : 'feed100',
           subject : 'accessToken'
         }, (err, token) => {
@@ -392,7 +427,7 @@ module.exports = function(conn) {
         },
         secret,
         {
-          expiresIn : '10m',
+          expiresIn : '2m',
           issuer : 'feed100',
           subject : 'refreshToken'
         }, (err, token) => {
