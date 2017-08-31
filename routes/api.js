@@ -18,7 +18,7 @@ module.exports = function(conn) {
         var s3 = new AWS.S3();
         var params = {
              Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-             Key:req.params.folder+'/'+(+new Date())+files.ex_filename.name,
+             Key:'feed100/'+req.params.folder+'/'+(+new Date())+files.ex_filename.size,
              ACL:'public-read',
              Body: require('fs').createReadStream(files.ex_filename.path)
         }
@@ -27,52 +27,123 @@ module.exports = function(conn) {
             var result='';
             if(err) {
               console.log(err);
-               return next(err);
+              return next(err);
             }
             else {
               result = data.Location;
-              res.send(result);
+              res.json(
+                {
+                  "success" : true,
+                  "message" : "upload success",
+                  "data" : result
+                });
             }
           });
         }
         else {
-          res.send('');
+          res.json(
+            {
+              "success" : false,
+              "message" : "upload fail",
+            });
         }
 
     });
   });
 
   route.post('/move', (req, res, next) => {
-    var sliceUrl = req.body.img.split('/tmp/');
-    sliceUrl = decodeURIComponent(sliceUrl[1]);
-    var s3 = new AWS.S3();
-    var params = {
-         Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-         CopySource:req.body.img,
-         Key:'images/'+sliceUrl,
-         ACL:'public-read',
-    };
-    s3.copyObject(params, function(err, data){
-      if(err) {
-        console.log(err);
-        return next(err);
-      }
-      else {
-        var params = {
-             Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-             Key:'tmp/'+sliceUrl,
+    var images = req.body.images;
+    var promises = [];
+
+    function moveFile(image) {
+      return new Promise(
+        (resolve, reject) => {
+          var sliceUrl = image.split('/tmp/');
+          sliceUrl = decodeURIComponent(sliceUrl[1]);
+          console.log(sliceUrl);
+          var s3 = new AWS.S3();
+          var params = {
+               Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+               CopySource:image,
+               Key:'feed100/images/'+sliceUrl,
+               ACL:'public-read',
+          };
+          s3.copyObject(params, function(err, data){
+            if(err) {
+              console.log(err);
+              return next(err);
+            }
+            else {
+              var params = {
+                   Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+                   Key:'feed100/tmp/'+sliceUrl,
+              }
+              s3.deleteObject(params, function(err, data){
+                if(err) {
+                  console.log(err);
+                  return next(err);
+                }
+                else {
+                  resolve();
+                }
+              });
+            }
+          });
         }
-        s3.deleteObject(params, function(err, data){
-          if(err) {
-            console.log(err);
-            return next(err);
-          }
-          else {
-            res.send(req.body.img);
-          }
+      )
+    }
+
+    for(var i=0; i<images.length; i++) {
+      var promise = moveFile(images[i]);
+      promises.push(promise);
+    }
+
+    Promise.all(promises)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "move files success",
+          "data" : images
         });
-      }
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
     });
+
+  });
+
+  route.get('/companies', (req, res, next) => {
+    function selectCompanies() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table WHERE role = ?`;
+          conn.read.query(sql, "company", (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+
+    selectCompanies()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select companies",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
   route.get('/user', (req, res, next) => {
@@ -96,7 +167,72 @@ module.exports = function(conn) {
       );
     }
 
+    function selectParticipationProjectById(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
+          as participant_num
+          FROM project_participants_table
+          LEFT JOIN projects_table
+          ON project_participants_table.project_id = projects_table.project_id
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_participants_table.user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              var proceedingProjects = [];
+              var rewardProjects = [];
+              var endProjects = [];
+              if(results.length > 0) {
+                for(var i=0; i<results.length; i++) {
+                  if(new Date(results[i].project_end_date) > new Date()) {
+                    proceedingProjects.push(results[i]);
+                    if(i == results.length-1) {
+                      params[0].proceeding_projects = proceedingProjects;
+                      params[0].reward_projects = rewardProjects;
+                      params[0].end_projects = endProjects;
+                      resolve([params[0]]);
+                    }
+                  }
+                  else {
+                    if(!results[i].project_reward_date) {
+                      rewardProjects.push(results[i]);
+                      if(i == results.length-1) {
+                        params[0].proceeding_projects = proceedingProjects;
+                        params[0].reward_projects = rewardProjects;
+                        params[0].end_projects = endProjects;
+                        resolve([params[0]]);
+                      }
+                    }
+                    else {
+                      endProjects.push(results[i]);
+                      if(i == results.length-1) {
+                        params[0].proceeding_projects = proceedingProjects;
+                        params[0].reward_projects = rewardProjects;
+                        params[0].end_projects = endProjects;
+                        resolve([params[0]]);
+                      }
+                    }
+                  }
+                }
+              }
+              else {
+                params[0].proceeding_projects = proceedingProjects;
+                params[0].reward_projects = rewardProjects;
+                params[0].end_projects = endProjects;
+                resolve([params[0]]);
+              }
+            }
+          });
+        }
+      );
+    }
+
     selectByUserId()
+    .then(selectParticipationProjectById)
     .then((params) => {
       res.json(
         {
@@ -113,13 +249,12 @@ module.exports = function(conn) {
   });
 
   route.get('/newsfeeds', (req, res, next) => {
-    var user_id = req.decoded.user_id;
     function selectNewsfeeds() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
           SELECT * FROM newsfeeds_table ORDER BY newsfeed_id DESC`;
-          conn.read.query(sql, user_id, (err, results) => {
+          conn.read.query(sql, (err, results) => {
             if(err) reject(err);
             else {
               resolve([results]);
@@ -207,7 +342,48 @@ module.exports = function(conn) {
       res.json(
         {
           "success" : true,
-          "message" : "select newsfeeds",
+          "message" : "select newsfeed",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/newsfeed', (req, res, next) => {
+    var newsfeedData = {
+      newsfeed_nickname : req.body.newsfeed_nickname,
+      newsfeed_avatar_image : req.body.newsfeed_avatar_image,
+      newsfeed_source : req.body.newsfeed_source,
+      newsfeed_main_image : req.body.newsfeed_main_image,
+      newsfeed_name : req.body.newsfeed_name,
+      newsfeed_summary : req.body.newsfeed_summary,
+      newsfeed_story : JSON.stringify(req.body.newsfeed_story)
+    }
+    function insertNewsfeed() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO newsfeeds_table SET ?`;
+          conn.write.query(sql, newsfeedData, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+
+    insertNewsfeed()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "insert newsfeed success",
           "data" : params[0]
         });
     })
@@ -354,6 +530,148 @@ module.exports = function(conn) {
 
   });
 
+  route.get('/projects', (req, res, next) => {
+    function selectProjects() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
+          as participant_num
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          ORDER BY projects_table.project_id DESC`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProjects()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select projects",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/project/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function updateProjectViewNum() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE projects_table SET project_view_num = project_view_num +1
+          WHERE project_id = ?`;
+          conn.write.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
+          as participant_num
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    updateProjectViewNum()
+    .then(selectProjectById)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/project', (req, res, next) => {
+    var projectData = {
+      company_id : req.body.company_id,
+      project_main_image : req.body.project_main_image,
+      project_name : req.body.project_name,
+      project_summary : req.body.project_summary,
+      project_story : JSON.stringify(req.body.project_story),
+      max_participant_num : req.body.max_participant_num,
+      project_start_date : req.body.project_start_date,
+      project_end_date : req.body.project_end_date,
+      project_link : req.body.project_link,
+      project_hashtags : JSON.stringify(req.body.project_hashtags),
+      project_participation_gender_conditions : JSON.stringify(req.body.project_participation_gender_conditions),
+      project_participation_age_conditions : JSON.stringify(req.body.project_participation_age_conditions),
+      project_participation_job_conditions : JSON.stringify(req.body.project_participation_job_conditions),
+      project_participation_region_conditions : JSON.stringify(req.body.project_participation_region_conditions),
+      project_participation_marriage_conditions : JSON.stringify(req.body.project_participation_marriage_conditions),
+      project_participation_objective_conditions : JSON.stringify(req.body.project_participation_objective_conditions)
+    }
+    function insertProject() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO projects_table SET ?`;
+          conn.write.query(sql, projectData, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+
+    insertProject()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "insert project success",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
 
   route.post('/send-test', (req, res, next) => {
     console.log(req.body);

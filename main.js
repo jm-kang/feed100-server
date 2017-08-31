@@ -1,5 +1,6 @@
 var app = require('./config/express')();
 var conn = require('./config/db')(app);
+var path = require('path');
 
 var authMiddleware = require('./middlewares/auth');
 
@@ -14,6 +15,10 @@ app.use('/auth/', auth);
 app.use('/api/', authMiddleware);
 app.use('/api/', api);
 
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

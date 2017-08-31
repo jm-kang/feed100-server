@@ -401,7 +401,7 @@ module.exports = function(conn) {
         },
         secret,
         {
-          expiresIn : '1m',
+          expiresIn : '1d',
           issuer : 'feed100',
           subject : 'accessToken'
         }, (err, token) => {
@@ -427,7 +427,7 @@ module.exports = function(conn) {
         },
         secret,
         {
-          expiresIn : '2m',
+          expiresIn : '30d',
           issuer : 'feed100',
           subject : 'refreshToken'
         }, (err, token) => {

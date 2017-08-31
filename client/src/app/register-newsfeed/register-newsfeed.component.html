@@ -1,0 +1,66 @@
+<h1>새 뉴스피드 등록</h1>
+
+<div>
+  <h3>에디터 닉네임</h3>
+  <input type="text" [(ngModel)]="newsfeed_nickname">
+</div>
+<br/>
+
+<div>
+  <h3>에디터 이미지</h3>
+  <input type="file" (change)="uploadFiles($event, 'newsfeed_avatar_image')">
+  <div><img [src]="newsfeed_avatar_image" style="width:200px;"/></div>
+</div> 
+<br/>
+
+<div>
+  <h3>출처</h3>
+  <input type="text" [(ngModel)]="newsfeed_source">
+</div>
+<br/>
+
+<div>
+  <h3>뉴스피드 메인 이미지</h3>
+  <input type="file" (change)="uploadFiles($event, 'newsfeed_main_image')">
+  <div><img [src]="newsfeed_main_image" style="width:200px;"/></div>
+</div> 
+<br/>
+
+<div>
+  <h3>뉴스피드 이름</h3>
+  <input type="text" [(ngModel)]="newsfeed_name">
+</div>
+<br/>
+
+<div>
+  <h3>뉴스피드 요약</h3>
+  <textarea [(ngModel)]="newsfeed_summary"></textarea>
+</div>
+<br/>
+
+<div>
+  <h3>뉴스피드 스토리</h3>
+  <button (click)="addStory()">+</button>
+  <button *ngIf="newsfeed_story.length>1" (click)="removeStory()">-</button>
+  <div *ngFor="let story of newsfeed_story; let i = index">
+    <h6>story{{i+1}}</h6> 
+    <div>
+      <label>스토리 이미지</label>
+      <input type="file" (change)="uploadFiles($event, i)"> 
+      <div><img [src]="story.storyImage" style="width:200px;"/></div> 
+    </div>
+    <div>
+      <label>스토리 영상</label>
+      <input type="text" [(ngModel)]="story.storyVideo">
+    </div> 
+    <div>
+      <label>스토리 내용</label>
+      <textarea [(ngModel)]="story.storyContent"></textarea>
+    </div>   
+  </div>
+</div>
+<br/>
+
+<div>
+  <button (click)="moveFiles()">등록하기</button>
+</div>
