@@ -565,9 +565,9 @@ module.exports = function(conn) {
           SELECT * FROM interviews_table
           LEFT JOIN (SELECT COUNT(*) as ordinal, project_participant_id FROM interviews_table GROUP BY project_participant_id DESC) as ordinal_table
           ON interviews_table.project_participant_id =  ordinal_table.project_participant_id
-          LEFT JOIN FEED100DB.project_participants_table
+          LEFT JOIN project_participants_table
           ON interviews_table.project_participant_id = project_participants_table.project_participant_id
-          LEFT JOIN FEEd100DB.projects_table
+          LEFT JOIN projects_table
           ON project_participants_table.project_id = projects_table.project_id
           WHERE interviews_table.project_participant_id in (SELECT project_participant_id FROM project_participants_table WHERE user_id = ?)
           and interview_id in (SELECT MAX(interview_id) FROM interviews_table GROUP BY project_participant_id)
