@@ -3,7 +3,6 @@ var jwt = require('jsonwebtoken')
 var authMiddleware = (req, res, next) => {
     // read the token from header or url
     var token = req.headers['x-access-token'] || req.query.token;
-    console.log('req', req.headers);
     // token does not exist
     if(!token) {
       return res.json({

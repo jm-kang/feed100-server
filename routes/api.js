@@ -248,6 +248,356 @@ module.exports = function(conn) {
 
   });
 
+  route.get('/user/home', (req, res, next) => {
+    // 진행중 전부, 새 프로젝트 3, 새 뉴스피드 5
+    var user_id = req.decoded.user_id;
+    function selectProceedingProjectByUserId() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
+          as participant_num
+          FROM projects_table
+          LEFT JOIN project_participants_table
+          ON projects_table.project_id = project_participants_table.project_id
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_end_date > now() and project_participants_table.user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+    function selectProjects(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
+          as participant_num
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          ORDER BY projects_table.project_id DESC LIMIT 3`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              var data = {
+                proceeding_projects : params[0],
+                new_projects : results
+              }
+              resolve([data]);
+            }
+          });
+        }
+      );
+    }
+    function selectNewsfeeds(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM newsfeeds_table ORDER BY newsfeed_id DESC LIMIT 5`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].new_newsfeeds = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProceedingProjectByUserId()
+    .then(selectProjects)
+    .then(selectNewsfeeds)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select user home data",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  route.get('/user/project/:project_id', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectByUserId() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table LEFT JOIN levels_table
+          ON users_table.level = levels_table.level
+          WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              delete results[0].password;
+              delete results[0].salt;
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+    function selectProjectById(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
+          as participant_num
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].project_info = results[0];
+              if(new Date(results[0].project_end_date) > new Date()) {
+                params[0].project_info.isProceeding = true;
+              }
+              else {
+                params[0].project_info.isProceeding = false;
+              }
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function selectProjectParticipationInfoById(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM project_participants_table
+          WHERE project_id = ? and user_id = ?`;
+          conn.read.query(sql, [project_id, user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].project_participation_info = results[0];
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectByUserId()
+    .then(selectProjectById)
+    .then(selectProjectParticipationInfoById)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select user & project & project_participation info",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/user/alarms', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    function updateAlarmIsNew() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE alarms_table SET alarm_is_new = 0
+          WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+    function selectAlarms() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM alarms_table LEFT JOIN projects_table
+          ON alarms_table.project_id = projects_table.project_id
+          WHERE user_id = ? ORDER BY alarm_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateAlarmIsNew()
+    .then(selectAlarms)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select alarms",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/user/alarm/read', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var alarm_id = req.body.alarm_id;
+    function updateAlarmIsRead() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE alarms_table SET alarm_is_read = 1
+          WHERE alarm_id = ?`;
+          conn.write.query(sql, alarm_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+    function selectAlarms() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM alarms_table LEFT JOIN projects_table
+          ON alarms_table.project_id = projects_table.project_id
+          WHERE user_id = ? ORDER BY alarm_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateAlarmIsRead()
+    .then(selectAlarms)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update alarm_is_read and select alarms",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/user/alarm&interview/num', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    function selectAlarmAndInterviewNum() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT COUNT(*) as interview_num,
+          (SELECT COUNT(*) FROM alarms_table WHERE user_id = ? and alarm_is_new = 1) as alarm_num
+          FROM interviews_table
+          WHERE project_participant_id in
+          (SELECT project_participant_id
+          FROM project_participants_table
+          LEFT JOIN projects_table
+          ON project_participants_table.project_id = projects_table.project_id
+          WHERE user_id = ? and interview_response is null and project_end_date > now())`;
+          conn.read.query(sql, [user_id, user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectAlarmAndInterviewNum()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select alarm and interview num",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/user/interviews', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    function selectInterviews() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM interviews_table
+          LEFT JOIN (SELECT COUNT(*) as ordinal, project_participant_id FROM interviews_table GROUP BY project_participant_id DESC) as ordinal_table
+          ON interviews_table.project_participant_id =  ordinal_table.project_participant_id
+          LEFT JOIN FEED100DB.project_participants_table
+          ON interviews_table.project_participant_id = project_participants_table.project_participant_id
+          LEFT JOIN FEEd100DB.projects_table
+          ON project_participants_table.project_id = projects_table.project_id
+          WHERE interviews_table.project_participant_id in (SELECT project_participant_id FROM project_participants_table WHERE user_id = ?)
+          and interview_id in (SELECT MAX(interview_id) FROM interviews_table GROUP BY project_participant_id)
+          ORDER BY interview_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectInterviews()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select interviews",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
   route.get('/newsfeeds', (req, res, next) => {
     function selectNewsfeeds() {
       return new Promise(
@@ -631,7 +981,6 @@ module.exports = function(conn) {
       project_summary : req.body.project_summary,
       project_story : JSON.stringify(req.body.project_story),
       max_participant_num : req.body.max_participant_num,
-      project_start_date : req.body.project_start_date,
       project_end_date : req.body.project_end_date,
       project_link : req.body.project_link,
       project_hashtags : JSON.stringify(req.body.project_hashtags),

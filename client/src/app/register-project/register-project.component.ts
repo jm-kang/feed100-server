@@ -16,7 +16,6 @@ export class RegisterProjectComponent implements OnInit {
   project_summary = "";
   project_story = [{"storyImage" : "", "storyVideo" : "", "storyContent" : ""}];
   max_participant_num = 0;
-  project_start_date = "";
   project_end_date = "";
   project_link = "";
   project_hashtags = [
@@ -206,7 +205,6 @@ export class RegisterProjectComponent implements OnInit {
       "project_summary" : this.project_summary,
       "project_story" : this.project_story,
       "max_participant_num" : this.max_participant_num,
-      "project_start_date" : this.project_start_date,
       "project_end_date" : this.project_end_date,
       "project_link" : this.project_link,
       "project_hashtags" : this.project_hashtags,
