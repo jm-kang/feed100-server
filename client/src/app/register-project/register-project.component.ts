@@ -18,9 +18,7 @@ export class RegisterProjectComponent implements OnInit {
   max_participant_num = 0;
   project_end_date = "";
   project_link = "";
-  project_hashtags = [
-    {"value" : "", "isActiveHashtag" : false}
-  ];
+  project_hashtags = ["", "ㅁㄴㅇ"];
   project_participation_gender_conditions = [
     {"condition" : "남자", "isApproved" : true}, 
     {"condition" : "여자", "isApproved" : true}
@@ -95,6 +93,10 @@ export class RegisterProjectComponent implements OnInit {
     );
   }
   
+  customTrackBy(index: number, obj: any): any {
+    return index;
+  }
+
   addStory() {
     this.project_story.push({"storyImage" : "", "storyVideo" : "", "storyContent" : ""});
   }
@@ -104,7 +106,7 @@ export class RegisterProjectComponent implements OnInit {
   }
 
   addHashtag() {
-    this.project_hashtags.push({"value" : "", "isActiveHashtag" : false});
+    this.project_hashtags.push("");
   }
 
   removeHashtag() {

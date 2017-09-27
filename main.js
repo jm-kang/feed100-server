@@ -1,20 +1,32 @@
 var app = require('./config/express')();
 var conn = require('./config/db')(app);
 var path = require('path');
+var cors = require('cors')();
 
 var authMiddleware = require('./middlewares/auth');
 
-var auth = require('./routes/auth')(conn);
-var api = require('./routes/api')(conn);
+var admin = require("firebase-admin");
+var serviceAccount = require("./feed100-158308-firebase-adminsdk-y80ka-3bfaf63af8.json");
 
-var cors = require('cors')();
+admin.initializeApp({
+ credential: admin.credential.cert(serviceAccount),
+ databaseURL: "https://feed100-158308.firebaseio.com"
+});
+
+var commonApi = require('./routes/common/api')(conn);
+var userApi = require('./routes/user/api')(conn, admin);
+var companyApi = require('./routes/company/api')(conn, admin);
+var adminApi = require('./routes/admin/api')(conn, admin);
 
 app.use(cors);
 
-app.use('/auth/', auth);
-app.use('/api/', authMiddleware);
-app.use('/api/', api);
-
+app.use('/common/api', commonApi);
+app.use('/user/api/', authMiddleware);
+app.use('/user/api/', userApi);
+app.use('/company/api/', authMiddleware);
+app.use('/company/api/', companyApi);
+app.use('/admin/api/', authMiddleware);
+app.use('/admin/api/', adminApi);
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/dist/index.html'));

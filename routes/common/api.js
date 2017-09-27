@@ -3,6 +3,112 @@ module.exports = function(conn) {
   var hasher = pbkfd2Password();
   var route = require('express').Router();
   var jwt = require('jsonwebtoken');
+  var formidable = require('formidable');
+  var AWS = require('aws-sdk');
+  AWS.config.region = 'ap-northeast-2';
+
+  route.post('/upload/:folder', (req, res, next) => {
+    var form = new formidable.IncomingForm();
+    form.parse(req, function(err, fields, files){
+      console.log('files', files);
+        var s3 = new AWS.S3();
+        var params = {
+             Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+             Key:'feed100/'+req.params.folder+'/'+(+new Date())+files.ex_filename.size,
+             ACL:'public-read',
+             Body: require('fs').createReadStream(files.ex_filename.path)
+        }
+        if(files.ex_filename.size != 0) {
+          s3.upload(params, function(err, data){
+            var result='';
+            if(err) {
+              console.log(err);
+              return next(err);
+            }
+            else {
+              result = data.Location;
+              res.json(
+                {
+                  "success" : true,
+                  "message" : "upload success",
+                  "data" : result
+                });
+            }
+          });
+        }
+        else {
+          res.json(
+            {
+              "success" : false,
+              "message" : "upload fail",
+            });
+        }
+
+    });
+  });
+
+  route.post('/move', (req, res, next) => {
+    var images = req.body.images;
+    var promises = [];
+
+    function moveFile(image) {
+      return new Promise(
+        (resolve, reject) => {
+          var sliceUrl = image.split('/tmp/');
+          sliceUrl = decodeURIComponent(sliceUrl[1]);
+          console.log(sliceUrl);
+          var s3 = new AWS.S3();
+          var params = {
+               Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+               CopySource:image,
+               Key:'feed100/images/'+sliceUrl,
+               ACL:'public-read',
+          };
+          s3.copyObject(params, function(err, data){
+            if(err) {
+              console.log(err);
+              return next(err);
+            }
+            else {
+              var params = {
+                   Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+                   Key:'feed100/tmp/'+sliceUrl,
+              }
+              s3.deleteObject(params, function(err, data){
+                if(err) {
+                  console.log(err);
+                  return next(err);
+                }
+                else {
+                  resolve();
+                }
+              });
+            }
+          });
+        }
+      )
+    }
+
+    for(var i=0; i<images.length; i++) {
+      var promise = moveFile(images[i]);
+      promises.push(promise);
+    }
+
+    Promise.all(promises)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "move files success",
+          "data" : images
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
 
   route.post('/refresh', (req, res, next) => {
     var secret = req.app.get('jwt-secret');
@@ -387,6 +493,42 @@ module.exports = function(conn) {
     });
 
   });
+
+  route.get('/test', (req, res, next) => {
+    var i = 0;
+    var j = 0;
+    var promises = [];
+    function getPromise(param) {
+      return new Promise(
+        (resolve, reject) => {
+          console.log(param);
+          if(!param) {
+            resolve(false);
+          }
+          else {
+            i++;
+            j += i;
+            console.log(i, j);
+            if(i == 10) {
+              resolve(true);
+            }
+            else {
+              resolve(false);
+            }
+          }
+        }
+      );
+    }
+
+    for(var k=0; k<10; k++) {
+      promises.push(getPromise(true));
+    }
+
+    Promise.all(promises)
+    .then(() => {
+      res.json("i : " + i + " j : " + j);
+    })
+  })
 
   function signAccessToken(params) {
     return new Promise(

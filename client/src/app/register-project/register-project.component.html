@@ -68,15 +68,15 @@
 </div>
 <br/>
 
-<div>
+  <div>
   <h3>프로젝트 해시태그</h3>
   <button (click)="addHashtag()">+</button>
   <button *ngIf="project_hashtags.length>1" (click)="removeHashtag()">-</button>
-  <div *ngFor="let project_hashtag of project_hashtags">
-    <input type="text" [(ngModel)]="project_hashtag.value">  
+  <div *ngFor="let project_hashtag of project_hashtags; let i = index; trackBy: customTrackBy">
+    <input type="text" [(ngModel)]="project_hashtags[i]">    
   </div>
 </div>
-<br/>
+<br/>  
 
 <div>
   <h3>프로젝트 참가 프로필 조건</h3>

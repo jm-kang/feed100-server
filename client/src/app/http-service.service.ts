@@ -22,7 +22,7 @@ export class HttpServiceService {
   } 
 
   localLogin(username, password, role) {
-    let url = this.getServerUrl() + '/auth/login';
+    let url = this.getServerUrl() + '/common/api/login';
     let data = {
       "username" : username,
       "password" : password,
@@ -40,7 +40,7 @@ export class HttpServiceService {
   }
 
   refreshTokens() {
-    let url = this.getServerUrl() + '/auth/refresh';
+    let url = this.getServerUrl() + '/common/api/refresh';
     let headers = new Headers();
     headers.append('Content-type', 'application/json');
 
@@ -83,7 +83,7 @@ export class HttpServiceService {
   }
 
   getCompanyList() {
-    let url = this.getServerUrl() + '/api/companies';
+    let url = this.getServerUrl() + '/admin/api/companies';
     let headers = new Headers();
     headers.append('Content-type', 'application/json');
 
@@ -93,7 +93,7 @@ export class HttpServiceService {
   }
 
   getUserInfo() {
-    let url = this.getServerUrl() + '/api/user';
+    let url = this.getServerUrl() + '/admin/api/user';
     let headers = new Headers();
     headers.append('Content-type', 'application/json');
 
@@ -103,7 +103,7 @@ export class HttpServiceService {
   }
 
   uploadFiles(formData: FormData) {
-    let url = this.getServerUrl() + '/api/upload/tmp';
+    let url = this.getServerUrl() + '/common/api/upload/tmp';
     let headers = new Headers();
 
     let accessToken = localStorage.getItem('accessToken');
@@ -112,7 +112,7 @@ export class HttpServiceService {
   }
 
   moveFiles(images) {
-    let url = this.getServerUrl() + '/api/move';
+    let url = this.getServerUrl() + '/common/api/move';
     let headers = new Headers();
     headers.append('Content-type', 'application/json');
 
@@ -122,7 +122,7 @@ export class HttpServiceService {
   }
 
   registerProject(data) {
-    let url = this.getServerUrl() + '/api/project';
+    let url = this.getServerUrl() + '/admin/api/project';
     let headers = new Headers();
     headers.append('Content-type', 'application/json');
 
@@ -132,7 +132,7 @@ export class HttpServiceService {
   }
 
   registerNewsfeed(data) {
-    let url = this.getServerUrl() + '/api/newsfeed';
+    let url = this.getServerUrl() + '/admin/api/newsfeed';
     let headers = new Headers();
     headers.append('Content-type', 'application/json');
 
