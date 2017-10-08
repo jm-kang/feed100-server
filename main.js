@@ -17,6 +17,7 @@ var commonApi = require('./routes/common/api')(conn);
 var userApi = require('./routes/user/api')(conn, admin);
 var companyApi = require('./routes/company/api')(conn, admin);
 var adminApi = require('./routes/admin/api')(conn, admin);
+var cron = require('./routes/common/cron')(app, conn, admin);
 
 app.use(cors);
 
@@ -27,6 +28,7 @@ app.use('/company/api/', authMiddleware);
 app.use('/company/api/', companyApi);
 app.use('/admin/api/', authMiddleware);
 app.use('/admin/api/', adminApi);
+app.use('/common/cron/', cron);
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/dist/index.html'));

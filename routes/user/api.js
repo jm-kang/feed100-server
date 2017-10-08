@@ -1,5 +1,7 @@
 module.exports = function(conn, admin) {
   var route = require('express').Router();
+  var AWS = require('aws-sdk');
+  AWS.config.region = 'ap-northeast-2';
 
   route.get('/user', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -79,7 +81,8 @@ module.exports = function(conn, admin) {
           ON project_participants_table.project_id = projects_table.project_id
           LEFT JOIN users_table
           ON projects_table.company_id = users_table.user_id
-          WHERE project_participants_table.user_id = ?`;
+          WHERE project_participants_table.user_id = ?
+          ORDER BY projects_table.project_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
             else {
@@ -246,7 +249,8 @@ module.exports = function(conn, admin) {
           ON projects_table.project_id = project_participants_table.project_id
           LEFT JOIN users_table
           ON projects_table.company_id = users_table.user_id
-          WHERE project_end_date > now() and project_participants_table.user_id = ?`;
+          WHERE project_end_date > now() and project_participants_table.user_id = ?
+          ORDER BY projects_table.project_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
             else {
@@ -545,7 +549,15 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM interviews_table
+          SELECT *,
+          (SELECT COUNT(*) as interview_num FROM interviews_table as a
+          LEFT JOIN project_participants_table as b
+          ON a.project_participant_id = b.project_participant_id
+          LEFT JOIN projects_table as c
+          ON b.project_id = c.project_id
+          WHERE b.project_participant_id= project_participants_table.project_participant_id and a.interview_response is null and c.project_end_date > now())
+          as interview_num
+          FROM interviews_table
           LEFT JOIN (SELECT COUNT(*) as ordinal, project_participant_id FROM interviews_table GROUP BY project_participant_id DESC) as ordinal_table
           ON interviews_table.project_participant_id =  ordinal_table.project_participant_id
           LEFT JOIN project_participants_table
@@ -582,8 +594,8 @@ module.exports = function(conn, admin) {
   });
 
   route.get('/user/interview/:project_id', (req, res, next) => {
-    var user_id = 12;
-    var project_id = 5;
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
     function selectProjectById() {
       return new Promise(
         (resolve, reject) => {
@@ -609,7 +621,7 @@ module.exports = function(conn, admin) {
           ON project_participants_table.user_id = users_table.user_id
           LEFT JOIN projects_table
           ON project_participants_table.project_id = projects_table.project_id
-          WHERE project_participants_Table.user_id = ? and project_participants_table.project_id = ?`;
+          WHERE project_participants_table.user_id = ? and project_participants_table.project_id = ?`;
           conn.read.query(sql, [user_id, project_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -643,7 +655,8 @@ module.exports = function(conn, admin) {
     var interview_response = req.body.interview_response;
     var interview_response_images = req.body.interview_response_images;
 
-    function insertInterviewResponse() {
+    function insertInterviewResponse(params) {
+      var interview_response_images = params[1];
       return new Promise(
         (resolve, reject) => {
           var responseData = {
@@ -652,9 +665,9 @@ module.exports = function(conn, admin) {
             interview_response_images : (interview_response_images == null) ? null : JSON.stringify(interview_response_images)
           }
           var sql = `
-          UPDATE interviews_table SET ?, interview_response_registration_date = now() WHERE interview_id = ?`;
+          UPDATE interviews_table SET ?, interview_is_new = 1, interview_response_registration_date = now() WHERE interview_id = ?`;
           conn.write.query(sql, [responseData, interview_id], (err, results) => {
-            if(err) console.log(err, sql);
+            if(err) reject(err);
             else {
               resolve([results]);
             }
@@ -662,8 +675,70 @@ module.exports = function(conn, admin) {
         }
       )
     }
+    function selectUserIdAndTokens(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT company_id as user_id, device_token, 1 as is_company, project_id FROM projects_table
+          LEFT JOIN users_token_table
+          ON projects_table.company_id = users_token_table.user_id
+          WHERE project_id =
+          (SELECT project_id FROM project_participants_table
+          LEFT JOIN interviews_table
+          ON project_participants_table.project_participant_id = interviews_table.project_participant_id
+          WHERE interview_id = ?)`;
+          conn.read.query(sql, [interview_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              insertAlarmAndPush(0, results);
+            }
+          });
+          var user_ids = [];
+          function insertAlarmAndPush(i, list) {
+            if(i < list.length) {
+              var alarm_user_id = list[i].user_id;
+              var project_id = list[i].project_id;
+              var device_token = list[i].device_token;
+              var is_company = list[i].is_company;
+              var alarmData = {
+                user_id : alarm_user_id,
+                project_id : project_id,
+                alarm_link : 'newInterview',
+                alarm_tag : '새 인터뷰',
+              }
+              if(is_company) {
+                alarmData.alarm_content = '새로운 인터뷰 답변이 도착했습니다. 확인해주세요!';
+                if(device_token) {
+                  sendFCM(device_token, alarmData.alarm_content);
+                }
+                if(user_ids.indexOf(alarm_user_id) < 0) {
+                  var sql = `
+                  INSERT INTO alarms_table SET ?`;
+                  conn.write.query(sql, [alarmData], (err, results) => {
+                    if(err) reject(err);
+                    else {
+                      user_ids.push(alarm_user_id);
+                      insertAlarmAndPush(++i, list);
+                    }
+                  });
+                }
+                else {
+                  insertAlarmAndPush(++i, list);
+                }
+              }
+            }
+            else {
+              resolve([params[0]]);
+            }
+          }
+        }
+      )
+    }
 
-    insertInterviewResponse()
+
+    moveImages([{}, interview_response_images])
+    .then(insertInterviewResponse)
+    .then(selectUserIdAndTokens)
     .then((params) => {
       res.json(
         {
@@ -1499,14 +1574,15 @@ module.exports = function(conn, admin) {
                   });
               }
               else {
-                resolve();
+                resolve([{}, project_feedback_images]);
               }
             }
           });
         }
       )
     }
-    function insertProjectFeedback() {
+    function insertProjectFeedback(params) {
+      var project_feedback_images = params[1];
       return new Promise(
         (resolve, reject) => {
           var feedbackData = {
@@ -1522,7 +1598,7 @@ module.exports = function(conn, admin) {
           var sql = `
           INSERT INTO project_participants_table SET ?, project_feedback_registration_date = now()`;
           conn.write.query(sql, [feedbackData], (err, results) => {
-            if(err) console.log(err, sql);
+            if(err) reject(err);
             else {
               resolve([results]);
             }
@@ -1530,9 +1606,88 @@ module.exports = function(conn, admin) {
         }
       )
     }
+    function selectUserIdAndTokens(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT company_id as user_id, device_token, 1 as is_company FROM projects_table
+          LEFT JOIN users_token_table
+          ON projects_table.company_id = users_token_table.user_id
+          WHERE project_id = ?
+          UNION ALL
+          SELECT project_participants_table.user_id, device_token, 0 as is_company
+          FROM project_participants_table
+          LEFT JOIN users_token_table
+          ON project_participants_table.user_id = users_token_table.user_id
+          WHERE project_id = ? and project_participants_table.user_id != ?`;
+          conn.read.query(sql, [project_id, project_id, user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              insertAlarmAndPush(0, results);
+            }
+          });
+          var user_ids = [];
+          function insertAlarmAndPush(i, list) {
+            if(i < list.length) {
+              var alarm_user_id = list[i].user_id;
+              var device_token = list[i].device_token;
+              var is_company = list[i].is_company;
+              var alarmData = {
+                user_id : alarm_user_id,
+                project_id : project_id,
+                alarm_link : 'newFeedback',
+                alarm_tag : '새 피드백',
+              }
+              if(is_company) {
+                alarmData.alarm_content = '프로젝트에 새로운 피드백이 등록되었습니다.';
+                if(device_token) {
+                  sendFCM(device_token, alarmData.alarm_content);
+                }
+                if(user_ids.indexOf(alarm_user_id) < 0) {
+                  var sql = `
+                  INSERT INTO alarms_table SET ?`;
+                  conn.write.query(sql, [alarmData], (err, results) => {
+                    if(err) reject(err);
+                    else {
+                      user_ids.push(alarm_user_id);
+                      insertAlarmAndPush(++i, list);
+                    }
+                  });
+                }
+                else {
+                  insertAlarmAndPush(++i, list);
+                }
+              }
+              else {
+                alarmData.alarm_content = '새로운 피드백이 등록되었습니다. 토론에 참여해주세요!';
+                if(device_token) {
+                  sendFCM(device_token, alarmData.alarm_content);
+                }
+                if(user_ids.indexOf(user_id) < 0) {
+                  var sql = `
+                  INSERT INTO alarms_table SET ?`;
+                  conn.write.query(sql, [alarmData], (err, results) => {
+                    if(err) reject(err);
+                    else {
+                      user_ids.push(user_id);
+                      insertAlarmAndPush(++i, list);
+                    }
+                  });
+                }
+              }
+            }
+            else {
+              resolve([params[0]]);
+            }
+          }
+        }
+      )
+    }
 
     selectPreCondition()
+    .then(moveImages)
     .then(insertProjectFeedback)
+    .then(selectUserIdAndTokens)
     .then((params) => {
       res.json(
         {
@@ -1703,14 +1858,15 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var sql = `
           SELECT project_end_date > now() as is_proceeding,
-          (SELECT COUNT(*) FROM opinions_table WHERE feedback_id = ? and project_participant_id = project_participant_id)
-          as is_writing,
           (SELECT project_participant_id FROM project_participants_table WHERE user_id = ? and project_id = projects_table.project_id)
-          as project_participant_id
+          as project_participant_id,
+          (SELECT COUNT(*) FROM opinions_table WHERE feedback_id = ?
+          and project_participant_id = (SELECT project_participant_id FROM project_participants_table WHERE user_id = ? and project_id = projects_table.project_id))
+          as is_writing
           FROM projects_table LEFT JOIN project_participants_table
           ON projects_table.project_id = project_participants_table.project_id
-          WHERE project_participant_id = ?`;
-          conn.read.query(sql, [feedback_id, user_id, feedback_id], (err, results) => {
+          WHERE project_participants_table.project_participant_id = ?`;
+          conn.read.query(sql, [user_id, feedback_id, user_id, feedback_id], (err, results) => {
             if(err) reject(err);
             else {
               console.log(results);
@@ -1729,14 +1885,17 @@ module.exports = function(conn, admin) {
                   });
               }
               else {
-                resolve(results[0].project_participant_id);
+                resolve([results[0].project_participant_id, req.body.opinion_image]);
               }
             }
           });
         }
       )
     }
-    function insertOpinion(project_participant_id) {
+    function insertOpinion(params) {
+      var project_participant_id = params[0];
+      var images = params[1];
+      var opinion_image = (images == null) ? null : images[0];
       return new Promise(
         (resolve, reject) => {
           var opinionData = {
@@ -1744,7 +1903,7 @@ module.exports = function(conn, admin) {
             feedback_id : req.body.feedback_id,
             is_empathy : req.body.is_empathy,
             opinion : req.body.opinion,
-            opinion_image : req.body.opinion_image
+            opinion_image : opinion_image
           }
           var sql = `
           INSERT INTO opinions_table SET ?`;
@@ -1759,6 +1918,7 @@ module.exports = function(conn, admin) {
     }
 
     selectPreCondition()
+    .then(moveImages)
     .then(insertOpinion)
     .then((params) => {
       res.json(
@@ -2010,10 +2170,11 @@ module.exports = function(conn, admin) {
 
   route.post('/send-test', (req, res, next) => {
     console.log(req.body);
-    sendFCM(req.body.device_token, res);
+    sendFCM(req.body.device_token, "Hello FEED100");
+    res.send('send');
   });
 
-  function sendFCM(device_token, res) {
+  function sendFCM(device_token, content) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
 
@@ -2021,9 +2182,8 @@ module.exports = function(conn, admin) {
     // on how to define a message payload.
     var payload = {
       notification: {
-        body: 'Body of your push notification',
-        sound : "default",
-        badge : "0"
+        body: content,
+        sound: "default"
       }
     };
 
@@ -2040,11 +2200,9 @@ module.exports = function(conn, admin) {
       // the contents of response.
       console.log("Successfully sent message:", response);
       console.log(response.results);
-      res.send(response);
     })
     .catch(function(error) {
       console.log("Error sending message:", error);
-      res.send(error);
     });
   }
   function beginTransaction(params) {
@@ -2079,6 +2237,54 @@ module.exports = function(conn, admin) {
     conn.write.rollback(() => {
       reject(err);
     });
+  }
+  function moveImages(params) {
+    var param = params[0];
+    var images = params[1];
+    return new Promise(
+      (resolve, reject) => {
+        function moveFile(i, images) {
+          if(images && i < images.length) {
+            var image = images[i];
+            var sliceUrl = image.split('/tmp/');
+            sliceUrl = decodeURIComponent(sliceUrl[1]);
+            console.log(sliceUrl);
+            var s3 = new AWS.S3();
+            var params = {
+                 Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+                 CopySource:image,
+                 Key:'feed100/images/'+sliceUrl,
+                 ACL:'public-read',
+            };
+            s3.copyObject(params, function(err, data){
+              if(err) {
+                reject(err);
+              }
+              else {
+                var params = {
+                     Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+                     Key:'feed100/tmp/'+sliceUrl,
+                }
+                s3.deleteObject(params, function(err, data){
+                  if(err) {
+                    reject(err);
+                  }
+                  else {
+                    images[i] = images[i].replace('/tmp/', '/images/');
+                    moveFile(++i, images);
+                  }
+                });
+              }
+            });
+          }
+          else {
+            resolve([param, images]);
+          }
+        }
+
+        moveFile(0, images);
+      }
+    )
   }
 
   return route;
