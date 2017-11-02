@@ -238,6 +238,7 @@ module.exports = function(app, conn, admin) {
     })
     .catch(function(error) {
       console.log("Error sending message:", error);
+      return;
     });
   }
 

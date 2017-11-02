@@ -201,14 +201,15 @@ module.exports = function(conn, admin) {
 
   route.put('/user/account', (req, res, next) => {
     var user_id = req.decoded.user_id;
+    var avatar_image = req.body.avatar_image
     var nickname = req.body.nickname;
     var introduction = req.body.introduction;
 
     function updateUserAccount() {
       return new Promise(
         (resolve, reject) => {
-          var sql = `UPDATE users_table SET nickname = ?, introduction = ? WHERE user_id = ?`;
-          conn.write.query(sql, [nickname, introduction, user_id], (err, results) => {
+          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ?, introduction = ? WHERE user_id = ?`;
+          conn.write.query(sql, [avatar_image, nickname, introduction, user_id], (err, results) => {
             if(err) reject(err);
             else {
               resolve([results]);
@@ -655,8 +656,7 @@ module.exports = function(conn, admin) {
     var interview_response = req.body.interview_response;
     var interview_response_images = req.body.interview_response_images;
 
-    function insertInterviewResponse(params) {
-      var interview_response_images = params[1];
+    function insertInterviewResponse() {
       return new Promise(
         (resolve, reject) => {
           var responseData = {
@@ -736,8 +736,7 @@ module.exports = function(conn, admin) {
     }
 
 
-    moveImages([{}, interview_response_images])
-    .then(insertInterviewResponse)
+    insertInterviewResponse()
     .then(selectUserIdAndTokens)
     .then((params) => {
       res.json(
@@ -1582,7 +1581,6 @@ module.exports = function(conn, admin) {
       )
     }
     function insertProjectFeedback(params) {
-      var project_feedback_images = params[1];
       return new Promise(
         (resolve, reject) => {
           var feedbackData = {
@@ -1674,6 +1672,9 @@ module.exports = function(conn, admin) {
                     }
                   });
                 }
+                else {
+                  insertAlarmAndPush(++i, list);
+                }
               }
             }
             else {
@@ -1685,7 +1686,6 @@ module.exports = function(conn, admin) {
     }
 
     selectPreCondition()
-    .then(moveImages)
     .then(insertProjectFeedback)
     .then(selectUserIdAndTokens)
     .then((params) => {
@@ -1918,7 +1918,6 @@ module.exports = function(conn, admin) {
     }
 
     selectPreCondition()
-    .then(moveImages)
     .then(insertOpinion)
     .then((params) => {
       res.json(
@@ -2203,6 +2202,7 @@ module.exports = function(conn, admin) {
     })
     .catch(function(error) {
       console.log("Error sending message:", error);
+      return;
     });
   }
   function beginTransaction(params) {
@@ -2238,54 +2238,54 @@ module.exports = function(conn, admin) {
       reject(err);
     });
   }
-  function moveImages(params) {
-    var param = params[0];
-    var images = params[1];
-    return new Promise(
-      (resolve, reject) => {
-        function moveFile(i, images) {
-          if(images && i < images.length) {
-            var image = images[i];
-            var sliceUrl = image.split('/tmp/');
-            sliceUrl = decodeURIComponent(sliceUrl[1]);
-            console.log(sliceUrl);
-            var s3 = new AWS.S3();
-            var params = {
-                 Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-                 CopySource:image,
-                 Key:'feed100/images/'+sliceUrl,
-                 ACL:'public-read',
-            };
-            s3.copyObject(params, function(err, data){
-              if(err) {
-                reject(err);
-              }
-              else {
-                var params = {
-                     Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-                     Key:'feed100/tmp/'+sliceUrl,
-                }
-                s3.deleteObject(params, function(err, data){
-                  if(err) {
-                    reject(err);
-                  }
-                  else {
-                    images[i] = images[i].replace('/tmp/', '/images/');
-                    moveFile(++i, images);
-                  }
-                });
-              }
-            });
-          }
-          else {
-            resolve([param, images]);
-          }
-        }
-
-        moveFile(0, images);
-      }
-    )
-  }
+  // function moveImages(params) {
+  //   var param = params[0];
+  //   var images = params[1];
+  //   return new Promise(
+  //     (resolve, reject) => {
+  //       function moveFile(i, images) {
+  //         if(images && i < images.length) {
+  //           var image = images[i];
+  //           var sliceUrl = image.split('/tmp/');
+  //           sliceUrl = decodeURIComponent(sliceUrl[1]);
+  //           console.log(sliceUrl);
+  //           var s3 = new AWS.S3();
+  //           var params = {
+  //                Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+  //                CopySource:image,
+  //                Key:'feed100/images/'+sliceUrl,
+  //                ACL:'public-read',
+  //           };
+  //           s3.copyObject(params, function(err, data){
+  //             if(err) {
+  //               reject(err);
+  //             }
+  //             else {
+  //               var params = {
+  //                    Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
+  //                    Key:'feed100/tmp/'+sliceUrl,
+  //               }
+  //               s3.deleteObject(params, function(err, data){
+  //                 if(err) {
+  //                   reject(err);
+  //                 }
+  //                 else {
+  //                   images[i] = images[i].replace('/tmp/', '/images/');
+  //                   moveFile(++i, images);
+  //                 }
+  //               });
+  //             }
+  //           });
+  //         }
+  //         else {
+  //           resolve([param, images]);
+  //         }
+  //       }
+  //
+  //       moveFile(0, images);
+  //     }
+  //   )
+  // }
 
   return route;
 }
