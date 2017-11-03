@@ -160,8 +160,30 @@ module.exports = function(conn, admin) {
     var region = req.body.region;
     var marriage = req.body.marriage;
     var interests = req.body.interests;
+    var avatar_image = req.body.avatar_image;
 
-    function updateUserProfile() {
+    function selectUserById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `SELECT avatar_image FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              const images = ['assets/img/user-avatar-image.png',
+              'assets/img/user-avatar-image-man1.png', 'assets/img/user-avatar-image-man2.png', 'assets/img/user-avatar-image-man3.png',
+              'assets/img/user-avatar-image-woman1.png', 'assets/img/user-avatar-image-woman2.png', 'assets/img/user-avatar-image-woman3.png'];
+              if(images.indexOf(results[0].avatar_image) < 0) {
+                resolve(results[0].avatar_image);
+              }
+              else {
+                resolve(avatar_image);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateUserProfile(avatar_image) {
       return new Promise(
         (resolve, reject) => {
           var userData = {
@@ -170,7 +192,8 @@ module.exports = function(conn, admin) {
             job : job,
             region : region,
             marriage : marriage,
-            interests : JSON.stringify(interests)
+            interests : JSON.stringify(interests),
+            avatar_image : avatar_image
           }
           var sql = `UPDATE users_table SET ? WHERE user_id = ?`;
           conn.write.query(sql, [userData, user_id], (err, results) => {
@@ -183,7 +206,8 @@ module.exports = function(conn, admin) {
       )
     }
 
-    updateUserProfile()
+    selectUserById()
+    .then(updateUserProfile)
     .then((params) => {
       res.json(
         {

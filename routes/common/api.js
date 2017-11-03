@@ -363,7 +363,8 @@ module.exports = function(conn) {
               username: req.body.username,
               password: hash,
               salt: salt,
-              nickname: req.body.nickname
+              nickname: req.body.nickname,
+              avatar_image: req.body.avatar_image
             };
             var sql = 'INSERT INTO users_table SET ?'
             conn.write.query(sql, user, (err, results) => {
@@ -458,7 +459,8 @@ module.exports = function(conn) {
             role: req.body.role,
             auth_id: req.body.provider + ':' + req.body.app_id,
             username: req.body.username,
-            nickname: req.body.nickname
+            nickname: req.body.nickname,
+            avatar_image: req.body.avatar_image
           };
           var sql = 'INSERT INTO users_table SET ?'
           conn.write.query(sql, user, (err, results) => {
