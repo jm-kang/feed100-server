@@ -14,13 +14,19 @@ export class RegisterProjectComponent implements OnInit {
   project_main_image = "";
   project_name = "";
   project_summary = "";
+  project_type = "";
+  project_price = "";
+  project_payment_date = "";
   project_story = [{"storyImage" : "", "storyVideo" : "", "storyContent" : ""}];
+  project_story_quiz = [
+    {"question" : "", "options" : [{"option" : "", "isApproved" : true}, {"option" : "", "isApproved" : false}]}
+  ]
   max_participant_num = 0;
   project_end_date = "";
   project_link = "";
-  project_hashtags = ["", "ㅁㄴㅇ"];
+  project_hashtags = ["", "기타"];
   project_participation_gender_conditions = [
-    {"condition" : "남자", "isApproved" : true}, 
+    {"condition" : "남자", "isApproved" : true},
     {"condition" : "여자", "isApproved" : true}
   ];
   project_participation_age_conditions = [
@@ -92,7 +98,7 @@ export class RegisterProjectComponent implements OnInit {
       }
     );
   }
-  
+
   customTrackBy(index: number, obj: any): any {
     return index;
   }
@@ -103,6 +109,22 @@ export class RegisterProjectComponent implements OnInit {
 
   removeStory() {
     this.project_story.pop();
+  }
+
+  addStoryQuiz() {
+    this.project_story_quiz.push({"question" : "", "options" : [{"option" : "", "isApproved" : true}, {"option" : "", "isApproved" : false}]});
+  }
+
+  removeStoryQuiz() {
+    this.project_story_quiz.pop();
+  }
+
+  addStoryQuizOption(i) {
+    this.project_story_quiz[i].options.push({"option" : "", "isApproved" : false});
+  }
+
+  removeStoryQuizOption(i) {
+    this.project_story_quiz[i].options.pop();
   }
 
   addHashtag() {
@@ -129,7 +151,7 @@ export class RegisterProjectComponent implements OnInit {
     this.project_participation_objective_conditions[i].options.pop();
   }
 
-  uploadFiles(event, target) { 
+  uploadFiles(event, target) {
     let fileList: FileList = event.target.files;
     if(fileList.length > 0) {
       let file: File = fileList[0];
@@ -146,7 +168,7 @@ export class RegisterProjectComponent implements OnInit {
             else {
               this.project_story[target].storyImage = data.data;
             }
-            
+
           }
           else if(data.success == false) {
             this.httpService.apiRequestErrorHandler(data)
@@ -162,7 +184,7 @@ export class RegisterProjectComponent implements OnInit {
       );
 
     }
-  } 
+  }
 
   moveFiles() {
     let images = [];
@@ -205,7 +227,11 @@ export class RegisterProjectComponent implements OnInit {
       "project_main_image" : this.project_main_image,
       "project_name" : this.project_name,
       "project_summary" : this.project_summary,
+      "project_type" : this.project_type,
+      "project_price" : this.project_price,
+      "project_payment_date" : this.project_payment_date,
       "project_story" : this.project_story,
+      "project_story_quiz" : this.project_story_quiz,
       "max_participant_num" : this.max_participant_num,
       "project_end_date" : this.project_end_date,
       "project_link" : this.project_link,

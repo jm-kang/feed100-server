@@ -4,7 +4,7 @@
   <h3>기업명</h3>
   <select [(ngModel)]="company_id">
     <option *ngFor="let company of companies" [value]="company.user_id">{{company.user_id}} / {{company.nickname}}</option>
-  </select>  
+  </select>
 </div>
 <br/>
 
@@ -12,7 +12,7 @@
   <h3>프로젝트 메인 이미지</h3>
   <input type="file" (change)="uploadFiles($event, 'project_main_image')">
   <div><img [src]="project_main_image" style="width:200px;"/></div>
-</div> 
+</div>
 <br/>
 
 <div>
@@ -28,24 +28,60 @@
 <br/>
 
 <div>
+  <h3>가격 플랜</h3>
+  <input type="text" [(ngModel)]="project_type">
+</div>
+<br/>
+
+<div>
+  <h3>결제 금액</h3>
+  <input type="text" [(ngModel)]="project_price">
+</div>
+<br/>
+
+<div>
+  <h3>결제일</h3>
+  <input type="date" [(ngModel)]="project_payment_date">
+</div>
+<br/>
+
+<div>
   <h3>프로젝트 스토리</h3>
   <button (click)="addStory()">+</button>
   <button *ngIf="project_story.length>1" (click)="removeStory()">-</button>
   <div *ngFor="let story of project_story; let i = index">
-    <h6>story{{i+1}}</h6> 
+    <h6>story{{i+1}}</h6>
     <div>
       <label>스토리 이미지</label>
-      <input type="file" (change)="uploadFiles($event, i)"> 
-      <div><img [src]="story.storyImage" style="width:200px;"/></div> 
+      <input type="file" (change)="uploadFiles($event, i)">
+      <div><img [src]="story.storyImage" style="width:200px;"/></div>
     </div>
     <div>
       <label>스토리 영상</label>
       <input type="text"[(ngModel)]="story.storyVideo">
-    </div> 
+    </div>
     <div>
       <label>스토리 내용</label>
       <textarea [(ngModel)]="story.storyContent"></textarea>
-    </div>   
+    </div>
+  </div>
+</div>
+<br/>
+
+<div>
+  <h3>프로젝트 스토리 퀴즈</h3>
+  <button (click)="addStoryQuiz()">+</button>
+  <button *ngIf="project_story_quiz.length>1" (click)="removeStoryQuiz()">-</button>
+  <div *ngFor="let story_quiz of project_story_quiz; let i = index">
+    <h6>질문{{i+1}}</h6>
+    <input type="text" [(ngModel)]="story_quiz.question">
+    <h6>보기</h6>
+    <button (click)="addStoryQuizOption(i)">+</button>
+    <button *ngIf="project_story_quiz[i].options.length>2" (click)="removeStoryQuizOption(i)">-</button>
+    <div *ngFor="let option of story_quiz.options">
+      <input type="text" [(ngModel)]="option.option">
+      <input type="checkbox" [(ngModel)]="option.isApproved">
+    </div>
   </div>
 </div>
 <br/>
@@ -73,10 +109,10 @@
   <button (click)="addHashtag()">+</button>
   <button *ngIf="project_hashtags.length>1" (click)="removeHashtag()">-</button>
   <div *ngFor="let project_hashtag of project_hashtags; let i = index; trackBy: customTrackBy">
-    <input type="text" [(ngModel)]="project_hashtags[i]">    
+    <input type="text" [(ngModel)]="project_hashtags[i]">
   </div>
 </div>
-<br/>  
+<br/>
 
 <div>
   <h3>프로젝트 참가 프로필 조건</h3>
@@ -117,7 +153,7 @@
     <input type="text" [(ngModel)]="project_participation_objective_condition.question">
     <h6>보기</h6>
     <button (click)="addOption(i)">+</button>
-    <button *ngIf="project_participation_objective_conditions[i].options.length>2" (click)="removeOption(i)">-</button>  
+    <button *ngIf="project_participation_objective_conditions[i].options.length>2" (click)="removeOption(i)">-</button>
     <div *ngFor="let option of project_participation_objective_condition.options">
       <input type="text" [(ngModel)]="option.option">
       <input type="checkbox" [(ngModel)]="option.isApproved">

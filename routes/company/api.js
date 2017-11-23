@@ -1305,6 +1305,111 @@ module.exports = function(conn, admin) {
 
   });
 
+  route.get('/project/reports/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+    function selectReports() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM project_participants_table
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          LEFT JOIN levels_table
+          ON users_table.level = levels_table.level
+          WHERE project_participants_table.project_id = ? and project_report_registration_date is not null`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectReports()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select user reports",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.put('/project/report/select/:project_participant_id', (req, res, next) => {
+    var project_participant_id = req.params.project_participant_id;
+    // 최대 인원의 10% 선정
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT (max_participant_num / 10) as max_selected_report_num,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id and project_report_is_select = true)
+          as selected_report_num
+          FROM projects_table
+          LEFT JOIN project_participants_table
+          ON projects_table.project_id = project_participants_table.project_id
+          WHERE project_participant_id = ?
+          `;
+          conn.read.query(sql, [project_participant_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].max_selected_report_num <= results[0].selected_report_num) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "selected report num is over"
+                  });
+              }
+              else {
+                resolve();
+              }
+            }
+          });
+        }
+      )
+    }
+
+    function updateSelectedReport() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table SET project_report_is_select = 1 WHERE project_participant_id = ?`;
+          conn.read.query(sql, [project_participant_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectPreCondition()
+    .then(updateSelectedReport)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select report",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
   route.get('/project/report/:project_id', (req, res, next) => {
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
@@ -1415,11 +1520,33 @@ module.exports = function(conn, admin) {
         }
       );
     }
+    function selectReports(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM project_participants_table
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          LEFT JOIN levels_table
+          ON users_table.level = levels_table.level
+          WHERE project_participants_table.project_id = ? and project_report_registration_date is not null`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].reports = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
 
     selectProjectById()
     .then(selectProjectFeedbacks)
     .then(chooseBestFeedback)
     .then(selectProjectParticipants)
+    .then(selectReports)
     .then((params) => {
       res.json(
         {

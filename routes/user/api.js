@@ -368,6 +368,8 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var sql = `
           SELECT *,
+          (project_end_date < now() && project_end_date + INTERVAL 2 DAY > now())
+          as is_judge_proceeding,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num
           FROM projects_table LEFT JOIN users_table
@@ -1360,6 +1362,152 @@ module.exports = function(conn, admin) {
 
   });
 
+  route.get('/project/report/:project_id', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectReport() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM project_participants_table
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          LEFT JOIN projects_table
+          ON project_participants_table.project_id = projects_table.project_id
+          WHERE project_participants_table.user_id = ? and project_participants_table.project_id = ?
+          `;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectReport()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select report",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.put('/project/report/:project_id', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+    var project_report_images = req.body.project_report_images;
+    var project_report_story_summary_content = req.body.project_report_story_summary_content;
+    var project_report_pros_content = req.body.project_report_pros_content;
+    var project_report_cons_content = req.body.project_report_cons_content;
+    var project_report_overall_opinion_content = req.body.project_report_overall_opinion_content;
+
+    function updateReport() {
+      return new Promise(
+        (resolve, reject) => {
+          var reportData = {
+            project_report_images : (project_report_images == null) ? null : JSON.stringify(project_report_images),
+            project_report_story_summary_content : project_report_story_summary_content,
+            project_report_pros_content : project_report_pros_content,
+            project_report_cons_content : project_report_cons_content,
+            project_report_overall_opinion_content : project_report_overall_opinion_content
+          }
+          var sql = `
+          UPDATE project_participants_table SET ?, project_report_registration_date = now()
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, [reportData, user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+    function selectUserIdAndTokens(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT company_id as user_id, device_token, 1 as is_company, project_id FROM projects_table
+          LEFT JOIN users_token_table
+          ON projects_table.company_id = users_token_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              insertAlarmAndPush(0, results);
+            }
+          });
+          var user_ids = [];
+          function insertAlarmAndPush(i, list) {
+            if(i < list.length) {
+              var alarm_user_id = list[i].user_id;
+              var project_id = list[i].project_id;
+              var device_token = list[i].device_token;
+              var is_company = list[i].is_company;
+              var alarmData = {
+                user_id : alarm_user_id,
+                project_id : project_id,
+                alarm_link : 'newReport',
+                alarm_tag : '새 심층 피드백',
+              }
+              if(is_company) {
+                alarmData.alarm_content = '새로운 심층 피드백이 작성되었습니다. 확인해주세요!';
+                if(device_token) {
+                  sendFCM(device_token, alarmData.alarm_content);
+                }
+                if(user_ids.indexOf(alarm_user_id) < 0) {
+                  var sql = `
+                  INSERT INTO alarms_table SET ?`;
+                  conn.write.query(sql, [alarmData], (err, results) => {
+                    if(err) reject(err);
+                    else {
+                      user_ids.push(alarm_user_id);
+                      insertAlarmAndPush(++i, list);
+                    }
+                  });
+                }
+                else {
+                  insertAlarmAndPush(++i, list);
+                }
+              }
+            }
+            else {
+              resolve([params[0]]);
+            }
+          }
+        }
+      )
+    }
+
+    updateReport()
+    .then(selectUserIdAndTokens)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update project report",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
   route.get('/project/participation/:project_id', (req, res, next) => {
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
@@ -1554,7 +1702,6 @@ module.exports = function(conn, admin) {
   route.post('/project/feedback', (req, res, next) => {
     var user_id = req.decoded.user_id;
     var project_id = req.body.project_id;
-    var project_story_summary = req.body.project_story_summary;
     var project_feedback = req.body.project_feedback;
     var project_feedback_hashtags = req.body.project_feedback_hashtags;
     var project_feedback_images = req.body.project_feedback_images;
@@ -1610,7 +1757,6 @@ module.exports = function(conn, admin) {
           var feedbackData = {
             user_id : user_id,
             project_id : project_id,
-            project_story_summary : project_story_summary,
             project_feedback : JSON.stringify(project_feedback),
             project_feedback_hashtags : JSON.stringify(project_feedback_hashtags),
             project_feedback_images : (project_feedback_images == null) ? null : JSON.stringify(project_feedback_images),
@@ -1970,8 +2116,10 @@ module.exports = function(conn, admin) {
     var recommendation_rate = req.body.recommendation_rate;
     const feedback_reward = 1000;
     const opinion_reward = 100;
-    const interview_reward = 1000;
-    const best_feedback_reward = 10000;
+    const interview_reward = 500;
+    const best_feedback_reward = 1000;
+    const report_reward = 1000;
+    const selection_report_reward = 4000;
 
     function selectProjectById() {
       return new Promise(
@@ -2073,14 +2221,22 @@ module.exports = function(conn, admin) {
         feedback_point = feedback_reward + ((params[0].feedback.is_best) ? best_feedback_reward : 0);
         opinion_point = opinion_reward * params[0].my_opinion_num;
         interview_point = interview_reward * params[0].completed_interview_num;
-        project_point = feedback_point + opinion_point + interview_point;
+        report_point = 0;
+        if(params[0].feedback.project_report_registration_date) {
+          report_point = report_reward + ((params[0].feedback.project_report_is_select) ? selection_report_reward : 0);
+        }
+        project_point = feedback_point + opinion_point + interview_point + report_point;
         experience_point = ((project_point / 100).toFixed(0)) * 1 // string to number;
 
+        // 인터뷰 응답 안했으면 포인트 0
         var data = {
           project_participant_id : params[0].feedback.project_participant_id,
+          feedback_is_best : params[0].feedback.is_best,
+          report_is_select : params[0].feedback.project_report_is_select,
           feedback_point : feedback_point,
           opinion_point : opinion_point,
           interview_point : interview_point,
+          report_point : report_point,
           project_point : project_point,
           experience_point : experience_point,
           interview_num : params[0].interview_num,
