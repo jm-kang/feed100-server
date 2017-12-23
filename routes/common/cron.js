@@ -4,7 +4,7 @@ module.exports = function(app, conn, admin) {
   var request = require('request');
 
   cron.schedule('0 0 * * *', function() {
-    console.log('cron started', getFullFormatDate(new Date()));
+    console.log('cron started', new Date());
     var url = '';
     if ('development' == app.get('env')) {
       var url = 'http://localhost:3000/common/cron/alarm';

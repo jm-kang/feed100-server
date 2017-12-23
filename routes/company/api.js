@@ -1664,7 +1664,7 @@ module.exports = function(conn, admin) {
           ON opinions_table.project_participant_id = project_participants_table.project_participant_id
           LEFT JOIN users_table ON project_participants_table.user_id = users_table.user_id
           WHERE feedback_id = ?
-          ORDER BY opinion_registration_date DESC;`;
+          ORDER BY opinion_registration_date DESC`;
           conn.read.query(sql, [feedback_id], (err, results) => {
             if(err) reject(err);
             else {

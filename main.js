@@ -4,6 +4,7 @@ var path = require('path');
 var cors = require('cors')();
 
 var authMiddleware = require('./middlewares/auth');
+var versionMiddleware = require('./middlewares/version')(conn);
 
 var admin = require("firebase-admin");
 var serviceAccount = require("./feed100-158308-firebase-adminsdk-y80ka-3bfaf63af8.json");
@@ -21,9 +22,12 @@ var cron = require('./routes/common/cron')(app, conn, admin);
 
 app.use(cors);
 
+app.use('/common/api', versionMiddleware);
 app.use('/common/api', commonApi);
+app.use('/user/api/', versionMiddleware);
 app.use('/user/api/', authMiddleware);
 app.use('/user/api/', userApi);
+app.use('/company/api/', versionMiddleware);
 app.use('/company/api/', authMiddleware);
 app.use('/company/api/', companyApi);
 app.use('/admin/api/', authMiddleware);

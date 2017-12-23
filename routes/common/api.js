@@ -110,7 +110,7 @@ module.exports = function(conn) {
 
   });
 
-  route.post('/refresh', (req, res, next) => {
+  route.get('/refresh', (req, res, next) => {
     var secret = req.app.get('jwt-secret');
     var refreshToken = req.headers['x-refresh-token'] || req.query.refreshToken;
 
