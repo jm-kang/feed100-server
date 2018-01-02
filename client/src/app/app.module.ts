@@ -11,6 +11,8 @@ import { HttpModule } from '@angular/http';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
 import { RegisterProjectComponent } from './register-project/register-project.component';
 import { RegisterNewsfeedComponent } from './register-newsfeed/register-newsfeed.component';
+import { PrivateInfoPolicyComponent } from './private-info-policy/private-info-policy.component';
+import { TermsComponent } from './terms/terms.component';
 
 const ROUTES = [
   {
@@ -18,8 +20,16 @@ const ROUTES = [
     component: HomeComponent
   },
   {
+    path: 'private-info-policy',
+    component: PrivateInfoPolicyComponent
+  },
+  {
+    path: 'terms',
+    component: TermsComponent
+  },
+  {
     path: 'admin',
-    redirectTo: 'admin/login'    
+    redirectTo: 'admin/login'
   },
   {
     path: 'admin',
@@ -56,6 +66,8 @@ const ROUTES = [
     AdminHomeComponent,
     RegisterProjectComponent,
     RegisterNewsfeedComponent,
+    PrivateInfoPolicyComponent,
+    TermsComponent,
   ],
   imports: [
     BrowserModule,

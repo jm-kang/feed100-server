@@ -34,9 +34,37 @@ module.exports = function(conn) {
         });
       }
 
+      function isUpdateNeeded(server_version, client_version) {
+        var server_version_token = server_version.split('.');
+        var client_version_token = client_version.split('.');
+        if(server_version_token[0] > client_version_token[0]) {
+          return true;
+        }
+        else if(server_version_token[0] == client_version_token[0]) {
+          if(server_version_token[1] > client_version_token[1]) {
+            return true;
+          }
+          else if(server_version_token[1] == client_version_token[1]) {
+            if(server_version_token[2] > client_version_token[2]) {
+              return true;
+            }
+            else {
+              return false;
+            }
+          }
+          else {
+            return false;
+          }
+        }
+        else {
+          return false;
+        }
+      }
+
       // process the promise
       verifyVersion()
       .then((params) => {
+        console.log("version check : " + platform + " " + params[0].ios_version + " " + params[0].android_version + " " + version);
         if(params[0].notice) {
           return res.json({
             "success" : false,
@@ -44,7 +72,7 @@ module.exports = function(conn) {
             "notice" : params[0].notice
           });
         }
-        else if(platform == 'ios' && params[0].ios_version != version) {
+        else if(platform == 'ios' && isUpdateNeeded(params[0].ios_version, version)) {
           return res.json({
             "success" : false,
             "message" : "version is not match",
@@ -52,7 +80,7 @@ module.exports = function(conn) {
             "server_version" : params[0].ios_version
           });
         }
-        else if(platform == 'android' && params[0].android_version != version) {
+        else if(platform == 'android' && isUpdateNeeded(params[0].android_version, version)) {
           return res.json({
             "success" : false,
             "message" : "version is not match",
