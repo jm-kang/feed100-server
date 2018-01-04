@@ -294,6 +294,7 @@ module.exports = function(conn, admin) {
           as participant_num
           FROM projects_table LEFT JOIN users_table
           ON projects_table.company_id = users_table.user_id
+          WHERE is_private = false
           ORDER BY projects_table.project_id DESC LIMIT 3`;
           conn.read.query(sql, (err, results) => {
             if(err) reject(err);
@@ -312,7 +313,9 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM newsfeeds_table ORDER BY newsfeed_id DESC LIMIT 5`;
+          SELECT * FROM newsfeeds_table
+          WHERE is_private = false
+          ORDER BY newsfeed_id DESC LIMIT 5`;
           conn.read.query(sql, (err, results) => {
             if(err) reject(err);
             else {
@@ -779,12 +782,48 @@ module.exports = function(conn, admin) {
 
   });
 
+  route.get('/redeem/:project_code', (req, res, next) => {
+    var project_code = req.params.project_code;
+
+    function selectProjectByCode() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT project_id FROM projects_table WHERE project_code = ?`;
+          conn.read.query(sql, project_code, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProjectByCode()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project id",
+          "data" : (params[0]) ? params[0] : "{}"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
   route.get('/newsfeeds', (req, res, next) => {
     function selectNewsfeeds() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM newsfeeds_table ORDER BY newsfeed_id DESC`;
+          SELECT * FROM newsfeeds_table
+          WHERE is_private = false
+          ORDER BY newsfeed_id DESC`;
           conn.read.query(sql, (err, results) => {
             if(err) reject(err);
             else {
@@ -1030,6 +1069,7 @@ module.exports = function(conn, admin) {
           as participant_num
           FROM projects_table LEFT JOIN users_table
           ON projects_table.company_id = users_table.user_id
+          WHERE is_private = false
           ORDER BY projects_table.project_id DESC`;
           conn.read.query(sql, (err, results) => {
             if(err) reject(err);

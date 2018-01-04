@@ -99,12 +99,18 @@
 <br/>
 
 <div>
-  <h3>프로젝트 링크</h3>
-  <input type="text" [(ngModel)]="project_link">
+  <h3>프로젝트 Android 링크</h3>
+  <input type="text" [(ngModel)]="project_android_link">
 </div>
 <br/>
 
-  <div>
+<div>
+  <h3>프로젝트 iOS 링크</h3>
+  <input type="text" [(ngModel)]="project_ios_link">
+</div>
+<br/>
+
+<div>
   <h3>프로젝트 해시태그</h3>
   <button (click)="addHashtag()">+</button>
   <button *ngIf="project_hashtags.length>1" (click)="removeHashtag()">-</button>

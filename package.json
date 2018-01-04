@@ -28,6 +28,7 @@
     "passport-local": "^1.0.0",
     "pbkdf2-password": "^1.2.1",
     "request": "^2.81.0",
-    "serve-favicon": "~2.3.2"
+    "serve-favicon": "~2.3.2",
+    "voucher-code-generator": "^1.1.1"
   }
 }

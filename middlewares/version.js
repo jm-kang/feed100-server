@@ -5,12 +5,9 @@ module.exports = function(conn) {
       var version = req.headers['version'];
       var platform = req.headers['platform'];
       // token does not exist
-      if(!version) {
-        return res.json({
-          "success" : false,
-          "message" : "version is null"
-        });
-      }
+      // if(!version) {
+      //   next();
+      // }
 
       // create a promise that verify the token
       function verifyVersion() {

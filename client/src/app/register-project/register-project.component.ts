@@ -23,7 +23,8 @@ export class RegisterProjectComponent implements OnInit {
   ]
   max_participant_num = 0;
   project_end_date = "";
-  project_link = "";
+  project_android_link = "";
+  project_ios_link = "";
   project_hashtags = ["", "기타"];
   project_participation_gender_conditions = [
     {"condition" : "남자", "isApproved" : true},
@@ -234,7 +235,8 @@ export class RegisterProjectComponent implements OnInit {
       "project_story_quiz" : this.project_story_quiz,
       "max_participant_num" : this.max_participant_num,
       "project_end_date" : this.project_end_date,
-      "project_link" : this.project_link,
+      "project_android_link" : this.project_android_link,
+      "project_ios_link" : this.project_ios_link,
       "project_hashtags" : this.project_hashtags,
       "project_participation_gender_conditions" : this.project_participation_gender_conditions,
       "project_participation_age_conditions" : this.project_participation_age_conditions,

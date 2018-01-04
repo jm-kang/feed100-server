@@ -1,5 +1,6 @@
 module.exports = function(conn) {
   var route = require('express').Router();
+  var voucher_codes = require('voucher-code-generator');
 
   route.get('/user', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -71,8 +72,14 @@ module.exports = function(conn) {
   });
 
   route.post('/project', (req, res, next) => {
+    var code = voucher_codes.generate({
+        length: 8,
+        count: 1
+    });
+
     var projectData = {
       company_id : req.body.company_id,
+      project_code : code[0] + req.body.company_id,
       project_main_image : req.body.project_main_image,
       project_name : req.body.project_name,
       project_summary : req.body.project_summary,
@@ -83,7 +90,8 @@ module.exports = function(conn) {
       project_story_quiz : JSON.stringify(req.body.project_story_quiz),
       max_participant_num : req.body.max_participant_num,
       project_end_date : req.body.project_end_date,
-      project_link : req.body.project_link,
+      project_android_link : req.body.project_android_link,
+      project_ios_link : req.body.project_ios_link,
       project_hashtags : JSON.stringify(req.body.project_hashtags),
       project_participation_gender_conditions : JSON.stringify(req.body.project_participation_gender_conditions),
       project_participation_age_conditions : JSON.stringify(req.body.project_participation_age_conditions),
