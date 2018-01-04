@@ -1,7 +1,5 @@
 module.exports = function(conn, admin) {
   var route = require('express').Router();
-  var AWS = require('aws-sdk');
-  AWS.config.region = 'ap-northeast-2';
 
   route.get('/user', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -2458,54 +2456,6 @@ module.exports = function(conn, admin) {
       reject(err);
     });
   }
-  // function moveImages(params) {
-  //   var param = params[0];
-  //   var images = params[1];
-  //   return new Promise(
-  //     (resolve, reject) => {
-  //       function moveFile(i, images) {
-  //         if(images && i < images.length) {
-  //           var image = images[i];
-  //           var sliceUrl = image.split('/tmp/');
-  //           sliceUrl = decodeURIComponent(sliceUrl[1]);
-  //           console.log(sliceUrl);
-  //           var s3 = new AWS.S3();
-  //           var params = {
-  //                Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-  //                CopySource:image,
-  //                Key:'feed100/images/'+sliceUrl,
-  //                ACL:'public-read',
-  //           };
-  //           s3.copyObject(params, function(err, data){
-  //             if(err) {
-  //               reject(err);
-  //             }
-  //             else {
-  //               var params = {
-  //                    Bucket:'elasticbeanstalk-ap-northeast-2-035223481599',
-  //                    Key:'feed100/tmp/'+sliceUrl,
-  //               }
-  //               s3.deleteObject(params, function(err, data){
-  //                 if(err) {
-  //                   reject(err);
-  //                 }
-  //                 else {
-  //                   images[i] = images[i].replace('/tmp/', '/images/');
-  //                   moveFile(++i, images);
-  //                 }
-  //               });
-  //             }
-  //           });
-  //         }
-  //         else {
-  //           resolve([param, images]);
-  //         }
-  //       }
-  //
-  //       moveFile(0, images);
-  //     }
-  //   )
-  // }
 
   return route;
 }
