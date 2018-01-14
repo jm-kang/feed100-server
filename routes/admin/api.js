@@ -1,4 +1,4 @@
-module.exports = function(conn) {
+module.exports = function(conn, admin) {
   var route = require('express').Router();
   var voucher_codes = require('voucher-code-generator');
 
@@ -172,6 +172,13 @@ module.exports = function(conn) {
     });
 
   });
+
+  route.get('/send-test/:device_token', (req, res, next) => {
+    console.log(req.params.device_token);
+    sendFCM(req.params.device_token, "Hello FEED100");
+    res.send('send');
+  });
+
   /* web */
 
   /* mobile */
@@ -1724,6 +1731,61 @@ module.exports = function(conn) {
     sendFCM(req.body.device_token, res);
   });
   /* mobile */
+
+  function sendFCM(device_token, content) {
+    // This registration token comes from the client FCM SDKs.
+    var registrationToken = device_token;
+
+    // See the "Defining the message payload" section below for details
+    // on how to define a message payload.
+    var payload = {
+      notification: {
+        body: content,
+        sound: "default"
+      }
+    };
+
+    // Set the message as high priority and have it expire after 24 hours.
+    var options = {
+      priority: "high",
+    };
+
+    // Send a message to the device corresponding to the provided
+    // registration token.
+    admin.messaging().sendToDevice(registrationToken, payload, options)
+    .then(function(response) {
+      // See the MessagingDevicesResponse reference documentation for
+      // the contents of response.
+      console.log("Successfully sent message:", response);
+      console.log(response.results);
+      if(response.failureCount) {
+        if(response.results[0].error.errorInfo.code == "messaging/registration-token-not-registered") {
+          deleteDeviceToken(device_token);
+        }
+      }
+    })
+    .catch(function(error) {
+      console.log("Error sending message:", error);
+      return;
+    });
+  }
+
+  function deleteDeviceToken(device_token) {
+    return new Promise(
+      (resolve, reject) => {
+        var sql = `
+        DELETE FROM users_token_table WHERE device_token = ?
+        `;
+        conn.write.query(sql, device_token, (err, results) => {
+          if(err) reject(err);
+          else {
+            console.log('device token has deleted');
+            resolve([results]);
+          }
+        });
+      }
+    );
+  }
 
   function beginTransaction(params) {
     return new Promise(

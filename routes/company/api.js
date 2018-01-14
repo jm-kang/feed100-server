@@ -1768,12 +1768,35 @@ module.exports = function(conn, admin) {
       // the contents of response.
       console.log("Successfully sent message:", response);
       console.log(response.results);
+      if(response.failureCount) {
+        if(response.results[0].error.errorInfo.code == "messaging/registration-token-not-registered") {
+          deleteDeviceToken(device_token);
+        }
+      }
     })
     .catch(function(error) {
       console.log("Error sending message:", error);
       return;
     });
   }
+
+  function deleteDeviceToken(device_token) {
+    return new Promise(
+      (resolve, reject) => {
+        var sql = `
+        DELETE FROM users_token_table WHERE device_token = ?
+        `;
+        conn.write.query(sql, device_token, (err, results) => {
+          if(err) reject(err);
+          else {
+            console.log('device token has deleted');
+            resolve([results]);
+          }
+        });
+      }
+    );
+  }
+  
   function beginTransaction(params) {
     return new Promise(
       (resolve, reject) => {

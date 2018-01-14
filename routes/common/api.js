@@ -6,6 +6,9 @@ module.exports = function(conn) {
   var formidable = require('formidable');
   var AWS = require('aws-sdk');
   AWS.config.region = 'ap-northeast-2';
+  var nodemailer = require('nodemailer');
+  var smtpPool = require('nodemailer-smtp-pool');
+  var voucher_codes = require('voucher-code-generator');
 
   route.post('/upload/:folder', (req, res, next) => {
     var form = new formidable.IncomingForm();
@@ -127,7 +130,14 @@ module.exports = function(conn) {
           jwt.verify(refreshToken, secret, { subject : 'refreshToken' }, (err, decoded) => {
             if(err) reject(err);
             else {
-              resolve([secret, decoded.user_id, decoded.role]);
+              var sql = `
+              SELECT * FROM users_table WHERE user_id = ?`;
+              conn.read.query(sql, decoded.user_id, (err, results) => {
+                if(err) reject(err);
+                else {
+                  resolve([secret, results[0].user_id, results[0].role, results[0].warn_count]);
+                }
+              });
             }
           });
         }
@@ -215,7 +225,7 @@ module.exports = function(conn) {
         }
       );
     }
-    function verifyPassword(params) {
+    function verify(params) {
       var result = params[0];
       var password = params[1];
       return new Promise(
@@ -226,8 +236,21 @@ module.exports = function(conn) {
                 "success" : false,
                 "message" : "password is not correct"
               });
-            } else {
-              resolve([secret, result.user_id, req.body.role]);
+            }
+            else if(!result.is_verified) {
+              res.json({
+                "success" : false,
+                "message" : "email is not verified"
+              });
+            }
+            else if(result.warn_count >= 3) {
+              res.json({
+                "success" : false,
+                "message" : "warning count is over"
+              });
+            }
+            else {
+              resolve([secret, result.user_id, req.body.role, result.warn_count]);
             }
           });
         }
@@ -235,7 +258,7 @@ module.exports = function(conn) {
     }
 
     selectByUsername()
-    .then(verifyPassword)
+    .then(verify)
     .then(signAccessToken)
     .then(signRefreshToken)
     .then((params) => {
@@ -272,6 +295,18 @@ module.exports = function(conn) {
                   "message" : "app_id is unregistered"
                 });
               }
+              else if(!results[0].is_verified) {
+                res.json({
+                  "success" : false,
+                  "message" : "email is not verified"
+                });
+              }
+              else if(results[0].warn_count >= 3) {
+                res.json({
+                  "success" : false,
+                  "message" : "warning count is over"
+                });
+              }
               else {
                 resolve([secret, results[0].user_id, req.body.role]);
               }
@@ -303,7 +338,10 @@ module.exports = function(conn) {
   });
 
   route.post('/registration', (req, res, next) => {
-    var secret = req.app.get('jwt-secret');
+    var rand_key = voucher_codes.generate({
+        length: 10,
+        count: 1
+    });
 
     function selectByUsername() {
       return new Promise(
@@ -359,6 +397,7 @@ module.exports = function(conn) {
           hasher({password:req.body.password}, (err, pass, salt, hash) => {
             var user = {
               role: req.body.role,
+              rand_key: rand_key,
               auth_id: 'local:' + req.body.username,
               username: req.body.username,
               password: hash,
@@ -370,7 +409,8 @@ module.exports = function(conn) {
             conn.write.query(sql, user, (err, results) => {
               if(err) reject(err);
               else {
-                resolve([secret, results.insertId, req.body.role]);
+                sendVerifyEmail(req, req.body.username, rand_key);
+                resolve();
               }
             })
           });
@@ -381,17 +421,11 @@ module.exports = function(conn) {
     selectByUsername()
     .then(selectByNickname)
     .then(insertUser)
-    .then(signAccessToken)
-    .then(signRefreshToken)
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "registration success",
-          "data" : {
-            "accessToken" : params[0],
-            "refreshToken" : params[1]
-          }
+          "message" : "registration success"
         });
     })
     .catch((err) => {
@@ -402,7 +436,10 @@ module.exports = function(conn) {
   });
 
   route.post('/registration-sns', (req, res, next) => {
-    var secret = req.app.get('jwt-secret');
+    var rand_key = voucher_codes.generate({
+        length: 10,
+        count: 1
+    });
 
     function selectByUsername() {
       return new Promise(
@@ -457,6 +494,7 @@ module.exports = function(conn) {
         (resolve, reject) => {
           var user = {
             role: req.body.role,
+            rand_key: rand_key,
             auth_id: req.body.provider + ':' + req.body.app_id,
             username: req.body.username,
             nickname: req.body.nickname,
@@ -466,7 +504,8 @@ module.exports = function(conn) {
           conn.write.query(sql, user, (err, results) => {
             if(err) reject(err);
             else {
-              resolve([secret, results.insertId, req.body.role]);
+              sendVerifyEmail(req, req.body.username, rand_key);
+              resolve();
             }
           })
         }
@@ -476,17 +515,11 @@ module.exports = function(conn) {
     selectByUsername()
     .then(selectByNickname)
     .then(insertUser)
-    .then(signAccessToken)
-    .then(signRefreshToken)
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "registration success",
-          "data" : {
-            "accessToken" : params[0],
-            "refreshToken" : params[1]
-          }
+          "message" : "registration success"
         });
     })
     .catch((err) => {
@@ -496,62 +529,99 @@ module.exports = function(conn) {
 
   });
 
-  route.get('/test', (req, res, next) => {
-    var i = 0;
-    var j = 0;
-    var promises = [];
-    function getPromise(param) {
+  route.get('/verify/:rand_key', (req, res, next) => {
+    var rand_key = req.params.rand_key;
+
+    function updateVerify() {
       return new Promise(
         (resolve, reject) => {
-          console.log(param);
-          if(!param) {
-            resolve(false);
-          }
-          else {
-            i++;
-            j += i;
-            console.log(i, j);
-            if(i == 10) {
-              resolve(true);
-            }
+          var sql = `UPDATE users_table SET
+          is_verified = 1
+          WHERE rand_key = ?`;
+          conn.write.query(sql, rand_key, (err, results) => {
+            if(err) reject(err);
             else {
-              resolve(false);
+              resolve();
             }
-          }
+          });
         }
-      );
+      )
     }
 
-    for(var k=0; k<10; k++) {
-      promises.push(getPromise(true));
-    }
-
-    Promise.all(promises)
+    updateVerify()
     .then(() => {
-      res.json("i : " + i + " j : " + j);
+      res.send('인증이 완료되었습니다. 이제 해당 계정으로 로그인하실 수 있습니다.');
     })
-  })
+    .catch((err) => {
+      console.log(err);
+      res.send('오류가 발생했습니다.');
+    });
 
+  });
+
+  route.get('/test', (req, res, next) => {
+    // res.json({'id': req.app.get('gmail-id')})
+  });
+
+  function sendVerifyEmail(req, email, rand_key) {
+    var smtpTransport = nodemailer.createTransport(smtpPool({
+        service: 'gmail',
+        host: 'localhost',
+        port: '465',
+        tls: {
+            rejectUnauthorize:false
+        },
+        //이메일 전송을 위해 필요한 인증정보
+        //gmail 계정과 암호
+        auth: {
+            user: req.app.get('gmail-id'),
+            pass: req.app.get('gmail-pwd')
+        },
+        maxConnections: 5,
+        maxMessages: 10
+    }));
+    var link = "http://www.feed100.me/common/api/verify/" + rand_key;
+    var mailOpt = {
+        from: "FEED100 <" + req.app.get('gmail-id') + ">",
+        to: email,
+        subject: "Please confirm your Email account",
+        html: "Hello,<br> Please Click on the link to verify your email.<br><a href="+link+">Click here to verify</a>"
+    }
+    smtpTransport.sendMail(mailOpt, function(err, res) {
+        if(err) {
+            console.log(err);
+        }
+        else {
+            console.log('Message send :'+ res);
+        }
+
+        smtpTransport.close();
+    })
+
+  }
   function signAccessToken(params) {
     return new Promise(
       (resolve, reject) => {
         var secret = params[0];
         var user_id = params[1];
         var role = params[2];
+        var warn_count = params[3];
         jwt.sign(
         {
           role : role,
+          warn_count : warn_count,
           user_id : user_id
         },
         secret,
         {
           expiresIn : '1d',
+          // expiresIn : '1m',
           issuer : 'feed100',
           subject : 'accessToken'
         }, (err, token) => {
           if(err) reject(err);
           else {
-            resolve([secret, user_id, role, token]);
+            resolve([secret, user_id, role, warn_count, token]);
           }
         });
       }
@@ -563,15 +633,18 @@ module.exports = function(conn) {
         var secret = params[0];
         var user_id = params[1];
         var role = params[2];
-        var accessToken = params[3];
+        var warn_count = params[3];
+        var accessToken = params[4];
         jwt.sign(
         {
           role : role,
+          warn_count : warn_count,
           user_id : user_id
         },
         secret,
         {
           expiresIn : '30d',
+          // expiresIn : '5m',
           issuer : 'feed100',
           subject : 'refreshToken'
         }, (err, token) => {

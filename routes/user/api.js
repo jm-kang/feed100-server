@@ -1623,7 +1623,15 @@ module.exports = function(conn, admin) {
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
             else {
-              resolve([results[0]]);
+              if(results[0].warn_count >= 3) {
+                res.json({
+                  "success" : false,
+                  "message" : "warning count is over"
+                });
+              }
+              else {
+                resolve([results[0]]);
+              }
             }
           });
         }
@@ -1869,13 +1877,13 @@ module.exports = function(conn, admin) {
                 if(device_token) {
                   sendFCM(device_token, alarmData.alarm_content);
                 }
-                if(user_ids.indexOf(user_id) < 0) {
+                if(user_ids.indexOf(alarm_user_id) < 0) {
                   var sql = `
                   INSERT INTO alarms_table SET ?`;
                   conn.write.query(sql, [alarmData], (err, results) => {
                     if(err) reject(err);
                     else {
-                      user_ids.push(user_id);
+                      user_ids.push(alarm_user_id);
                       insertAlarmAndPush(++i, list);
                     }
                   });
@@ -2385,12 +2393,6 @@ module.exports = function(conn, admin) {
 
   });
 
-  route.post('/send-test', (req, res, next) => {
-    console.log(req.body);
-    sendFCM(req.body.device_token, "Hello FEED100");
-    res.send('send');
-  });
-
   function sendFCM(device_token, content) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
@@ -2417,12 +2419,35 @@ module.exports = function(conn, admin) {
       // the contents of response.
       console.log("Successfully sent message:", response);
       console.log(response.results);
+      if(response.failureCount) {
+        if(response.results[0].error.errorInfo.code == "messaging/registration-token-not-registered") {
+          deleteDeviceToken(device_token);
+        }
+      }
     })
     .catch(function(error) {
       console.log("Error sending message:", error);
       return;
     });
   }
+
+  function deleteDeviceToken(device_token) {
+    return new Promise(
+      (resolve, reject) => {
+        var sql = `
+        DELETE FROM users_token_table WHERE device_token = ?
+        `;
+        conn.write.query(sql, device_token, (err, results) => {
+          if(err) reject(err);
+          else {
+            console.log('device token has deleted');
+            resolve([results]);
+          }
+        });
+      }
+    );
+  }
+
   function beginTransaction(params) {
     return new Promise(
       (resolve, reject) => {

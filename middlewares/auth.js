@@ -35,8 +35,16 @@ var authMiddleware = (req, res, next) => {
     // process the promise
     verifyAccessToken()
     .then((decoded) => {
-      req.decoded = decoded;
-      next();
+      if(decoded.warn_count >= 3) {
+        res.json({
+          "success" : false,
+          "message" : "warning count is over"
+        });
+      }
+      else {
+        req.decoded = decoded;
+        next();
+      }
     }).catch(onError)
 }
 
