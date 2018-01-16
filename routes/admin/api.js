@@ -270,13 +270,12 @@ module.exports = function(conn, admin) {
     var user_id = req.decoded.user_id;
     var avatar_image = req.body.avatar_image;
     var nickname = req.body.nickname;
-    var introduction = req.body.introduction;
 
     function updateUserAccount() {
       return new Promise(
         (resolve, reject) => {
-          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ?, introduction = ? WHERE user_id = ?`;
-          conn.write.query(sql, [avatar_image, nickname, introduction, user_id], (err, results) => {
+          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ? WHERE user_id = ?`;
+          conn.write.query(sql, [avatar_image, nickname, user_id], (err, results) => {
             if(err) reject(err);
             else {
               resolve([results]);
@@ -451,6 +450,255 @@ module.exports = function(conn, admin) {
         {
           "success" : true,
           "message" : "select alarm and interview num",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.delete('/admin/sanction/newsfeed/:newsfeed_id/:newsfeed_comment_id', (req, res, next) => {
+    var newsfeed_id = req.params.newsfeed_id;
+    var newsfeed_comment_id = req.params.newsfeed_comment_id;
+
+    function deleteComment(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM newsfeed_comments_table WHERE newsfeed_comment_id = ?
+          `;
+          conn.write.query(sql, newsfeed_comment_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function deleteReportHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM newsfeed_report_history_table
+          WHERE newsfeed_id = ? and newsfeed_comment_id = ?`;
+          conn.write.query(sql, [newsfeed_id, newsfeed_comment_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    beginTransaction([{}])
+    .then(deleteComment)
+    .then(deleteReportHistory)
+    .then(endTransaction)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "delete newsfeed_comment",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.delete('/admin/sanction/project/:project_id/:user_id/:project_participant_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+    var user_id = req.params.user_id;
+    var project_participant_id = req.params.project_participant_id;
+
+    function deleteOpinion(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM opinions_table WHERE project_participant_id = ?
+          `;
+          conn.write.query(sql, project_participant_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function deleteInterview(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM interviews_table WHERE project_participant_id = ?
+          `;
+          conn.write.query(sql, project_participant_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function deleteProjectParticipants(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM project_participants_table WHERE project_participant_id = ?
+          `;
+          conn.write.query(sql, project_participant_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function deleteReportHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM project_report_history_table
+          WHERE project_id = ? and project_participant_id = ?`;
+          conn.write.query(sql, [project_id, project_participant_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function updateApprovedState(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participation_history_table
+          SET is_approved = 0
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, [user_id, project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function updateUserWarningCount(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE users_table
+          SET warn_count = warn_count + 1
+          WHERE user_id = ?`;
+          conn.write.query(sql, user_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function updateAlarmLink(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE alarms_table
+          SET alarm_link = ?
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, ["warning", user_id, project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function selectUserIdAndTokens(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT users_table.user_id, device_token, 0 as is_comapny, ? as project_id
+          FROM users_table
+          LEFT JOIN users_token_table
+          ON users_table.user_id = users_token_table.user_id
+          WHERE users_table.user_id = ?`;
+          conn.read.query(sql, [project_id, user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              insertAlarmAndPush(0, results);
+            }
+          });
+          var user_ids = [];
+          function insertAlarmAndPush(i, list) {
+            if(i < list.length) {
+              var alarm_user_id = list[i].user_id;
+              var project_id = list[i].project_id;
+              var device_token = list[i].device_token;
+              var is_company = list[i].is_company;
+              var alarmData = {
+                user_id : alarm_user_id,
+                project_id : project_id,
+                alarm_link : 'warning',
+                alarm_tag : '경고',
+              }
+              if(!is_company) {
+                alarmData.alarm_content = '해당 프로젝트에서 제외되었습니다.';
+                if(device_token) {
+                  sendFCM(device_token, alarmData.alarm_content);
+                }
+                if(user_ids.indexOf(alarm_user_id) < 0) {
+                  var sql = `
+                  INSERT INTO alarms_table SET ?`;
+                  conn.write.query(sql, [alarmData], (err, results) => {
+                    if(err) rollback(reject, err);
+                    else {
+                      user_ids.push(alarm_user_id);
+                      insertAlarmAndPush(++i, list);
+                    }
+                  });
+                }
+                else {
+                  insertAlarmAndPush(++i, list);
+                }
+              }
+            }
+            else {
+              resolve([params[0]]);
+            }
+          }
+        }
+      )
+    }
+
+    beginTransaction([{}])
+    .then(deleteOpinion)
+    .then(deleteInterview)
+    .then(deleteProjectParticipants)
+    .then(deleteReportHistory)
+    .then(updateApprovedState)
+    .then(updateUserWarningCount)
+    .then(updateAlarmLink)
+    .then(selectUserIdAndTokens)
+    .then(endTransaction)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "project sanction",
           "data" : params[0]
         });
     })

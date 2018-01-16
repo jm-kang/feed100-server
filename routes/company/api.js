@@ -90,13 +90,12 @@ module.exports = function(conn, admin) {
     var user_id = req.decoded.user_id;
     var avatar_image = req.body.avatar_image;
     var nickname = req.body.nickname;
-    var introduction = req.body.introduction;
 
     function updateUserAccount() {
       return new Promise(
         (resolve, reject) => {
-          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ?, introduction = ? WHERE user_id = ?`;
-          conn.write.query(sql, [avatar_image, nickname, introduction, user_id], (err, results) => {
+          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ? WHERE user_id = ?`;
+          conn.write.query(sql, [avatar_image, nickname, user_id], (err, results) => {
             if(err) reject(err);
             else {
               resolve([results]);
@@ -376,6 +375,148 @@ module.exports = function(conn, admin) {
           "success" : true,
           "message" : "select alarm and interview num",
           "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/company/report/newsfeed', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var newsfeed_id = req.body.newsfeed_id;
+    var newsfeed_comment_id = req.body.newsfeed_comment_id;
+    var newsfeed_report_data = {
+      user_id : user_id,
+      newsfeed_id : newsfeed_id,
+      newsfeed_comment_id : newsfeed_comment_id,
+    };
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM newsfeed_report_history_table
+          WHERE user_id = ? and newsfeed_comment_id = ?`;
+          conn.read.query(sql, [user_id, newsfeed_comment_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0]) {
+                res.json({
+                  "success" : false,
+                  "message" : "already reported"
+                });
+              }
+              else {
+                resolve();
+              }
+            }
+          });
+        }
+      )
+    }
+    function reportNewsfeed() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO newsfeed_report_history_table SET ?`;
+          conn.write.query(sql, newsfeed_report_data, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(reportNewsfeed)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "report newsfeed"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/company/report/project', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.body.project_id;
+    var project_participant_id = req.body.project_participant_id;
+    var feedback_id = (req.body.feedback_id) ? req.body.feedback_id : 0;
+    var opinion_id = (req.body.opinion_id) ? req.body.opinion_id : 0;
+    var interview_id = (req.body.interview_id) ? req.body.interview_id : 0;
+    var report_id = (req.body.report_id) ? req.body.report_id : 0;
+    var project_report_data = {
+      user_id : user_id,
+      project_id : project_id,
+      project_participant_id : project_participant_id,
+      feedback_id : feedback_id,
+      opinion_id : opinion_id,
+      interview_id : interview_id,
+      report_id : report_id
+    };
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM project_report_history_table
+          WHERE user_id = ?
+          and project_id = ?
+          and project_participant_id = ?
+          and feedback_id = ?
+          and opinion_id = ?
+          and interview_id = ?
+          and report_id = ?`;
+          conn.read.query(sql, [user_id, project_id, project_participant_id, feedback_id, opinion_id, interview_id, report_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0]) {
+                res.json({
+                  "success" : false,
+                  "message" : "already reported"
+                });
+              }
+              else {
+                resolve();
+              }
+            }
+          });
+        }
+      )
+    }
+    function reportProject() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO project_report_history_table SET ?`;
+          conn.write.query(sql, project_report_data, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(reportProject)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "report project"
         });
     })
     .catch((err) => {
@@ -1796,7 +1937,7 @@ module.exports = function(conn, admin) {
       }
     );
   }
-  
+
   function beginTransaction(params) {
     return new Promise(
       (resolve, reject) => {

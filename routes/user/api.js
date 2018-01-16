@@ -225,13 +225,12 @@ module.exports = function(conn, admin) {
     var user_id = req.decoded.user_id;
     var avatar_image = req.body.avatar_image
     var nickname = req.body.nickname;
-    var introduction = req.body.introduction;
 
     function updateUserAccount() {
       return new Promise(
         (resolve, reject) => {
-          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ?, introduction = ? WHERE user_id = ?`;
-          conn.write.query(sql, [avatar_image, nickname, introduction, user_id], (err, results) => {
+          var sql = `UPDATE users_table SET avatar_image = ?, nickname = ? WHERE user_id = ?`;
+          conn.write.query(sql, [avatar_image, nickname, user_id], (err, results) => {
             if(err) reject(err);
             else {
               resolve([results]);
@@ -562,6 +561,148 @@ module.exports = function(conn, admin) {
           "success" : true,
           "message" : "select alarm and interview num",
           "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/user/report/newsfeed', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var newsfeed_id = req.body.newsfeed_id;
+    var newsfeed_comment_id = req.body.newsfeed_comment_id;
+    var newsfeed_report_data = {
+      user_id : user_id,
+      newsfeed_id : newsfeed_id,
+      newsfeed_comment_id : newsfeed_comment_id,
+    };
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM newsfeed_report_history_table
+          WHERE user_id = ? and newsfeed_comment_id = ?`;
+          conn.read.query(sql, [user_id, newsfeed_comment_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0]) {
+                res.json({
+                  "success" : false,
+                  "message" : "already reported"
+                });
+              }
+              else {
+                resolve();
+              }
+            }
+          });
+        }
+      )
+    }
+    function reportNewsfeed() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO newsfeed_report_history_table SET ?`;
+          conn.write.query(sql, newsfeed_report_data, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(reportNewsfeed)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "report newsfeed"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/user/report/project', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.body.project_id;
+    var project_participant_id = req.body.project_participant_id;
+    var feedback_id = (req.body.feedback_id) ? req.body.feedback_id : 0;
+    var opinion_id = (req.body.opinion_id) ? req.body.opinion_id : 0;
+    var interview_id = (req.body.interview_id) ? req.body.interview_id : 0;
+    var report_id = (req.body.report_id) ? req.body.report_id : 0;
+    var project_report_data = {
+      user_id : user_id,
+      project_id : project_id,
+      project_participant_id : project_participant_id,
+      feedback_id : feedback_id,
+      opinion_id : opinion_id,
+      interview_id : interview_id,
+      report_id : report_id
+    };
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM project_report_history_table
+          WHERE user_id = ?
+          and project_id = ?
+          and project_participant_id = ?
+          and feedback_id = ?
+          and opinion_id = ?
+          and interview_id = ?
+          and report_id = ?`;
+          conn.read.query(sql, [user_id, project_id, project_participant_id, feedback_id, opinion_id, interview_id, report_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0]) {
+                res.json({
+                  "success" : false,
+                  "message" : "already reported"
+                });
+              }
+              else {
+                resolve();
+              }
+            }
+          });
+        }
+      )
+    }
+    function reportProject() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO project_report_history_table SET ?`;
+          conn.write.query(sql, project_report_data, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(reportProject)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "report project"
         });
     })
     .catch((err) => {
@@ -1048,6 +1189,134 @@ module.exports = function(conn, admin) {
           "success" : true,
           "message" : "insert comment",
           "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/point-history', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function selectPointHistoryById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM point_history_table
+          LEFT JOIN projects_table
+          ON point_history_table.project_id = projects_table.project_id
+          WHERE user_id = ?
+          ORDER BY point_history_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectPointHistoryById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select point history",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.post('/point-exchange', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var is_accumulated = false;
+    var point = req.body.point;
+    var bank_name = req.body.bank_name;
+    var account_number = req.body.account_number;
+    var account_holder_name = req.body.account_holder_name;
+    var total_point;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table
+          WHERE user_id = ?`;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].point < point) {
+                res.json({
+                  "success" : false,
+                  "message" : "more point is needed"
+                });
+              }
+              else {
+                total_point = results[0].point - point;
+                resolve([{}]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function insertPointHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var point_data = {
+            user_id : user_id,
+            is_accumulated : is_accumulated,
+            point : point,
+            total_point : total_point,
+            bank_name : bank_name,
+            account_number : account_number,
+            account_holder_name : account_holder_name
+          }
+          var sql = `
+          INSERT INTO point_history_table SET ?`;
+          conn.write.query(sql, point_data, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function updateUserPoint(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE users_table SET point = ?`;
+          conn.write.query(sql, total_point, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(beginTransaction)
+    .then(insertPointHistory)
+    .then(updateUserPoint)
+    .then(endTransaction)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "point exchange"
         });
     })
     .catch((err) => {
@@ -1714,8 +1983,8 @@ module.exports = function(conn, admin) {
           }
           var sql = `
           INSERT INTO project_participation_history_table
-          (user_id, project_id, is_approved, project_participation_objective_conditions, introduction, gender, age, job, region, marriage, interests)
-          SELECT ?, ?, ?, ?, introduction, gender, age, job, region, marriage, interests FROM users_table WHERE user_id = ?`;
+          (user_id, project_id, is_approved, project_participation_objective_conditions, gender, age, job, region, marriage, interests)
+          SELECT ?, ?, ?, ?, gender, age, job, region, marriage, interests FROM users_table WHERE user_id = ?`;
           conn.write.query(sql, [participationData.user_id, participationData.project_id, participationData.is_approved, participationData.project_participation_objective_conditions, user_id], (err, results) => {
             if(err) console.log(err, sql);
             else {
@@ -2152,13 +2421,12 @@ module.exports = function(conn, admin) {
 
   route.post('/project/reward/:project_id', (req, res, next) => {
     // point 계산 (bestFeedback?, interview_num?)
-    // participants_table => satisfaction_rate, recommendation_rate, point 및 exp 등록
+    // participants_table => recommendation_rate, point 및 exp 등록
     // point 및 exp 추가
     // 레벨업 조건 검사 -> /user router에서 get할 때 검사해서 레벨업
     // client로 point, exp 정보 전송.
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
-    var satisfaction_rate = req.body.satisfaction_rate;
     var recommendation_rate = req.body.recommendation_rate;
     const feedback_reward = 1000;
     const opinion_reward = 100;
@@ -2295,9 +2563,9 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `UPDATE project_participants_table SET
-          project_satisfaction_rate = ?, project_recommendation_rate = ?, experience_point = ?, point = ?, project_reward_date = now()
+          project_recommendation_rate = ?, experience_point = ?, point = ?, project_reward_date = now()
           WHERE project_participant_id = ? and project_reward_date is null`;
-          conn.write.query(sql, [satisfaction_rate, recommendation_rate, params[0].experience_point, params[0].point, params[0].project_participant_id], (err, results) => {
+          conn.write.query(sql, [recommendation_rate, params[0].experience_point, params[0].point, params[0].project_participant_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               console.log(results);
@@ -2333,6 +2601,35 @@ module.exports = function(conn, admin) {
         }
       )
     }
+    function insertPointHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              var total_point = results[0].point + params[0].point;
+              var point_data = {
+                user_id : user_id,
+                is_accumulated : true,
+                project_id : project_id,
+                point : params[0].point,
+                total_point : total_point,
+              }
+              var sql = `
+              INSERT INTO point_history_table SET ?`;
+              conn.write.query(sql, point_data, (err, results) => {
+                if(err) rollback(reject, err);
+                else {
+                  resolve([params[0]]);
+                }
+              });
+            }
+          });
+        }
+      )
+    }
 
     selectProjectById()
     .then(selectProjectFeedbacks)
@@ -2340,6 +2637,7 @@ module.exports = function(conn, admin) {
     .then(beginTransaction)
     .then(updateRewardInfo)
     .then(updateUserPointAndExp)
+    .then(insertPointHistory)
     .then(endTransaction)
     .then((params) => {
       res.json(
