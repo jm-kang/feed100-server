@@ -370,6 +370,16 @@ hr.dark {
   position:relative;
 }
 
+.element-title h3 {
+  color:#333333;
+  font-weight:300;
+  font-size:26px;
+  line-height:1.5;
+  position:relative;
+}
+
+
+
 .element-title h4 {
   font-size:24px;
   color:#383C41;
@@ -956,6 +966,11 @@ h3.feed100-text {
 
 .md-text-center {
   text-align: center;
+}
+
+footer h6{
+  color: #8D95A0 !important;
+  line-height: 1.8;
 }
 
 @media (min-width: 768px) {

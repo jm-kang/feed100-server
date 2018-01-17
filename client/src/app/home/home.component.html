@@ -39,14 +39,22 @@
       <div class="collapse navbar-collapse" id="navcol-clean">
         <ul class="nav navbar-nav navbar-right">
           <li role="presentation" class="btn-nav-wrapper">
-            <button type="button" class="btn btn-nav">지금 프로젝트 신청하기</button>
+            <button type="button" class="btn btn-nav">
+              <a class="white-text" target="_blank" href="https://feed100.typeform.com/to/tZTmfg">
+                지금 프로젝트 신청하기
+              </a>
+            </button>
           </li>
         </ul>
       </div>
       <div *ngIf="isOpenSideMenu" class="side-menu">
         <ul class="nav navbar-nav navbar-right" [ngStyle]="{'borderTop': isOverScroll ? '1px solid #eee;' : '0'}">
           <li role="presentation" class="btn-nav-wrapper">
-            <button type="button" class="btn btn-nav">지금 프로젝트 신청하기</button>
+              <button type="button" class="btn btn-nav">
+                <a class="white-text" target="_blank" href="https://feed100.typeform.com/to/tZTmfg">
+                  지금 프로젝트 신청하기
+                </a>
+              </button>
           </li>
         </ul>
       </div>
@@ -128,7 +136,7 @@
     </div>
   </div>
 </section>
-<div class="linear-vertical"><span></span></div>
+<!-- <div class="linear-vertical"><span></span></div> -->
 <section class="element element-dual-content intro-section">
   <div class="container intro-container">
     <div class="row">
@@ -382,8 +390,10 @@
         <div class="service-icon center-sm-block text-center">
           <span><img [src]="features[2].illust" alt=""></span>
         </div>
-        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line">{{features[2].title}}</h2>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line">{{features[2].content}}</p>
+        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display">{{features[2].title}}</h2>
+        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display-none">{{features[2].title}}</h3>
+        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display">{{features[2].content}}</p>
+        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display-none"><small><small>{{features[2].content}}</small></small></p>
       </div>
       <div class="col-sm-4 col-sm-offset-1 col-sm-pull-1 z-index-1"><img class="img-responsive center-block m-t-sm-40" [src]="features[2].phoneImg" alt="image-alternative"></div>
       <div class="clearfix"></div>
@@ -397,8 +407,10 @@
         <div class="service-icon center-sm-block text-center">
           <span><img [src]="features[3].illust" alt=""></span>
         </div>
-        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line">{{features[3].title}}</h2>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 p-r-sm-0 pre-line">{{features[3].content}}</p>
+        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display">{{features[3].title}}</h2>
+        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display-none">{{features[3].title}}</h3>
+        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display">{{features[3].content}}</p>
+        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display-none"><small><small>{{features[3].content}}</small></small></p>
       </div>
       <div class="col-sm-6 col-sm-pull-6"><img class="img-responsive center-block m-b-sm-40" [src]="features[3].phoneImg" alt="image-alternative"></div>
       <div class="clearfix"></div>
@@ -412,7 +424,8 @@
     <div class="row">
       <div class="col-md-12">
         <div class="element-title">
-          <h2 class="text-center font-weight-400 m-b-25">지금 바로 <b>프로젝트를 신청</b>해보세요!</h2>
+          <h2 class="text-center font-weight-400 m-b-25 sm-display">지금 바로 <b>프로젝트를 신청</b>해보세요!</h2>
+          <h3 class="text-center font-weight-400 m-b-25 sm-display-none">지금 바로<br /><b>프로젝트를 신청</b><br />해보세요!</h3>
           <div class="linear-division m-b-50"></div>
         </div>
       </div>
@@ -451,7 +464,7 @@
             </div>
           </div>
           <div class="plan-price text-center col-sm-12"><span class="sale-price m-r-10" *ngIf="priceTable[0].unsaledPrice">&thinsp;{{priceTable[0].unsaledPrice}}&thinsp;</span><span class="price feed100-text">{{priceTable[0].price}} </span><span class="currency">만원 </span><span class="interval"> / 프로젝트 당</span></div>
-          <div class="plan-button col-sm-12"><a class="btn btn-project btn-block" role="button" href="#">지금 프로젝트 신청하기</a></div>
+          <div class="plan-button col-sm-12"><a class="btn btn-project btn-block" role="button" target="_blank" href="https://feed100.typeform.com/to/tZTmfg">지금 프로젝트 신청하기</a></div>
         </div>
       </div>
       <div class="clearfix"></div>
@@ -486,8 +499,10 @@
 
       <div class="col-md-6 col-md-offset-0 col-sm-8 col-sm-offset-2 m-t-30">
         <div class="element-title">
-          <h1 class="text-center font-weight-400 white-text"><span class="text-extend">지금 시작해 보세요!</span></h1>
-          <p class="text-center gray-text font-def font-weight-400">잠재고객 매칭 및 피드백 서비스</p>
+          <h1 class="text-center font-weight-400 white-text sm-display"><span class="text-extend">지금 시작해 보세요!</span></h1>
+          <h3 class="text-center font-weight-400 white-text sm-display-none"><span class="text-extend">지금 시작해 보세요!</span></h3>
+          <p class="text-center gray-text font-def font-weight-400 sm-display">잠재고객 매칭 및 피드백 서비스</p>
+          <p class="text-center gray-text font-def font-weight-400 sm-display-none"><small>잠재고객 매칭 및 피드백 서비스</small></p>
           <p class="text-center m-t-20 m-b-0">
             <a class="btn btn-default btn-box-shadow font-lg m-t-15 m-r-15 m-l-15" role="button" href="#">
               <svg width="22px" height="24px" class="vertical-align-sub m-r-10" viewBox="0 0 22 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -570,21 +585,62 @@
     </div>
   </div>
 </section>
-<footer class="dark-extended-bg p-b-20">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-6 col-md-push-6 footer-nav">
-        <ul class="list-inline text-right text-md-center m-t-5">
-          <li class="m-r-15"><a class="text-uppercase white-text font-xs" href="#">Our Story</a></li>
-          <li class="m-r-15"><a class="text-uppercase white-text font-xs" href="#">Terms</a></li>
-          <li><a class="text-uppercase white-text font-xs" href="#">Privacy</a></li>
-        </ul>
-      </div>
-      <div class="col-md-6 col-md-pull-6 copyright">
-        <p class="text-md-center">
-          <span class="text-uppercase white-text font-sm m-l-10">FEED100</span><span class="white-text font-xs m-l-35">© Copyright 2018. All rights reserved</span>
-        </p>
-      </div>
+
+
+<footer class="dark-extended-bg p-t-60 p-b-40">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-md-push-6 col-sm-12">
+                <ul class="list-unstyled">
+                    <li>
+                        <h6 class="text-right text-md-center">대표 성민규 | 사업자 등록번호 297-44-00248<br />대전광역시 유성구 대학로99 충남대학교 산학연교육연구관 9층 901호<br />전화 010-2449-2781 | 이메일 feed100.help@gmail.com</h6>
+                    </li>
+                    <li> <div class="text-right text-md-center"><a target="_blank" href="terms" class="semi-light-text font-sm">이용약관</a> | <a target="_blank" href="private-info-policy" class="semi-light-text font-sm">개인정보취급방침</a></div></li>
+                </ul>
+                
+            </div>
+            <div class="col-md-6 col-md-pull-6 col-sm-12">
+                <p class="footer-logo clearfix text-md-center m-b-5 p-t-md-40">
+                    <svg width="50.74px" height="24px" class="vertical-align-sub" viewBox="0 0 50.74 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                      <defs>
+                        <style>.letter-logo-1{fill:none;stroke:#fff;stroke-miterlimit:10;stroke-width:0.75px;}.letter-logo-2{fill:#fff;}</style>
+                      </defs>
+                      <title>letter-logo</title>
+                      <g id="layer-letter-logo1" data-name="layer-letter-logo1">
+                        <g id="layer-letter-logo2" data-name="layer-letter-logo2">
+                          <line class="letter-logo-1" x1="50.74" y1="11.62" y2="11.62"/>
+                          <path class="letter-logo-2" d="M1.77,7.91a.13.13,0,0,1-.15.15H1.14A.13.13,0,0,1,1,7.91V.46C1,.3,1,.21,1,.18a.51.51,0,0,1,.27,0h1.9A2.74,2.74,0,0,1,5,.7a2.1,2.1,0,0,1,.68,1.69,2.35,2.35,0,0,1-.2,1A2,2,0,0,1,5,4.11a2.4,2.4,0,0,1-.83.44,3,3,0,0,1-1,.13H1.77ZM4.93,2.39a1.62,1.62,0,0,0-.39-1.17A1.54,1.54,0,0,0,3.37.81H1.77V4h.87A7.14,7.14,0,0,0,3.56,4a1.86,1.86,0,0,0,.7-.22,1.22,1.22,0,0,0,.46-.49A2.05,2.05,0,0,0,4.93,2.39Z"/>
+                          <path class="letter-logo-2" d="M17.85,4.11a4.72,4.72,0,0,1-.88,3,3.17,3.17,0,0,1-2.62,1.15,3.2,3.2,0,0,1-2.63-1.15,4.64,4.64,0,0,1-.88-3,5.6,5.6,0,0,1,.21-1.6,4.15,4.15,0,0,1,.62-1.27A3.36,3.36,0,0,1,12.85.33a3.7,3.7,0,0,1,3,0A3.23,3.23,0,0,1,17,1.25a4.31,4.31,0,0,1,.63,1.29A5.24,5.24,0,0,1,17.85,4.11Zm-.78,0a4.61,4.61,0,0,0-.17-1.27,4,4,0,0,0-.48-1.08A2.67,2.67,0,0,0,15.53,1a2.58,2.58,0,0,0-2.35,0,2.66,2.66,0,0,0-.89.81,4,4,0,0,0-.48,1.08,4.59,4.59,0,0,0-.17,1.27,4.65,4.65,0,0,0,.17,1.28,4,4,0,0,0,.48,1.08,2.85,2.85,0,0,0,.91.8,2.37,2.37,0,0,0,1.16.29,2.4,2.4,0,0,0,1.17-.28,2.66,2.66,0,0,0,.89-.81,4,4,0,0,0,.48-1.08A4.66,4.66,0,0,0,17.07,4.11Z"/>
+                          <path class="letter-logo-2" d="M25.94.82V7.91a.13.13,0,0,1-.15.15H25.3a.13.13,0,0,1-.15-.15V.82H23A.13.13,0,0,1,22.8.67V.31A.13.13,0,0,1,23,.16h5.21a.13.13,0,0,1,.15.15V.67a.13.13,0,0,1-.15.15Z"/>
+                          <path class="letter-logo-2" d="M33.84,8.07a.5.5,0,0,1-.26,0,.49.49,0,0,1,0-.26V.42a.43.43,0,0,1,0-.24.43.43,0,0,1,.24,0h3.71a.13.13,0,0,1,.15.15V.66a.13.13,0,0,1-.15.15h-3.2V3.63h3a.13.13,0,0,1,.15.15v.38a.13.13,0,0,1-.15.15h-3V7.39h3.33a.13.13,0,0,1,.15.15v.38a.13.13,0,0,1-.15.15Z"/>
+                          <path class="letter-logo-2" d="M44.28,8.06H43.8a.13.13,0,0,1-.15-.15V.44a.49.49,0,0,1,0-.26.49.49,0,0,1,.26,0h.49a.44.44,0,0,1,.19,0,.31.31,0,0,1,.1.12l4,6.91V.29A.13.13,0,0,1,48.9.14h.47a.13.13,0,0,1,.15.15V7.76a.5.5,0,0,1,0,.26.5.5,0,0,1-.26,0h-.65l-.12,0a.34.34,0,0,1-.09-.11L44.43,1.14V7.91A.13.13,0,0,1,44.28,8.06Z"/>
+                          <path class="letter-logo-2" d="M4.68,21.58q0,2.25-3.09,2.25H.3a.5.5,0,0,1-.26,0,.5.5,0,0,1,0-.26v-7.3A.5.5,0,0,1,0,16s.11,0,.26,0H1.9q2.53,0,2.53,1.94A1.66,1.66,0,0,1,3,19.68a2.55,2.55,0,0,1,1.23.71A1.73,1.73,0,0,1,4.68,21.58Zm-.79,0a1.31,1.31,0,0,0-.58-1.17,3.37,3.37,0,0,0-1.83-.38H.79v3.1h.82Q3.89,23.16,3.89,21.62ZM3.64,17.9q0-1.31-1.74-1.31H.81v2.79H1.7A2.32,2.32,0,0,0,3.16,19,1.31,1.31,0,0,0,3.64,17.9Z"/>
+                          <path class="letter-logo-2" d="M12.81,23.68a.13.13,0,0,1,0,.1.08.08,0,0,1-.09,0h-.56a.25.25,0,0,1-.24-.15q-.48-1-.8-1.64l-.5-1-.34-.67a2.84,2.84,0,0,1-.45.06l-.53,0h-.9v3.24a.13.13,0,0,1-.15.15H7.78a.13.13,0,0,1-.15-.15V16.25c0-.08,0-.14,0-.18a.15.15,0,0,1,0-.1.15.15,0,0,1,.1,0H10a3,3,0,0,1,1.05.17,2,2,0,0,1,.74.46,1.88,1.88,0,0,1,.44.73,3,3,0,0,1,.14.95,1.67,1.67,0,0,1-.11.61,2.11,2.11,0,0,1-.3.53,2.66,2.66,0,0,1-.44.44,2.84,2.84,0,0,1-.52.33Zm-1.27-5.45a2.52,2.52,0,0,0-.1-.76A1.07,1.07,0,0,0,11.1,17a1.47,1.47,0,0,0-.62-.28,4.54,4.54,0,0,0-1-.09H8.41v3.18H9.53a2.89,2.89,0,0,0,.81-.11,1.92,1.92,0,0,0,.64-.31,1.46,1.46,0,0,0,.42-.49A1.34,1.34,0,0,0,11.54,18.23Z"/>
+                          <path class="letter-logo-2" d="M22,19.88a4.72,4.72,0,0,1-.88,3A3.17,3.17,0,0,1,18.47,24a3.2,3.2,0,0,1-2.63-1.15,4.63,4.63,0,0,1-.88-3,5.61,5.61,0,0,1,.21-1.6A4.14,4.14,0,0,1,15.8,17,3.36,3.36,0,0,1,17,16.09a3.69,3.69,0,0,1,3,0,3.23,3.23,0,0,1,1.15.93,4.31,4.31,0,0,1,.63,1.29A5.24,5.24,0,0,1,22,19.88Zm-.78,0A4.61,4.61,0,0,0,21,18.61a4,4,0,0,0-.48-1.08,2.67,2.67,0,0,0-.89-.81,2.58,2.58,0,0,0-2.35,0,2.66,2.66,0,0,0-.89.81,4,4,0,0,0-.48,1.08,4.59,4.59,0,0,0-.17,1.27,4.65,4.65,0,0,0,.17,1.28,4,4,0,0,0,.48,1.08,2.84,2.84,0,0,0,.91.8,2.37,2.37,0,0,0,1.16.29A2.4,2.4,0,0,0,19.64,23a2.67,2.67,0,0,0,.89-.81A4,4,0,0,0,21,21.15,4.67,4.67,0,0,0,21.18,19.88Z"/>
+                          <path class="letter-logo-2" d="M27.07,16.59v7.09a.13.13,0,0,1-.15.15h-.49a.13.13,0,0,1-.15-.15V16.59h-2.2a.13.13,0,0,1-.15-.15v-.36a.13.13,0,0,1,.15-.15h5.21a.13.13,0,0,1,.15.15v.36a.13.13,0,0,1-.15.15Z"/>
+                          <path class="letter-logo-2" d="M32,23.84c-.15,0-.24,0-.26,0a.49.49,0,0,1,0-.26V16.18a.43.43,0,0,1,0-.24.44.44,0,0,1,.24,0h3.71a.13.13,0,0,1,.15.15v.37a.13.13,0,0,1-.15.15h-3.2V19.4h3a.13.13,0,0,1,.15.15v.38a.13.13,0,0,1-.15.15h-3v3.08h3.33a.13.13,0,0,1,.15.15v.38a.13.13,0,0,1-.15.15Z"/>
+                          <path class="letter-logo-2" d="M44.1,23.68a.13.13,0,0,1,0,.1.08.08,0,0,1-.09,0h-.56a.25.25,0,0,1-.24-.15q-.48-1-.8-1.64l-.5-1-.34-.67a2.84,2.84,0,0,1-.45.06l-.53,0h-.9v3.24a.13.13,0,0,1-.15.15h-.48a.13.13,0,0,1-.15-.15V16.25c0-.08,0-.14,0-.18a.15.15,0,0,1,0-.1.15.15,0,0,1,.1,0h2.2a3,3,0,0,1,1.05.17,2,2,0,0,1,.74.46,1.88,1.88,0,0,1,.44.73,3,3,0,0,1,.14.95,1.67,1.67,0,0,1-.11.61,2.11,2.11,0,0,1-.3.53,2.66,2.66,0,0,1-.44.44,2.84,2.84,0,0,1-.52.33Zm-1.27-5.45a2.52,2.52,0,0,0-.1-.76,1.07,1.07,0,0,0-.34-.51,1.47,1.47,0,0,0-.62-.28,4.54,4.54,0,0,0-1-.09H39.7v3.18h1.12a2.89,2.89,0,0,0,.81-.11,1.92,1.92,0,0,0,.64-.31,1.46,1.46,0,0,0,.42-.49A1.34,1.34,0,0,0,42.83,18.23Z"/>
+                          <path class="letter-logo-2" d="M46.45,23.72c-.11,0-.16-.1-.14-.19l0-.49a.19.19,0,0,1,.07-.12.1.1,0,0,1,.11,0,3.07,3.07,0,0,0,.75.29,3.75,3.75,0,0,0,.87.09,1.88,1.88,0,0,0,1.28-.43,1.5,1.5,0,0,0,.5-1.21,1,1,0,0,0-.24-.62,2.7,2.7,0,0,0-.67-.59q-.37-.23-.84-.49a8.92,8.92,0,0,1-.9-.56,3.28,3.28,0,0,1-.72-.68,1.41,1.41,0,0,1-.29-.88,1.85,1.85,0,0,1,.21-.9,2,2,0,0,1,.57-.65,2.67,2.67,0,0,1,.82-.4,3.22,3.22,0,0,1,.94-.14,5,5,0,0,1,.74,0,4.59,4.59,0,0,1,.69.17c.11,0,.15.1.13.19l-.09.42c0,.12-.08.15-.18.1a2.3,2.3,0,0,0-.58-.19,4.41,4.41,0,0,0-.72,0,2.54,2.54,0,0,0-.67.09,1.61,1.61,0,0,0-.54.26,1.29,1.29,0,0,0-.37.43,1.26,1.26,0,0,0-.14.61.85.85,0,0,0,.19.52,2.57,2.57,0,0,0,.46.46,4.57,4.57,0,0,0,.59.39l.57.33.68.42a3.28,3.28,0,0,1,.59.48,2.4,2.4,0,0,1,.42.59,1.63,1.63,0,0,1,.16.74,2,2,0,0,1-.22,1,2.21,2.21,0,0,1-.58.7,2.64,2.64,0,0,1-.84.44,3.17,3.17,0,0,1-1,.16,4.93,4.93,0,0,1-.84-.06A6.08,6.08,0,0,1,46.45,23.72Z"/>
+                        </g>
+                      </g>
+</svg><span class="text-uppercase font-sm m-l-15 white-text">포텐브라더스</span></p>
+                <p class="copyright font-sm light-text clearfix text-md-center m-b-10">© Copyright 2018 포텐브라더스. All rights reserved</p>
+                <!-- <div class="social-icons clearfix text-md-center">
+                  <a href="#" target="_blank" class="m-r-20" data-toggle="tooltip" title="Facebook">
+                    <i class="fa fa-facebook-official facebook"></i>
+                  </a>
+                  <a href="#" target="_blank" class="m-r-20" data-toggle="tooltip" title="Google+">
+                    <i class="fa fa-google-plus google-plus"></i>
+                  </a>
+                  <a href="#" target="_blank" class="m-r-20" data-toggle="tooltip" title="Twitter">
+                    <i class="fa fa-twitter twitter"></i>
+                  </a>
+                  <a href="#" target="_blank" data-toggle="tooltip" title="Instagram">
+                    <i class="fa fa-instagram instagram"></i>
+                  </a>
+                </div> -->
+            </div>
+            <div class="clearfix"></div>
+        </div>
     </div>
-  </div>
 </footer>

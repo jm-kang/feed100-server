@@ -69,7 +69,7 @@ export class HomeComponent implements OnInit {
 
   features = [
     {
-      title: "원하는 고객으로부터 리얼 피드백을!",
+      title: "원하는 고객으로부터\n리얼 피드백을!",
       content: "경험과 이해를 바탕으로 작성하는 피드백!\n매칭된 고객들이 서로 의견을 나누는 토론!\n고객이 프로젝트를 진행하며 겪은 경험을 종합한 심층 피드백!",
       phoneImg: "assets/img/phone-mokup-1.png",
       illust: "assets/illust/illust-1.png",
