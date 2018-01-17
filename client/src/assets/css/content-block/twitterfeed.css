@@ -1,0 +1,64 @@
+.element-twitterfeed {
+  background:linear-gradient(-270deg, #4697ff 0%, #41bfff 100%);
+}
+
+.element-twitterfeed .element-title .inline-title {
+  background:-webkit-linear-gradient(135deg, #35a8fa 0%, #3892f8 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.element-statistics + .element-twitterfeed {
+  background:linear-gradient(0deg, #41C0FF 1%, #4697FF 99%);
+}
+
+.element-statistics + .element-twitterfeed .element-title .inline-title {
+  background:-webkit-linear-gradient(-90deg, #3791f7 1%, #3d9cfe 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.twitterfeed {
+  background:#FFFFFF;
+  box-shadow:0 4px 12px 0 rgba(0,0,0,0.20);
+  border-radius:8px;
+  padding:35px 25px 25px;
+  position:relative;
+  overflow:hidden;
+}
+
+.twitterfeed i.twitterfeed-icon {
+  position:absolute;
+  right:0.9em;
+  top:0.8em;
+  color:#00AAEC;
+  font-size:20px;
+}
+
+.twitterfeed .user-meta .meta p {
+  font-size:16px;
+  color:#383C41;
+  letter-spacing:0;
+  line-height:22px;
+}
+
+.twitterfeed .user-meta .meta a {
+  font-size:12px;
+  color:#A5ADBB;
+  letter-spacing:0;
+  line-height:0;
+  text-decoration:none;
+}
+
+.twitterfeed .tweet-content p {
+  font-size:14px;
+  color:#848991;
+  letter-spacing:0;
+  line-height:22px;
+}
+
+.twitterfeed .tweet-content p a {
+  color:#47AAFF;
+  text-decoration:none;
+}
+

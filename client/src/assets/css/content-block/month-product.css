@@ -1,0 +1,13 @@
+.month-product-shapes {
+  position:absolute;
+  bottom:200px;
+  left:auto;
+  right:0;
+}
+
+@media (max-width:1200px) {
+  .month-product-shapes {
+    bottom:150px;
+  }
+}
+

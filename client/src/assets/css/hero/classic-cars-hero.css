@@ -1,0 +1,31 @@
+.element-classic-cars-hero .element-title h1 {
+  font-size:72px;
+}
+
+@media (max-width:992px) {
+  .element-classic-cars-hero .element-title h1 {
+    font-size:62px;
+  }
+}
+
+@media (max-width:768px) {
+  .element-classic-cars-hero .element-title h1 {
+    font-size:52px;
+  }
+}
+
+.scroll-down {
+  position:absolute;
+  width:100%;
+  left:0;
+  bottom:30px;
+  text-align:center;
+}
+
+.scroll-down a {
+  font-size:30px;
+  padding:0 10px;
+  border-radius:50%;
+  border:3px solid #FFF;
+}
+

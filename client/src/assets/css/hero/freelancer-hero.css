@@ -1,0 +1,24 @@
+.element-freelancer-hero .element-title h1 {
+  font-size:48px;
+  letter-spacing:0;
+  line-height:60px;
+}
+
+.element-freelancer-hero .avatars li img {
+  box-shadow:0 4px 16px 0 rgba(0,0,0,0.40);
+}
+
+.element-freelancer-hero .avatars li:first-of-type img, .element-freelancer-hero .avatars li:last-of-type img {
+  box-shadow:0 2px 12px 0 rgba(0,0,0,0.40);
+}
+
+.element-freelancer-hero .avatars li:first-of-type {
+  margin-right:-50px;
+  transform:scale(0.7);
+}
+
+.element-freelancer-hero .avatars li:last-of-type {
+  margin-left:-50px;
+  transform:scale(0.7);
+}
+

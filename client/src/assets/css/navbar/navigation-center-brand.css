@@ -1,0 +1,94 @@
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand .navbar-brand {
+    position:absolute;
+    width:calc(100% + 30px);
+    left:0;
+    top:0.5em;
+    text-align:center;
+    margin:auto;
+  }
+}
+
+.navigation-clean.navigation-center-brand .navbar-nav > li > a {
+  font-size:13px;
+  color:#383C41;
+  letter-spacing:0;
+}
+
+@media (min-width:992px) {
+  .navigation-clean.navigation-center-brand.navbar-transparent .navbar-nav > li > a {
+    color:#FFFFFF;
+  }
+}
+
+.navigation-clean.navigation-center-brand .navbar-nav > li > a:focus, .navigation-clean.navigation-center-brand .navbar-nav > li > a:hover {
+  color:#574DFD !important;
+  background-color:transparent;
+}
+
+@media (min-width:992px) {
+  .navigation-clean.navigation-center-brand.navbar-transparent .navbar-nav > li > a:focus, .navigation-clean.navigation-center-brand.navbar-transparent .navbar-nav > li > a:hover {
+    color:#FFFFFF !important;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-nav > li > a {
+    margin-top:15px;
+    margin-bottom:15px;
+    padding:0 48px;
+    border-right-color:#E4E7EC;
+    border-right-style:solid;
+    border-right-width:1px;
+  }
+}
+
+@media (max-width:992px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-nav > li > a {
+    padding-left:28px;
+    padding-right:28px;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-left > li:first-child > a {
+    margin-left:0;
+    padding-left:0;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-left > li:last-child > a {
+    margin-right:0;
+    padding-right:0;
+    border-right:none;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-right > li:first-child > a {
+    margin-left:0;
+    padding-left:0;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-right > li:last-child > a {
+    margin-right:0;
+    padding-right:0;
+    border-right:none;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-left {
+    margin-left:0;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-center-brand.navbar .navbar-right {
+    margin-right:0;
+  }
+}
+

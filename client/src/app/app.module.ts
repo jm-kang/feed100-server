@@ -5,7 +5,6 @@ import { MomentModule } from 'angular2-moment';
 import { MatPaginatorModule, MatTableModule, MatFormFieldModule, MatInputModule, 
   MatSortModule, MatButtonModule, MatDialogModule, MatDatepickerModule, MatNativeDateModule,
   MAT_DATE_LOCALE } from '@angular/material';
-
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from './app.component';
@@ -22,6 +21,10 @@ import { TermsComponent } from './terms/terms.component';
 import { ReportListComponent } from './report-list/report-list.component';
 import { PointExchangeListComponent } from './point-exchange-list/point-exchange-list.component';
 import { PointExchangeDialogComponent } from './point-exchange-dialog/point-exchange-dialog.component';
+
+import { ScrollToModule } from 'ng2-scroll-to';
+
+import { WINDOW_PROVIDERS } from "./window.service";
 
 const ROUTES = [
   {
@@ -105,6 +108,7 @@ const ROUTES = [
     MatDatepickerModule,
     MatNativeDateModule,
     BrowserAnimationsModule,
+    ScrollToModule.forRoot(),
     RouterModule.forRoot(ROUTES)
   ],
   entryComponents: [
@@ -112,7 +116,8 @@ const ROUTES = [
   ],
   providers: [
     HttpServiceService,
-    {provide: MAT_DATE_LOCALE, useValue: 'ko-KR'}
+    {provide: MAT_DATE_LOCALE, useValue: 'ko-KR'},
+    WINDOW_PROVIDERS
   ],
   bootstrap: [AppComponent]
 })

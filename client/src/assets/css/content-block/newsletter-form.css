@@ -1,0 +1,56 @@
+.element-newsletter-form .element-title .inline-title {
+  background:-webkit-linear-gradient(360deg, #ff8a54 0%, #ff4d4f 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.newsletter-subscribe-form {
+  margin:40px auto 15px;
+  background:#FFFFFF;
+  box-shadow:0 2px 12px 0 rgba(0,0,0,0.20);
+  border-radius:444px;
+}
+
+.newsletter-subscribe-form.bordered {
+  box-shadow:none;
+  border:1px solid #E4E7EC;
+}
+
+.newsletter-subscribe-form .input-group {
+  padding-right:5px;
+}
+
+.newsletter-subscribe-form .input-group input {
+  background:transparent;
+  color:#383C41;
+  font-size:16px;
+  box-shadow:none;
+  outline:none;
+  border:none;
+  height:60px;
+  padding:10px 40px;
+}
+
+.newsletter-subscribe-form div.input-group-btn .btn {
+  outline:none;
+  border-radius:444px;
+  letter-spacing:0;
+  padding:15px 45px;
+}
+
+.newsletter-subscribe-form.rounded {
+  border-radius:3px;
+}
+
+.newsletter-subscribe-form.rounded .input-group input {
+  padding:12px 22px;
+  height:44px;
+}
+
+.newsletter-subscribe-form.rounded div.input-group-btn .btn {
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:12px 22px;
+}
+

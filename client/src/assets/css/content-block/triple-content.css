@@ -1,0 +1,59 @@
+.element.element-triple-content {
+  overflow:hidden;
+  background-image:url('../../../assets/img/classic-cars-left-to-right-triple-content-bg.png'), url('../../../assets/img/classic-cars-right-to-left-triple-content-bg.png'), url('../../../assets/img/classic-cars-triple-content-bg.jpg');
+  background-repeat:no-repeat;
+  background-position:center left -600px, center right -600px, top center;
+  background-size:970px, 970px, cover;
+  -webkit-transition:background-position ease 1.2s;
+  -ms-transition:background-position ease 1.2s;
+  transition:background-position ease 1.2s;
+}
+
+.element-triple-content .heading {
+  font-size:100px;
+}
+
+@media (max-width:1200px) {
+  .element.element-triple-content {
+    background-position:center left -200px, center right -200px, top center;
+    background-size:450px, 450px, cover;
+  }
+}
+
+@media (max-width:992px) {
+  .element.element-triple-content {
+    padding-top:50px;
+    padding-bottom:50px;
+    background-position:top 150px left -150px, top 150px right -150px, top -170px center;
+    background-size:500px, 500px, cover;
+  }
+}
+
+@media (max-width:992px) {
+  .element-triple-content .heading {
+    font-size:80px;
+  }
+}
+
+@media (max-width:768px) {
+  .element.element-triple-content {
+    background-position:top 110px left -20px, top 110px right -20px, top -170px center;
+    background-size:200px, 200px, cover;
+  }
+}
+
+@media (max-width:768px) {
+  .element-triple-content .heading {
+    font-size:60px;
+  }
+}
+
+.element-triple-content .clouds.element-parallax {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+}
+

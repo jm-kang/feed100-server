@@ -1,0 +1,18 @@
+.element-demo-select-hero .element-title h1 {
+  font-size:68px;
+  letter-spacing:0;
+  line-height:60px;
+}
+
+@media (max-width:992px) {
+  .element-demo-select-hero .element-title h1 {
+    font-size:58px;
+  }
+}
+
+@media (max-width:768px) {
+  .element-demo-select-hero .element-title h1 {
+    font-size:48px;
+  }
+}
+

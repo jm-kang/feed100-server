@@ -1,0 +1,30 @@
+.element-single-product .form-header h2 {
+  font-size:36px;
+}
+
+.element-single-product .image .price-tag {
+  position:absolute;
+  left:0;
+  top:0;
+  right:auto;
+  border-radius:44px;
+  padding:10px 40px;
+}
+
+@media (max-width:992px) {
+  .element-single-product .image .price-tag {
+    left:15px;
+  }
+}
+
+.element-single-product .content + .image .price-tag {
+  right:0;
+  left:auto;
+}
+
+@media (max-width:992px) {
+  .element-single-product .content + .image .price-tag {
+    right:15px;
+  }
+}
+

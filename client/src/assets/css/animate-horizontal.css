@@ -1,0 +1,37 @@
+@keyframes animate-horizontal {
+  0% {
+    -moz-transform:translate3d(0, 0, 0);
+    -webkit-transform:translate3d(0, 0, 0);
+    -ms-transform:translate3d(0, 0, 0);
+    transform:translate3d(0, 0, 0);
+  }
+  100% {
+    -moz-transform:translate3d(-3689px, 0, 0);
+    -webkit-transform:translate3d(-3689px, 0, 0);
+    -ms-transform:translate3d(-3689px, 0, 0);
+    transform:translate3d(-3689px, 0, 0);
+  }
+}
+
+.element-animate-horizontal {
+  -moz-animation:animate-horizontal 60s linear infinite;
+  -webkit-animation:animate-horizontal 60s linear infinite;
+  -ms-animation:animate-horizontal 60s linear infinite;
+  animation:animate-horizontal 60s linear infinite;
+  -moz-backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  -ms-backface-visibility:hidden;
+  backface-visibility:hidden;
+  -moz-transform:translate3d(0,0,0);
+  -webkit-transform:translate3d(0,0,0);
+  -ms-transform:translate3d(0,0,0);
+  transform:translate3d(0,0,0);
+  background-repeat:repeat-x;
+  background-size:3689px auto;
+  width:8189px;
+  height:100%;
+  position:absolute;
+  top:0;
+  left:0;
+}
+

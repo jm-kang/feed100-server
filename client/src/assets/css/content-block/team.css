@@ -1,0 +1,88 @@
+.team-bg {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+}
+
+.team-member {
+  background:#FFFFFF;
+  box-shadow:0 4px 12px 0 rgba(0,0,0,0.20);
+  border-radius:4px;
+}
+
+.team-member .user-avatar {
+  padding:40px 25px 15px;
+}
+
+.team-member .meta {
+  padding:5px 25px;
+}
+
+.team-member .meta p {
+  font-size:18px;
+  color:#383C41;
+  line-height:22px;
+  letter-spacing:0;
+}
+
+.team-member .meta a {
+  font-size:12px;
+  color:#6B717B;
+  letter-spacing:0;
+  line-height:0;
+  text-decoration:none;
+}
+
+.team-member .skills {
+  padding:10px 25px 0;
+  text-align:center;
+}
+
+.team-member .skills ul li:not(.see-more) {
+  background:#E4E7EC;
+  border-radius:44px;
+  font-size:12px;
+  color:#6B717B;
+  letter-spacing:0;
+  text-decoration:none;
+  padding:0 15px;
+  margin-right:5px;
+  margin-bottom:10px;
+}
+
+.team-member .skills ul li:not(.see-more) a {
+  font-size:inherit;
+  color:inherit;
+  text-decoration:none;
+  line-height:1.42857143;
+}
+
+.team-member .skills ul li.see-more a {
+  font-size:14px;
+  color:#47AAFF;
+  letter-spacing:0;
+  text-decoration:none;
+  line-height:1.42857143;
+  padding:0;
+}
+
+.team-member .contact {
+  background:#FFC025;
+  border-radius:0 0 4px 4px;
+  font-size:14px;
+  color:#FFFFFF;
+  letter-spacing:0;
+  text-align:center;
+  padding:15px;
+  margin-top:-10px;
+}
+
+.team-member .contact a {
+  display:block;
+  font-size:inherit;
+  color:inherit;
+  text-decoration:none;
+}
+

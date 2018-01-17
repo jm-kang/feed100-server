@@ -1,0 +1,22 @@
+.brands {
+  display:block;
+  text-align:center;
+  padding:40px 0;
+}
+
+.brands a {
+  display:inline-block;
+  margin:10px 20px;
+  vertical-align:middle;
+}
+
+.brands .owl-item:not(.active.center) a {
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-color:#c2cad3;
+}
+
+.brands .owl-item:not(.active.center) a img {
+  visibility:hidden;
+}
+

@@ -1,0 +1,57 @@
+.element-application-hero .element-title h1 {
+  font-size:48px;
+  color:#383C41;
+  letter-spacing:0;
+  line-height:60px;
+}
+
+@media (max-width:768px) {
+  .element-application-hero .element-title h1 {
+    font-size:38px;
+  }
+}
+
+.element-application-hero .phone-wrap {
+  position:relative;
+  z-index:5;
+  width:100%;
+  max-width:1300px;
+  margin:0 auto;
+  padding:0 15px;
+}
+
+.element-application-hero .phone-wrap .phone {
+  position:relative;
+  z-index:5;
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
+}
+
+.element-application-hero .phone-wrap .mid-phone {
+  position:relative !important;
+}
+
+.element-application-hero .phone-wrap .left-phone {
+  position:absolute;
+  width:100%;
+  max-width:306px;
+  z-index:3 !important;
+  top:10% !important;
+  left:0 !important;
+}
+
+.element-application-hero .phone-wrap .right-phone {
+  position:absolute;
+  width:100%;
+  max-width:306px;
+  z-index:3 !important;
+  top:10% !important;
+  right:0 !important;
+  left:auto !important;
+}
+
+body:not(.mobile-device) .element-application-hero.layer-parallax + .element {
+  margin-top:-1.44em;
+}
+

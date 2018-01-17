@@ -1,0 +1,22 @@
+.form-box {
+  background:#FFFFFF;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 2px 4px 0 rgba(0,0,0,0.25);
+}
+
+.form-box:before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:6px;
+  background:linear-gradient(90deg, #31DAFF 0%, #538DFF 100%);
+}
+
+.form-box .form-group {
+  padding-left:25px;
+  padding-right:25px;
+}
+

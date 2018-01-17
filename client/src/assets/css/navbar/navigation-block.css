@@ -1,0 +1,30 @@
+@media (min-width:768px) {
+  .navigation-clean.navigation-block .navbar-left {
+    display:block;
+    clear:both;
+  }
+}
+
+@media (min-width:768px) {
+  .navigation-clean.navigation-block .navbar-left > li:first-child > a {
+    padding-left:0;
+  }
+}
+
+.navigation-clean.navigation-block .navbar-right {
+  position:absolute;
+  top:15px;
+  right:15px;
+}
+
+.navigation-clean.navigation-block .navbar-right.social-icons {
+  margin:0;
+}
+
+@media (min-width:992px) {
+  .navigation-clean.navigation-block.navbar-transparent .navbar-right.social-icons a i {
+    color:#fff;
+    -webkit-text-fill-color:#fff;
+  }
+}
+

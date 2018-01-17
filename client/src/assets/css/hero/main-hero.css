@@ -1,0 +1,30 @@
+.element.element-software-hero {
+  background:linear-gradient(90deg, #4641FF 0%, #876EFF 100%);
+}
+
+.element-software-hero .element-title {
+  padding-top:210px;
+}
+
+.element-software-hero .element-title h1 {
+  font-size:100px;
+  letter-spacing:0;
+}
+
+@media (max-width:768px) {
+  .element-software-hero .element-title h1 {
+    font-size:80px;
+  }
+}
+
+.element-software-hero .hero-brand {
+  position:relative;
+}
+
+.element-software-hero .hero-brand .hero-brand-shape {
+  position:absolute;
+  bottom:0;
+  left:calc(50% - 109px);
+  z-index:-1;
+}
+
