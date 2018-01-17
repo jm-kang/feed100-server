@@ -173,6 +173,167 @@ module.exports = function(conn, admin) {
 
   });
 
+  route.get('/reports', (req, res, next) => {
+
+    function selectProjectReports(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *, project_name,
+          IF(report_id, '심층 피드백',
+          IF(interview_id, '인터뷰',
+          IF(opinion_id, '토론', '피드백')))
+          as what
+          FROM project_report_history_table
+          LEFT JOIN projects_table
+          ON project_report_history_table.project_id = projects_table.project_id
+          ORDER BY project_report_history_id DESC`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].project_report = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function selectNewsfeedReports(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *, newsfeed_name
+          FROM newsfeed_report_history_table
+          LEFT JOIN newsfeeds_table
+          ON newsfeed_report_history_table.newsfeed_id = newsfeeds_table.newsfeed_id
+          ORDER BY newsfeed_report_history_id DESC`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].newsfeed_report = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProjectReports([{}])
+    .then(selectNewsfeedReports)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select report history",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/point-histories', (req, res, next) => {
+
+    function selectPointHistoryNotCompleted(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM point_history_table
+          WHERE is_accumulated = 0 and is_completed = 0
+          ORDER BY point_history_id DESC`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].isNotCompleted = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function selectPointHistoryCompleted(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM point_history_table
+          WHERE is_accumulated = 0 and is_completed = 1
+          ORDER BY deposit_date DESC`;
+          conn.read.query(sql, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].isCompleted = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectPointHistoryNotCompleted([{}])
+    .then(selectPointHistoryCompleted)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select point history",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.put('/point-exchange', (req, res, next) => {
+    var point_history_id = req.body.point_history_id;
+    var admin_name = req.body.admin_name;
+    var deposit_amount = req.body.deposit_amount;
+    var deposit_date = req.body.deposit_date;
+    var admin_data = {
+      "is_completed" : true,
+      "admin_name" : admin_name,
+      "deposit_amount" : deposit_amount,
+      "deposit_date" : deposit_date
+    }
+
+    function updatePointHistory() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE point_history_table SET ? WHERE point_history_id = ?`;
+          conn.read.query(sql, [admin_data, point_history_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updatePointHistory()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update point history",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
   route.get('/send-test/:device_token', (req, res, next) => {
     console.log(req.params.device_token);
     sendFCM(req.params.device_token, "Hello FEED100");

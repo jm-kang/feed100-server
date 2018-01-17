@@ -141,4 +141,35 @@ export class HttpServiceService {
     return this.http.post(url, data, { headers: headers }).map(res => res.json());
   }
 
+  getReportList() {
+    let url = this.getServerUrl() + '/admin/api/reports';
+    let headers = new Headers();
+    headers.append('Content-type', 'application/json');
+
+    let accessToken = localStorage.getItem('accessToken');
+    headers.append('x-access-token', accessToken);
+    return this.http.get(url, { headers: headers }).map(res => res.json());
+  }
+
+  getPointHistories() {
+    let url = this.getServerUrl() + '/admin/api/point-histories';
+    let headers = new Headers();
+    headers.append('Content-type', 'application/json');
+
+    let accessToken = localStorage.getItem('accessToken');
+    headers.append('x-access-token', accessToken);
+    return this.http.get(url, { headers: headers }).map(res => res.json());
+  }
+
+  completeExchange(data) {
+    let url = this.getServerUrl() + '/admin/api/point-exchange';
+    let headers = new Headers();
+    headers.append('Content-type', 'application/json');
+
+    let accessToken = localStorage.getItem('accessToken');
+    headers.append('x-access-token', accessToken);
+    return this.http.put(url, data, { headers: headers }).map(res => res.json());
+  }
+
+
 }

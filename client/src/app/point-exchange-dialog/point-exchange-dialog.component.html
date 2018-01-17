@@ -1,0 +1,29 @@
+<div class="example-container">
+    <mat-form-field>
+      <input matInput [value]="point_history_id" placeholder="point_history_id" disabled>
+    </mat-form-field>
+  
+    <mat-form-field>
+      <input matInput [(ngModel)]="admin_name" required placeholder="관리자 이름">
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput [(ngModel)]="deposit_amount" required placeholder="입금액">
+    </mat-form-field>
+    
+    <mat-form-field class="example-full-width">
+      <input matInput [(ngModel)]="deposit_date" required [matDatepicker]="picker" placeholder="입금 날짜" disabled>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker touchUi="true" #picker disabled="false"></mat-datepicker>
+    </mat-form-field>
+    
+    <mat-form-field>
+      <input matInput [(ngModel)]="deposit_time" required type="time" placeholder="입금 시간">
+    </mat-form-field>
+
+    <button mat-button (click)="onNoClick()">취소</button>
+    <button mat-button (click)="onYesClick()">확인</button>
+
+    
+  </div>
+  

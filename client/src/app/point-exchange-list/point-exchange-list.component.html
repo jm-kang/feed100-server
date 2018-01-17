@@ -1,0 +1,162 @@
+<!-- <h3>포인트 환전내역</h3>
+<h4>입금 전</h4>
+<div *ngFor="let exchange of pointExchangeList">
+  <p *ngIf="!exchange.is_completed">
+      {{exchange.point_history_id}}.
+      {{exchange.user_id}}
+      {{exchange.point}}원 /
+      {{exchange.bank_name}} /
+      {{exchange.account_number}} /
+      {{exchange.account_holder_name}} /
+      {{exchange.point_history_registration_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}}
+      <br/>
+      -> 
+      <button>입금 처리 완료하기</button>
+    </p>
+</div>
+<h4>입금 완료</h4>
+<div *ngFor="let exchange of pointExchangeList">
+    <p *ngIf="exchange.is_completed">
+      {{exchange.point_history_id}}.
+      {{exchange.user_id}}
+      {{exchange.point}}원 /
+      {{exchange.bank_name}} /
+      {{exchange.account_number}} /
+      {{exchange.account_holder_name}} /
+      {{exchange.point_history_registration_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}}
+      <br/>
+      -> 
+      처리자 : {{exchange.admin_name}} /
+      입금액 : {{exchange.deposit_amount}}원 /
+      {{exchange.deposit_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}}
+    </p>
+  </div> -->
+<h3>환전 신청내역</h3>
+<div class="example-header">
+  <mat-form-field>
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+</div>
+
+<div class="example-container mat-elevation-z8">
+    
+  <mat-table [dataSource]="dataSource" matSort>
+
+    <ng-container matColumnDef="point_history_id">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> point_<br/>history_id </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.point_history_id}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="user_id">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> user_id </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.user_id}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="point">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> point </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.point}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="bank_name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> bank_name </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{row.bank_name}}</mat-cell>
+    </ng-container>  
+  
+    <ng-container matColumnDef="account_number">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> account_number </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.account_number}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="account_holder_name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> account_<br/>holder_name </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.account_holder_name}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="point_history_registration_date">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> point_history_<br/>registration_date </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.point_history_registration_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="complete">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> complete </mat-header-cell>
+      <mat-cell *matCellDef="let row" > <button mat-raised-button color="primary" (click)="openDialog(row.point_history_id)">처리하기</button> </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;">
+    </mat-row>
+  </mat-table>
+
+  <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+</div>
+
+<br />
+
+<h3>입금 완료</h3>
+<div class="example-header">
+  <mat-form-field>
+    <input matInput (keyup)="applyFilter2($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+</div>
+  
+<div class="example-container mat-elevation-z8">
+  
+  <mat-table #table2 [dataSource]="dataSource2" matSort>
+
+    <ng-container matColumnDef="point_history_id">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> point_<br/>history_id </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.point_history_id}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="user_id">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> user_id </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.user_id}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="point">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> point </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.point}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="bank_name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> bank_name </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{row.bank_name}}</mat-cell>
+    </ng-container>  
+  
+    <ng-container matColumnDef="account_number">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> account_number </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.account_number}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="account_holder_name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> account_<br/>holder_name </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.account_holder_name}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="point_history_registration_date">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> point_history_<br/>registration_date </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.point_history_registration_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="admin_name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> admin_name </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.admin_name}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="deposit_amount">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> deposit_amount </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.deposit_amount}} </mat-cell>
+    </ng-container>  
+
+    <ng-container matColumnDef="deposit_date">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> deposit_date </mat-header-cell>
+      <mat-cell *matCellDef="let row" > {{row.deposit_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}} </mat-cell>
+    </ng-container>        
+
+    <mat-header-row *matHeaderRowDef="displayedColumns2"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns2;">
+    </mat-row>
+  </mat-table>
+  
+  <mat-paginator #table2 [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+</div>

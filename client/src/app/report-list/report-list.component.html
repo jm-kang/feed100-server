@@ -1,0 +1,94 @@
+<h3>프로젝트 신고내역</h3>
+<div class="example-header">
+    <mat-form-field>
+      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    </mat-form-field>
+  </div>
+  
+  <div class="example-container mat-elevation-z8">
+  
+    <mat-table [dataSource]="dataSource" matSort>
+  
+      <ng-container matColumnDef="project_name">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> project_name </mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{row.project_name}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="project_participant_id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> project_participant_id </mat-header-cell>
+        <mat-cell *matCellDef="let row" > {{row.project_participant_id}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="type">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> type </mat-header-cell>
+        <mat-cell *matCellDef="let row">{{row.what}}</mat-cell>
+      </ng-container>  
+    
+      <ng-container matColumnDef="feedback_id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> feedback_id </mat-header-cell>
+        <mat-cell *matCellDef="let row" > {{row.feedback_id}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="opinion_id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> opinion_id </mat-header-cell>
+        <mat-cell *matCellDef="let row" > {{row.opinion_id}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="interview_id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> interview_id </mat-header-cell>
+        <mat-cell *matCellDef="let row" > {{row.interview_id}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="report_id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> report_id </mat-header-cell>
+        <mat-cell *matCellDef="let row" > {{row.report_id}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="project_report_registration_date">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> project_report_registration_date </mat-header-cell>
+        <mat-cell *matCellDef="let row" > {{row.project_report_registration_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}} </mat-cell>
+      </ng-container>  
+  
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;">
+      </mat-row>
+    </mat-table>
+  
+    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </div>
+
+  <br />
+
+  <h3>뉴스피드 신고내역</h3>
+  <div class="example-header">
+      <mat-form-field>
+        <input matInput (keyup)="applyFilter2($event.target.value)" placeholder="Filter">
+      </mat-form-field>
+    </div>
+    
+    <div class="example-container mat-elevation-z8">
+    
+      <mat-table #table2 [dataSource]="dataSource2" matSort>
+    
+        <ng-container matColumnDef="newsfeed_name">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> newsfeed_name </mat-header-cell>
+          <mat-cell *matCellDef="let row"> {{row.newsfeed_name}} </mat-cell>
+        </ng-container>
+  
+        <ng-container matColumnDef="newsfeed_comment_id">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> newsfeed_comment_id </mat-header-cell>
+          <mat-cell *matCellDef="let row" > {{row.newsfeed_comment_id}} </mat-cell>
+        </ng-container>
+  
+        <ng-container matColumnDef="newsfeed_report_registration_date">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> newsfeed_report_registration_date </mat-header-cell>
+          <mat-cell *matCellDef="let row" > {{row.newsfeed_report_registration_date | amDateFormat: 'YYYY-MM-DD hh:mm:ss'}} </mat-cell>
+        </ng-container>  
+    
+        <mat-header-row *matHeaderRowDef="displayedColumns2"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns2;">
+        </mat-row>
+      </mat-table>
+    
+      <mat-paginator #table2 [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+    </div>

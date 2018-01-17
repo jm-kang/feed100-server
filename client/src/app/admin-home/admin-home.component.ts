@@ -49,4 +49,12 @@ export class AdminHomeComponent implements OnInit {
     this.router.navigate([ '/admin/register-newsfeed' ]);
   }
 
+  openReportListPage() {
+    this.router.navigate([ '/admin/report-list' ]);
+  }
+
+  openPointExchangeListPage() {
+    this.router.navigate([ '/admin/point-exchange-list' ]);
+  }
+  
 }

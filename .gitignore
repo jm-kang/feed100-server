@@ -2,3 +2,5 @@ config/
 node_modules/
 config.js
 feed100-158308-firebase-adminsdk-y80ka-3bfaf63af8.json
+.ebextensions/
+*.zip
