@@ -1,7 +1,7 @@
 import { Component, HostListener, Inject, NgModule, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/platform-browser';
-import { WINDOW } from "../window.service";
+// import { WINDOW } from "../window.service";
 import { DomSanitizer } from '@angular/platform-browser';
 
 
@@ -109,7 +109,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
-    @Inject(WINDOW) private window,
+    // @Inject(WINDOW) private window,
     private elementRef: ElementRef,
   ) {
     console.log(window.screen.width);
@@ -132,25 +132,25 @@ export class HomeComponent implements OnInit {
   // nav scroll function
   @HostListener("window:scroll", [])
   public onWindowScroll() {
-    const offset = this.window.pageYOffset || this.document.documentElement.scrollTop || this.document.body.scrollTop || 0;
+    const offset = this.document.documentElement.scrollTop || this.document.body.scrollTop || 0;
 
     // Make sure they scroll more than delta
     if(Math.abs(this.lastScrollTop - offset) <= this.delta)
         return;
 
-    // If they scrolled down and are past the navbar, add class .nav-up.
-    // This is necessary so you never see what is "behind" the navbar.
-    if (offset > this.lastScrollTop && offset > 75) {
-      // Scroll Down
-      this.isNavUp = true;
-      this.isNavDown = false;
-    } else {
-      // Scroll Up
-      if(offset + this.window.screen.height < document.documentElement.scrollHeight) {
-        this.isNavUp = false;
-        this.isNavDown = true;
-      }
-    }
+    // // If they scrolled down and are past the navbar, add class .nav-up.
+    // // This is necessary so you never see what is "behind" the navbar.
+    // if (offset > this.lastScrollTop && offset > 75) {
+    //   // Scroll Down
+    //   this.isNavUp = true;
+    //   this.isNavDown = false;
+    // } else {
+    //   // Scroll Up
+    //   if(offset + this.window.screen.height < document.documentElement.scrollHeight) {
+    //     this.isNavUp = false;
+    //     this.isNavDown = true;
+    //   }
+    // }
 
     this.lastScrollTop = offset;
 
