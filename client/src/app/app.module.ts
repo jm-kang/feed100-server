@@ -24,7 +24,7 @@ import { PointExchangeDialogComponent } from './point-exchange-dialog/point-exch
 
 import { ScrollToModule } from 'ng2-scroll-to';
 
-import { WINDOW_PROVIDERS } from "./window.service";
+// import { WINDOW_PROVIDERS } from "./window.service";
 
 const ROUTES = [
   {
@@ -117,7 +117,7 @@ const ROUTES = [
   providers: [
     HttpServiceService,
     {provide: MAT_DATE_LOCALE, useValue: 'ko-KR'},
-    WINDOW_PROVIDERS
+    // WINDOW_PROVIDERS
   ],
   bootstrap: [AppComponent]
 })
