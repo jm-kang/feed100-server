@@ -75,7 +75,7 @@ export class HomeComponent implements OnInit {
       illust: "assets/illust/illust-1.png",
     },
     {
-      title: "1:1 대화를 통해 고객의\n심층적인 의견을 풍부하게 수집!",
+      title: "1:1 인터뷰를 통해 고객의\n심층적인 의견을 풍부하게 수집!",
       content: "고객과 자유롭게 이야기함으로써 감정이나 욕구, 태도 등을\n이끌어내 다양하고 풍부한 의견을 수집해 보세요!",
       phoneImg: "assets/img/phone-mokup-2.png",
       illust: "assets/illust/illust-2.png",
