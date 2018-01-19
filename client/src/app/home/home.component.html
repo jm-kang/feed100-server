@@ -63,10 +63,13 @@
 </header>
 <section id="hero-module" class="element element-drone-hero element-parallax overlay-dark-5 head-section" data-background="assets/img/single-product-hero-img.jpg">
   <div class="video-wrapper">
-    <video autoplay loop class="video-background sm-display" muted plays-inline>
+    <div *ngIf="isDesktop" class="background-info">
+      <video autoplay loop class="video-background sm-display" muted playsinline>
           <source [src]="videoURL" type="video/mp4">
       </video>
-    <img class="video-background sm-display-none" src="./../../assets/img/dark-background.jpg" alt="">
+      <img class="video-background sm-display-none" src="./../../assets/img/dark-background.jpg" alt="">
+    </div>
+    <img *ngIf="!isDesktop" class="video-background" src="./../../assets/img/dark-background.jpg" alt="">
     <div class="container video-container">
       <div class="row">
         <div class="col-md-12">
@@ -349,68 +352,68 @@
   </div>
 </section>
 
-<section id="features" class="element element-info-box element-gray p-t-100 p-b-0 p-b-md-100">
+<section id="features" class="element element-info-box element-gray p-t-100 p-b-0 p-b-sm-100">
   <div class="container">
     <div class="row">
-      <div class="col-sm-6 col-sm-offset-1 p-t-150 p-t-lg-100 p-t-md-0">
-        <div class="service-icon center-sm-block text-center">
+      <div class="col-sm-6 p-t-150 p-t-lg-100 p-t-sm-0">
+        <div class="service-icon center-sm-block right-block">
           <span class="sm-display"><img [src]="features[0].illust" alt=""></span>
         </div>
-        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display">{{features[0].title}}</h2>
-        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display-none">{{features[0].title}}</h3>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display">{{features[0].content}}</p>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display-none"><small><small>{{features[0].content}}</small></small></p>
+        <h2 class="text-right feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display">{{features[0].title}}</h2>
+        <h3 class="text-right feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display-none">{{features[0].title}}</h3>
+        <p class="text-right semi-light-text text-sm-center pre-line md-display">{{features[0].content}}</p>
+        <p class="text-right semi-light-text text-sm-center pre-line md-display-none"><small><small>{{features[0].content}}</small></small></p>
       </div>
-      <div class="col-sm-4 col-sm-offset-1 col-sm-pull-1 z-index-1"><img class="img-responsive center-block m-t-sm-40" [src]="features[0].phoneImg" alt="image-alternative"></div>
+      <div class="col-sm-6 z-index-1"><img class="img-responsive center-block m-t-sm-40" [src]="features[0].phoneImg" alt="image-alternative"></div>
       <div class="clearfix"></div>
     </div>
   </div>
 </section>
-<section class="element element-info-box first p-t-130 p-b-0 p-b-md-100">
+<section class="element element-info-box first p-t-130 p-b-0 p-b-sm-100">
   <div class="container">
     <div class="row">
-      <div class="col-sm-6 p-t-150 p-t-lg-100 p-t-md-0 col-sm-push-6">
+      <div class="col-sm-6 p-t-150 p-t-lg-100 p-t-sm-0 col-sm-push-6">
         <div class="service-icon center-sm-block text-center">
           <span><img [src]="features[1].illust" alt=""></span>
         </div>
-        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display">{{features[1].title}}</h2>
-        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display-none">{{features[1].title}}</h3>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display">{{features[1].content}}</p>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display-none"><small><small>{{features[1].content}}</small></small></p>
+        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display">{{features[1].title}}</h2>
+        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display-none">{{features[1].title}}</h3>
+        <p class="text-left semi-light-text text-sm-center pre-line md-display">{{features[1].content}}</p>
+        <p class="text-left semi-light-text text-sm-center pre-line md-display-none"><small><small>{{features[1].content}}</small></small></p>
       </div>
       <div class="col-sm-6 col-sm-pull-6"><img class="img-responsive center-block m-b-sm-40" [src]="features[1].phoneImg" alt="image-alternative"></div>
       <div class="clearfix"></div>
     </div>
   </div>
 </section>
-<section class="element element-info-box element-gray p-t-100 p-b-0 p-b-md-100">
+<section class="element element-info-box element-gray p-t-100 p-b-0 p-b-sm-100">
   <div class="container">
     <div class="row">
-      <div class="col-sm-6 col-sm-offset-1 p-t-150 p-t-lg-100 p-t-md-0">
-        <div class="service-icon center-sm-block text-center">
+      <div class="col-sm-6 p-t-150 p-t-lg-100 p-t-sm-0">
+        <div class="service-icon center-sm-block text-center right-block">
           <span><img [src]="features[2].illust" alt=""></span>
         </div>
-        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display">{{features[2].title}}</h2>
-        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display-none">{{features[2].title}}</h3>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display">{{features[2].content}}</p>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display-none"><small><small>{{features[2].content}}</small></small></p>
+        <h2 class="text-right feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display">{{features[2].title}}</h2>
+        <h3 class="text-right feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display-none">{{features[2].title}}</h3>
+        <p class="text-right semi-light-text text-sm-center pre-line md-display">{{features[2].content}}</p>
+        <p class="text-right semi-light-text text-sm-center pre-line md-display-none"><small><small>{{features[2].content}}</small></small></p>
       </div>
-      <div class="col-sm-4 col-sm-offset-1 col-sm-pull-1 z-index-1"><img class="img-responsive center-block m-t-sm-40" [src]="features[2].phoneImg" alt="image-alternative"></div>
+      <div class="col-sm-6 z-index-1"><img class="img-responsive center-block m-t-sm-40" [src]="features[2].phoneImg" alt="image-alternative"></div>
       <div class="clearfix"></div>
     </div>
   </div>
 </section>
-<section class="element element-info-box first p-t-130 p-b-0 p-b-md-100">
+<section class="element element-info-box first p-t-130 p-b-0 p-b-sm-100">
   <div class="container">
     <div class="row">
-      <div class="col-sm-6 p-t-150 p-t-lg-100 p-t-md-0 col-sm-push-6">
+      <div class="col-sm-6 p-t-150 p-t-lg-100 p-t-sm-0 col-sm-push-6">
         <div class="service-icon center-sm-block text-center">
           <span><img [src]="features[3].illust" alt=""></span>
         </div>
-        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display">{{features[3].title}}</h2>
-        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line sm-display-none">{{features[3].title}}</h3>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display">{{features[3].content}}</p>
-        <p class="text-left semi-light-text text-sm-center p-r-120 p-r-md-0 pre-line sm-display-none"><small><small>{{features[3].content}}</small></small></p>
+        <h2 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display">{{features[3].title}}</h2>
+        <h3 class="text-left feed100-text text-sm-center m-t-30 m-b-30 pre-line md-display-none">{{features[3].title}}</h3>
+        <p class="text-left semi-light-text text-sm-center pre-line md-display">{{features[3].content}}</p>
+        <p class="text-left semi-light-text text-sm-center pre-line md-display-none"><small><small>{{features[3].content}}</small></small></p>
       </div>
       <div class="col-sm-6 col-sm-pull-6"><img class="img-responsive center-block m-b-sm-40" [src]="features[3].phoneImg" alt="image-alternative"></div>
       <div class="clearfix"></div>

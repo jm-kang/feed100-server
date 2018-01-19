@@ -1,6 +1,7 @@
 import { Component, HostListener, Inject, NgModule, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/platform-browser';
+import { Ng2DeviceService } from 'ng2-device-detector';
 // import { WINDOW } from "../window.service";
 import { DomSanitizer } from '@angular/platform-browser';
 
@@ -61,6 +62,7 @@ export class HomeComponent implements OnInit {
   videoURL: String = "./../../assets/video/space.mp4";
   appLogo: String = "./../../assets/img/app-logo-white.png";
 
+  deviceInfo = null;
 
   rocketStyle:any;
 
@@ -111,8 +113,13 @@ export class HomeComponent implements OnInit {
     @Inject(DOCUMENT) private document: Document,
     // @Inject(WINDOW) private window,
     private elementRef: ElementRef,
+    private deviceService: Ng2DeviceService
   ) {
-    console.log(window.screen.width);
+    console.log(this.isDesktop);
+  }
+
+  get isDesktop() {
+    return this.deviceService.isDesktop();
   }
 
   ngOnInit() {

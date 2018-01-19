@@ -21,6 +21,7 @@ import { TermsComponent } from './terms/terms.component';
 import { ReportListComponent } from './report-list/report-list.component';
 import { PointExchangeListComponent } from './point-exchange-list/point-exchange-list.component';
 import { PointExchangeDialogComponent } from './point-exchange-dialog/point-exchange-dialog.component';
+import { Ng2DeviceDetectorModule } from 'ng2-device-detector';
 
 import { ScrollToModule } from 'ng2-scroll-to';
 
@@ -109,6 +110,7 @@ const ROUTES = [
     MatNativeDateModule,
     BrowserAnimationsModule,
     ScrollToModule.forRoot(),
+    Ng2DeviceDetectorModule.forRoot(),
     RouterModule.forRoot(ROUTES)
   ],
   entryComponents: [
