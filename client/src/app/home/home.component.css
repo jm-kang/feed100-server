@@ -980,6 +980,34 @@ footer h6{
   margin-left: auto;
 }
 
+.lg-display {
+  display: none;
+}
+
+.lg-display-none {
+  display: block;
+}
+
+.md-lg-display {
+  display: none;
+}
+
+.social-icons a {
+  display:inline-block;
+  /* width:auto; */
+  height:28px
+}
+
+.blog-logo {
+  width: 33.95px;
+}
+
+.facebook-logo {
+  width: 28px;
+}
+
+
+
 @media (min-width: 768px) {
   .rocket-icon {
     width: 130px !important;
@@ -1035,9 +1063,6 @@ footer h6{
   }
 }
 
-
-
-
 @media (min-width: 992px) {
   .intro-container .row {
     display: flex;
@@ -1064,6 +1089,41 @@ footer h6{
     z-index: 0;
   }
 
+  .rocket-icon-wrapper {
+    top: -200px;
+  }
+  .sm-lg-display {
+    display: block;
+  }
+}
+
+@media (min-width: 1200px) {
+
+  .lg-display {
+    display: block;
+  }
+
+  .lg-display-none {
+    display: none;
+  }
+
+  .sm-lg-display {
+    display: none;
+  }
+
+  .rocket-icon-wrapper {
+    /* top: -240px; */
+  }
+}
+
+@media (min-width: 1920px) {
+  .background-info {
+    width: 100%;
+  }
+
+  .video-background {
+    width: 100%;
+  }
 }
 
 @media (max-width: 767px) {
@@ -1071,3 +1131,19 @@ footer h6{
     font-size: 16px;
   }
 }
+
+/* logo svg */
+.logo-cls-1{fill:url(#linear-gradient);}.logo-cls-2{fill:url(#linear-gradient-2);}.logo-cls-3{fill:url(#linear-gradient-3);}.logo-cls-4{fill:url(#linear-gradient-4);}
+
+/* network svg */
+.cls-1{fill:#66545b;}.cls-2{fill:#d6835f;}.cls-3{fill:#fff;}.cls-4{fill:#f6d688;}.cls-5{fill:#f9dd9d;}.cls-6{fill:#d8893a;}.cls-7{fill:#e2a96b;}.cls-8{fill:#cea957;}.cls-10,.cls-9{fill:#bab3a2;}.cls-10{fill-rule:evenodd;}.cls-11{fill:url(#network-linear-gradient);}.cls-12{fill:url(#network-linear-gradient-2);}.cls-13{fill:url(#network-linear-gradient-3);}.cls-14{fill:url(#network-linear-gradient-4);}.cls-15{fill:#fcefe6;}.cls-16{fill:none;stroke:#fcefe6;stroke-miterlimit:10;stroke-width:6px;}
+.cls2-1{fill:#66545b;}.cls2-2{fill:#d6835f;}.cls2-3{fill:#fff;}.cls2-4{fill:#f6d688;}.cls2-5{fill:#f9dd9d;}.cls2-6{fill:#d8893a;}.cls2-7{fill:#e2a96b;}.cls2-8{fill:#cea957;}.cls2-10,.cls2-9{fill:#bab3a2;}.cls2-10{fill-rule:evenodd;}.cls2-11{fill:url(#network2-linear-gradient);}.cls2-12{fill:url(#network2-linear-gradient-2);}.cls2-13{fill:url(#network2-linear-gradient-3);}.cls2-14{fill:url(#network2-linear-gradient-4);}.cls2-15{fill:#fcefe6;}.cls2-16{fill:none;stroke:#fcefe6;stroke-miterlimit:10;stroke-width:6px;}
+
+/* letter svg */
+.letter-logo-1{fill:#fff;}.letter-logo-2{fill:none;stroke:#fff;stroke-miterlimit:10;stroke-width:0.75px;}
+
+/* facebook logo */
+.facebook-logo{fill:#fff;}
+
+/* blog logo */
+.blog-logo-1{fill:#fff;}.blog-logo-2{fill:#110d19;}
