@@ -1,5 +1,4 @@
 @import url(https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css);
-@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css); 
 
 body {
   overflow-x:hidden;
@@ -120,7 +119,7 @@ input[type="text"].form-control, input[type="email"].form-control, input[type="t
   border:1px solid #E4E7EC;
   border-radius:3px;
   font-size:14px;
-  font-family: 'Nanum Gothic', sans-serif;;
+  font-family: 'NanumSquare', sans-serif;;
   color:#A5ADBB;
   letter-spacing:0;
   outline:0;
@@ -133,7 +132,7 @@ textarea.form-control {
   border:1px solid #E4E7EC;
   border-radius:3px;
   font-size:14px;
-  font-family: 'Nanum Gothic', sans-serif;;
+  font-family: 'NanumSquare', sans-serif;;
   color:#A5ADBB;
   letter-spacing:0;
   outline:0;
@@ -553,6 +552,7 @@ hr.dark {
   -webkit-align-item:center;
   -webkit-justify-content:center;
   overflow: hidden;
+  height: 100%;
 }
 
 .video-background {
@@ -1009,6 +1009,10 @@ footer h6{
   width: 28px;
 }
 
+.background-info {
+  height: 100%;
+  width: 100%;
+}
 
 
 @media (min-width: 768px) {
@@ -1119,13 +1123,14 @@ footer h6{
   }
 }
 
-@media (min-width: 1920px) {
+@media (min-width: 1600px) {
   .background-info {
     width: 100%;
   }
 
   .video-background {
     width: 100%;
+    height: auto;
   }
 }
 
