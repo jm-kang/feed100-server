@@ -1,9 +1,10 @@
 import { Component, HostListener, Inject, NgModule, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/platform-browser';
-// import { WINDOW } from "../window.service";
-import { DomSanitizer } from '@angular/platform-browser';
 import { Ng2DeviceService } from 'ng2-device-detector';
+// import { WINDOW } from "../window.service";
+
+
 
 @Component({
   selector: 'app-home',
@@ -61,6 +62,8 @@ export class HomeComponent implements OnInit {
   videoURL: String = "./../../assets/video/space.mp4";
   appLogo: String = "./../../assets/img/app-logo-white.png";
 
+  deviceInfo = null;
+  imgOrVideo: string = null;
 
   rocketStyle:any;
 
@@ -103,7 +106,7 @@ export class HomeComponent implements OnInit {
       interview: 30,
       report: 30,
       unsaledPrice: 50,
-      price: 45
+      price: "무료"
     }
   ]
 
@@ -113,7 +116,6 @@ export class HomeComponent implements OnInit {
     private elementRef: ElementRef,
     private deviceService: Ng2DeviceService
   ) {
-    console.log(window.screen.width);
   }
 
   isDesktop() {
@@ -132,7 +134,7 @@ export class HomeComponent implements OnInit {
     } else {
       this.isOpenSideMenu = true;
     }
-  }
+  }  
 
   // nav scroll function
   @HostListener("window:scroll", [])
@@ -158,6 +160,7 @@ export class HomeComponent implements OnInit {
     // }
 
     this.lastScrollTop = offset;
+    console.log(offset);
 
     if(offset < 150) {
       document.querySelector(".navigation-clean")['style'].backgroundColor = 'transparent'; // 추가

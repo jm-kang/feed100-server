@@ -1,3 +1,6 @@
+@import url(https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css);
+@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css); 
+
 body {
   overflow-x:hidden;
   -ms-overflow-style:scrollbar;
@@ -6,14 +9,14 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family:'Maven Pro', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
   color:#383C41;
   margin-top:0;
   margin-bottom:0;
 }
 
 p {
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
   font-size:16px;
   color:#383C41;
   font-weight:400;
@@ -36,12 +39,12 @@ h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
 }
 
 a, span, li {
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
   line-height:28px;
 }
 
 input, .btn {
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
 }
 
 p, pre, ul, ol, blockquote, h1, h2, h3, h4, h5, h6 {
@@ -117,7 +120,7 @@ input[type="text"].form-control, input[type="email"].form-control, input[type="t
   border:1px solid #E4E7EC;
   border-radius:3px;
   font-size:14px;
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Nanum Gothic', sans-serif;;
   color:#A5ADBB;
   letter-spacing:0;
   outline:0;
@@ -130,7 +133,7 @@ textarea.form-control {
   border:1px solid #E4E7EC;
   border-radius:3px;
   font-size:14px;
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Nanum Gothic', sans-serif;;
   color:#A5ADBB;
   letter-spacing:0;
   outline:0;
@@ -534,8 +537,10 @@ hr.dark {
   padding: 13px !important;
 }
 
-.navbar-brand img{
+.navigation-clean[_ngcontent-c1] .navbar-brand[_ngcontent-c1] img[_ngcontent-c1]{
   vertical-align: top !important;
+  height: 16px;
+  margin-top: 4px;
 }
 
 .video-wrapper {
@@ -670,16 +675,16 @@ strong {
 	50% { stroke: #e8e4df; }
 }
 
-
+/* 
 .line {
-  fill:#fdbc6e;
-  stroke:$blue;
+  fill: #fdbc6e;
+  stroke: #ff6700;
   stroke-miterlimit:10;
 	stroke-width:0.5;
 	animation: line-pulse 5s ease infinite;
-	-moz-animation: line-pulse 5s ease infinite; /* Firefox */
-	-webkit-animation: line-pulse 5s ease infinite; /* Safari and Chrome */
-	-o-animation: line-pulse 5s ease infinite; /* Opera */
+	-moz-animation: line-pulse 5s ease infinite;
+	-webkit-animation: line-pulse 5s ease infinite;
+	-o-animation: line-pulse 5s ease infinite;
 }
 .circle {
 	fill: transparent;
@@ -688,12 +693,12 @@ strong {
 .blue-bg {
 	fill: #e8e4df;
 	animation: circle-pulse 10s linear infinite;
-	-moz-animation: circle-pulse 10s linear infinite; /* Firefox */
-	-webkit-animation: circle-pulse 10s linear infinite; /* Safari and Chrome */
-	-o-animation: circle-pulse 10s linear infinite; /* Opera */
-	-webkit-animation-delay: 3s; /* Chrome, Safari, Opera */
+	-moz-animation: circle-pulse 10s linear infinite;
+	-webkit-animation: circle-pulse 10s linear infinite;
+	-o-animation: circle-pulse 10s linear infinite;
+	-webkit-animation-delay: 3s;
   animation-delay: 3s;
-}
+} */
 
 .devide-section img {
   width: 100%;
@@ -973,6 +978,39 @@ footer h6{
   line-height: 1.8;
 }
 
+.right-block {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.lg-display {
+  display: none;
+}
+
+.lg-display-none {
+  display: block;
+}
+
+.md-lg-display {
+  display: none;
+}
+
+.social-icons a {
+  display:inline-block;
+  /* width:auto; */
+  height:28px
+}
+
+.blog-logo {
+  width: 33.95px;
+}
+
+.facebook-logo {
+  width: 28px;
+}
+
+
+
 @media (min-width: 768px) {
   .rocket-icon {
     width: 130px !important;
@@ -1018,17 +1056,15 @@ footer h6{
     padding: 30px 60px;
   }
 
-  .element-info-box.element-gray:after {
-    z-index: 0;
-  }
-
   .element-info-box[_ngcontent-c1] .service-icon[_ngcontent-c1] {
     width: 180px;
   }
+
+  .navigation-clean[_ngcontent-c1] .navbar-brand[_ngcontent-c1] img[_ngcontent-c1]{
+    height: 24px;
+    margin-top: 0;
+  }
 }
-
-
-
 
 @media (min-width: 992px) {
   .intro-container .row {
@@ -1051,6 +1087,46 @@ footer h6{
   .md-text-center {
     text-align: left;
   }
+
+  .element-info-box.element-gray:after {
+    z-index: 0;
+  }
+
+  .rocket-icon-wrapper {
+    top: -200px;
+  }
+  .sm-lg-display {
+    display: block;
+  }
+}
+
+@media (min-width: 1200px) {
+
+  .lg-display {
+    display: block;
+  }
+
+  .lg-display-none {
+    display: none;
+  }
+
+  .sm-lg-display {
+    display: none;
+  }
+
+  .rocket-icon-wrapper {
+    /* top: -240px; */
+  }
+}
+
+@media (min-width: 1920px) {
+  .background-info {
+    width: 100%;
+  }
+
+  .video-background {
+    width: 100%;
+  }
 }
 
 @media (max-width: 767px) {
@@ -1058,3 +1134,19 @@ footer h6{
     font-size: 16px;
   }
 }
+
+/* logo svg */
+.logo-cls-1{fill:url(#linear-gradient);}.logo-cls-2{fill:url(#linear-gradient-2);}.logo-cls-3{fill:url(#linear-gradient-3);}.logo-cls-4{fill:url(#linear-gradient-4);}
+
+/* network svg */
+.cls-1{fill:#66545b;}.cls-2{fill:#d6835f;}.cls-3{fill:#fff;}.cls-4{fill:#f6d688;}.cls-5{fill:#f9dd9d;}.cls-6{fill:#d8893a;}.cls-7{fill:#e2a96b;}.cls-8{fill:#cea957;}.cls-10,.cls-9{fill:#bab3a2;}.cls-10{fill-rule:evenodd;}.cls-11{fill:url(#network-linear-gradient);}.cls-12{fill:url(#network-linear-gradient-2);}.cls-13{fill:url(#network-linear-gradient-3);}.cls-14{fill:url(#network-linear-gradient-4);}.cls-15{fill:#fcefe6;}.cls-16{fill:none;stroke:#fcefe6;stroke-miterlimit:10;stroke-width:6px;}
+.cls2-1{fill:#66545b;}.cls2-2{fill:#d6835f;}.cls2-3{fill:#fff;}.cls2-4{fill:#f6d688;}.cls2-5{fill:#f9dd9d;}.cls2-6{fill:#d8893a;}.cls2-7{fill:#e2a96b;}.cls2-8{fill:#cea957;}.cls2-10,.cls2-9{fill:#bab3a2;}.cls2-10{fill-rule:evenodd;}.cls2-11{fill:url(#network2-linear-gradient);}.cls2-12{fill:url(#network2-linear-gradient-2);}.cls2-13{fill:url(#network2-linear-gradient-3);}.cls2-14{fill:url(#network2-linear-gradient-4);}.cls2-15{fill:#fcefe6;}.cls2-16{fill:none;stroke:#fcefe6;stroke-miterlimit:10;stroke-width:6px;}
+
+/* letter svg */
+.letter-logo-1{fill:#fff;}.letter-logo-2{fill:none;stroke:#fff;stroke-miterlimit:10;stroke-width:0.75px;}
+
+/* facebook logo */
+.facebook-logo{fill:#fff;}
+
+/* blog logo */
+.blog-logo-1{fill:#fff;}.blog-logo-2{fill:#110d19;}
