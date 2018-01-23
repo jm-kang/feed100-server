@@ -627,7 +627,7 @@
               </table>
             </div>
           </div>
-          <div class="plan-price text-center col-sm-12"><span class="sale-price m-r-10" *ngIf="priceTable[0].unsaledPrice">&thinsp;{{priceTable[0].unsaledPrice}}&thinsp;</span><span class="price feed100-text">{{priceTable[0].price}} </span><span *ngIf="priceTable[0].price > 0" class="currency">만원 </span><span *ngIf="priceTable[0].price == '무료'" class="currency">BETA </span><span class="interval"> / 프로젝트 당</span></div>
+          <div class="plan-price text-center col-sm-12"><span class="sale-price m-r-10" *ngIf="priceTable[0].unsaledPrice">&thinsp;{{priceTable[0].unsaledPrice}}&thinsp;</span><span class="price feed100-text">{{priceTable[0].price}} </span><span *ngIf="priceTable[0].price != '무료'" class="currency">만원 </span><span *ngIf="priceTable[0].price == '무료'" class="currency">BETA </span><span class="interval"> / 프로젝트 당</span></div>
           <div class="plan-button col-sm-12"><a class="btn btn-project btn-block" role="button" target="_blank" href="https://feed100.typeform.com/to/tZTmfg">지금 프로젝트 신청하기</a></div>
         </div>
       </div>
@@ -809,7 +809,7 @@
                           <path class="blog-logo-2" d="M26.4,17.9a4.56,4.56,0,0,0,2.48-.41,1.67,1.67,0,0,0,.26-.17,1.94,1.94,0,0,0,.22-.22,3,3,0,0,0,.5-.73,4,4,0,0,0,.25-.82c0-.09,0-.18.06-.27a3.9,3.9,0,0,0,.07-.76h0V8.75h-2v5.77h0a1.42,1.42,0,0,1-.43,1.09,1.46,1.46,0,0,1-.67.32,3.35,3.35,0,0,1-.75.06h0v2"/>
                         </g>
                       </g>
-                    </svg>                    
+                    </svg>
                   </a>
                 </div>
             </div>
