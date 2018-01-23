@@ -1,3 +1,6 @@
+@import url(https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css);
+@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css); 
+
 body {
   overflow-x:hidden;
   -ms-overflow-style:scrollbar;
@@ -6,14 +9,14 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family:'Maven Pro', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
   color:#383C41;
   margin-top:0;
   margin-bottom:0;
 }
 
 p {
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
   font-size:16px;
   color:#383C41;
   font-weight:400;
@@ -36,12 +39,12 @@ h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
 }
 
 a, span, li {
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
   line-height:28px;
 }
 
 input, .btn {
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'NanumSquare', sans-serif;;
 }
 
 p, pre, ul, ol, blockquote, h1, h2, h3, h4, h5, h6 {
@@ -117,7 +120,7 @@ input[type="text"].form-control, input[type="email"].form-control, input[type="t
   border:1px solid #E4E7EC;
   border-radius:3px;
   font-size:14px;
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Nanum Gothic', sans-serif;;
   color:#A5ADBB;
   letter-spacing:0;
   outline:0;
@@ -130,7 +133,7 @@ textarea.form-control {
   border:1px solid #E4E7EC;
   border-radius:3px;
   font-size:14px;
-  font-family:'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Nanum Gothic', sans-serif;;
   color:#A5ADBB;
   letter-spacing:0;
   outline:0;
@@ -672,16 +675,16 @@ strong {
 	50% { stroke: #e8e4df; }
 }
 
-
+/* 
 .line {
-  fill:#fdbc6e;
-  stroke:$blue;
+  fill: #fdbc6e;
+  stroke: #ff6700;
   stroke-miterlimit:10;
 	stroke-width:0.5;
 	animation: line-pulse 5s ease infinite;
-	-moz-animation: line-pulse 5s ease infinite; /* Firefox */
-	-webkit-animation: line-pulse 5s ease infinite; /* Safari and Chrome */
-	-o-animation: line-pulse 5s ease infinite; /* Opera */
+	-moz-animation: line-pulse 5s ease infinite;
+	-webkit-animation: line-pulse 5s ease infinite;
+	-o-animation: line-pulse 5s ease infinite;
 }
 .circle {
 	fill: transparent;
@@ -690,12 +693,12 @@ strong {
 .blue-bg {
 	fill: #e8e4df;
 	animation: circle-pulse 10s linear infinite;
-	-moz-animation: circle-pulse 10s linear infinite; /* Firefox */
-	-webkit-animation: circle-pulse 10s linear infinite; /* Safari and Chrome */
-	-o-animation: circle-pulse 10s linear infinite; /* Opera */
-	-webkit-animation-delay: 3s; /* Chrome, Safari, Opera */
+	-moz-animation: circle-pulse 10s linear infinite;
+	-webkit-animation: circle-pulse 10s linear infinite;
+	-o-animation: circle-pulse 10s linear infinite;
+	-webkit-animation-delay: 3s;
   animation-delay: 3s;
-}
+} */
 
 .devide-section img {
   width: 100%;
