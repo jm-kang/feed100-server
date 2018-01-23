@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MomentModule } from 'angular2-moment';
-import { MatPaginatorModule, MatTableModule, MatFormFieldModule, MatInputModule, 
+import { MatPaginatorModule, MatTableModule, MatFormFieldModule, MatInputModule,
   MatSortModule, MatButtonModule, MatDialogModule, MatDatepickerModule, MatNativeDateModule,
   MAT_DATE_LOCALE } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -23,7 +23,7 @@ import { PointExchangeListComponent } from './point-exchange-list/point-exchange
 import { PointExchangeDialogComponent } from './point-exchange-dialog/point-exchange-dialog.component';
 
 import { ScrollToModule } from 'ng2-scroll-to';
-
+import { Ng2DeviceDetectorModule } from 'ng2-device-detector';
 // import { WINDOW_PROVIDERS } from "./window.service";
 
 const ROUTES = [
@@ -91,13 +91,13 @@ const ROUTES = [
     ReportListComponent,
     PointExchangeListComponent,
     PointExchangeDialogComponent,
-    PointExchangeDialogComponent    
+    PointExchangeDialogComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
-    MomentModule,    
+    MomentModule,
     MatPaginatorModule,
     MatTableModule,
     MatFormFieldModule,
@@ -109,6 +109,7 @@ const ROUTES = [
     MatNativeDateModule,
     BrowserAnimationsModule,
     ScrollToModule.forRoot(),
+    Ng2DeviceDetectorModule.forRoot(),
     RouterModule.forRoot(ROUTES)
   ],
   entryComponents: [

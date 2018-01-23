@@ -2,21 +2,85 @@ module.exports = function(app, conn, admin) {
   var cron = require('node-cron');
   var route = require('express').Router();
   var request = require('request');
+  var AWS = require('aws-sdk');
+  AWS.config.region = 'ap-northeast-2';
 
+  var opts = {  
+    credentials: new AWS.EC2MetadataCredentials()// default to use the credentials for the ec2 instance
+  };
+  
+  var elasticbeanstalk = new AWS.ElasticBeanstalk(opts);
+  var ec2 = new AWS.EC2(opts);
+  var metadata = new AWS.MetadataService(opts);
+  
+  function runTaskOnMaster(name, taskToRun) {
+    console.log('Beginning task: ' + name);
+  
+    return new Promise( (resolve, reject) => {
+      metadata.request('/latest/meta-data/instance-id', (err, InstanceId) => {
+        if (err) {return reject(err);}
+        return resolve(InstanceId)
+      });
+    })
+    .then((currentInstanceId) => {
+      console.log('InstanceId', currentInstanceId);
+      return new Promise( (resolve, reject) => {    
+        var params = {
+          Filters: [
+            {
+              Name: 'resource-id',
+              Values: [currentInstanceId]
+            }
+          ]
+        };
+  
+        ec2.describeTags(params, (err, data) => {
+          if (err) {return reject('dt ' + err);}
+  
+          var envIdTag = data.Tags.find(t => t.Key === 'elasticbeanstalk:environment-id');
+          if (envIdTag === null) {
+            return reject('Failed to find the value of "elasticbeanstalk:environment-id" tag.');
+          }
+
+          elasticbeanstalk.describeEnvironmentResources({EnvironmentId: envIdTag.Value}, function (err, data) {
+            if (err) { return reject('de ' + err); }
+            if (currentInstanceId !== data.EnvironmentResources.Instances[0].Id) { return resolve(false); }
+            return resolve(true);
+          });
+        });
+      });
+    })
+    .then( (isMaster) => {
+      if (!isMaster) {
+        console.log('Not running task as not master EB instance.');
+      } else {
+        console.log('Identified as master EB instance. Running task.');
+        taskToRun();
+      }
+    })
+    .catch( (err) => console.log(err));
+  }
+  
   cron.schedule('0 0 * * *', function() {
     console.log('cron started', new Date());
-    var url = '';
     if ('development' == app.get('env')) {
       var url = 'http://localhost:3000/common/cron/alarm';
+      request(url, function (error, response, body) {
+        if(error) {
+          console.log('cron error:', error); // Print the error if one occurred
+        }
+      });
     }
     else if ('production' == app.get('env')) {
-        var url = 'http://www.feed100.me/common/cron/alarm';
+      runTaskOnMaster( 'Task 1', () => {
+        var url = 'https://www.feed100.me/common/cron/alarm';
+        request(url, function (error, response, body) {
+          if(error) {
+            console.log('cron error:', error); // Print the error if one occurred
+          }
+        });
+      });
     }
-    request(url, function (error, response, body) {
-      if(error) {
-        console.log('cron error:', error); // Print the error if one occurred
-      }
-    });
   }).start();
 
   route.get('/alarm', (req, res, next) => {

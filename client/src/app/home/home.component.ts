@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/platform-browser';
 // import { WINDOW } from "../window.service";
 import { DomSanitizer } from '@angular/platform-browser';
-
+import { Ng2DeviceService } from 'ng2-device-detector';
 
 @Component({
   selector: 'app-home',
@@ -111,8 +111,13 @@ export class HomeComponent implements OnInit {
     @Inject(DOCUMENT) private document: Document,
     // @Inject(WINDOW) private window,
     private elementRef: ElementRef,
+    private deviceService: Ng2DeviceService
   ) {
     console.log(window.screen.width);
+  }
+
+  isDesktop() {
+    return this.deviceService.isDesktop();
   }
 
   ngOnInit() {

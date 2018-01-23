@@ -26,6 +26,7 @@
     "angular2-moment": "^1.7.1",
     "bootstrap": "^3.3.7",
     "core-js": "^2.4.1",
+    "ng2-device-detector": "^1.0.0",
     "ng2-scroll-to": "^1.0.7",
     "ngx-bootstrap": "^2.0.0-rc.0",
     "rxjs": "^5.5.6",

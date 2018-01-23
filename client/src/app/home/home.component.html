@@ -63,10 +63,13 @@
 </header>
 <section id="hero-module" class="element element-drone-hero element-parallax overlay-dark-5 head-section" data-background="assets/img/single-product-hero-img.jpg">
   <div class="video-wrapper">
-    <video autoplay loop class="video-background sm-display" muted plays-inline>
-          <source [src]="videoURL" type="video/mp4">
+    <div *ngIf="isDesktop()" class="background-info">
+      <video autoplay loop class="video-background sm-display" muted playsinline>
+        <source [src]="videoURL" type="video/mp4">
       </video>
-    <img class="video-background sm-display-none" src="./../../assets/img/dark-background.jpg" alt="">
+      <img class="video-background sm-display-none" src="./../../assets/img/dark-background.jpg" alt="">
+    </div>
+    <img *ngIf="!isDesktop()" class="video-background" src="./../../assets/img/dark-background.jpg" alt="">
     <div class="container video-container">
       <div class="row">
         <div class="col-md-12">
@@ -597,7 +600,7 @@
                     </li>
                     <li> <div class="text-right text-md-center"><a target="_blank" href="terms" class="semi-light-text font-sm">이용약관</a> | <a target="_blank" href="private-info-policy" class="semi-light-text font-sm">개인정보취급방침</a></div></li>
                 </ul>
-                
+
             </div>
             <div class="col-md-6 col-md-pull-6 col-sm-12">
                 <p class="footer-logo clearfix text-md-center m-b-5 p-t-md-40">
