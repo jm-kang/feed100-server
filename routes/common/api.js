@@ -9,6 +9,8 @@ module.exports = function(conn) {
   var nodemailer = require('nodemailer');
   var smtpPool = require('nodemailer-smtp-pool');
   var voucher_codes = require('voucher-code-generator');
+  var handlebars = require('handlebars');  
+  var path = require('path');  
 
   route.post('/upload/:folder', (req, res, next) => {
     var form = new formidable.IncomingForm();
@@ -550,7 +552,7 @@ module.exports = function(conn) {
 
     updateVerify()
     .then(() => {
-      res.send('인증이 완료되었습니다. 이제 해당 계정으로 로그인하실 수 있습니다.');
+      res.sendFile(path.join(__dirname, '../../public', 'active.html'));
     })
     .catch((err) => {
       console.log(err);
@@ -580,23 +582,36 @@ module.exports = function(conn) {
         maxConnections: 5,
         maxMessages: 10
     }));
-    var link = "http://www.feed100.me/common/api/verify/" + rand_key;
-    var mailOpt = {
-        from: "FEED100 <" + req.app.get('gmail-id') + ">",
-        to: email,
-        subject: "Please confirm your Email account",
-        html: "Hello,<br> Please Click on the link to verify your email.<br><a href="+link+">Click here to verify</a>"
-    }
-    smtpTransport.sendMail(mailOpt, function(err, res) {
-        if(err) {
-            console.log(err);
+    
+    require('fs').readFile('public/mail-form.html', {encoding: 'utf-8'}, function (err, html) {
+      if (err) {
+          throw err;
+      }
+      else {
+        var template = handlebars.compile(html);
+        var link = "https://www.feed100.me/common/api/verify/" + rand_key;        
+        var replacements = {
+             link: link
+        };
+        var htmlToSend = template(replacements);
+        var mailOpt = {
+          from: "FEED100 <" + req.app.get('gmail-id') + ">",
+          to: email,
+          subject: "FEED100 이메일 인증을 진행해주세요.",
+          html: htmlToSend
         }
-        else {
-            console.log('Message send :'+ res);
-        }
-
-        smtpTransport.close();
-    })
+        smtpTransport.sendMail(mailOpt, function(err, res) {
+            if(err) {
+                console.log(err);
+            }
+            else {
+                console.log('Message send :'+ res);
+            }
+    
+            smtpTransport.close();
+        });  
+      }
+    });
 
   }
   function signAccessToken(params) {
