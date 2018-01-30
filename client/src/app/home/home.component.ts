@@ -163,12 +163,12 @@ export class HomeComponent implements OnInit {
     console.log(offset);
 
     if(offset < 150) {
-      document.querySelector(".navigation-clean")['style'].backgroundColor = 'transparent'; // 추가
-      this.appLogo = "./../../assets/img/app-logo-white.png"
+      document.querySelector(".navigation-clean")['style'].backgroundColor = '#0e100f'; // 추가
+      this.appLogo = "./../../assets/img/app-logo-white.png";
       this.isOverScroll = false;
     } else {
       document.querySelector(".navigation-clean")['style'].backgroundColor = '#ffffff'; // 추가
-      this.appLogo = "./../../assets/img/app-logo-black.png"
+      this.appLogo = "./../../assets/img/app-logo-black.png";
       this.isOverScroll = true;
     }
   }
