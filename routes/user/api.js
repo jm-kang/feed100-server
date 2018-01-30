@@ -1296,8 +1296,9 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          UPDATE users_table SET point = ?`;
-          conn.write.query(sql, total_point, (err, results) => {
+          UPDATE users_table SET point = ?
+          WHERE user_id = ?`;
+          conn.write.query(sql, [total_point, user_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               resolve([params[0]]);
