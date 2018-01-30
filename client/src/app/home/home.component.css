@@ -605,6 +605,21 @@ hr.dark {
   margin-top: -2px;
 }
 
+.wrap {
+  position: relative;
+}
+.svg-cover-img {
+  width: 100%;
+  height: auto;
+}
+.svg-box{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .font-white {
   color: #f2f2f2 !important;
 }
@@ -675,7 +690,7 @@ strong {
 	50% { stroke: #e8e4df; }
 }
 
-/* 
+/*
 .line {
   fill: #fdbc6e;
   stroke: #ff6700;

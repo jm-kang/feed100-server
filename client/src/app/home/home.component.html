@@ -146,7 +146,7 @@
       </div>
       <div class="col-md-6 lg-display">
         <div class="right-col">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2108.51 932.12">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2108.51 932.12" height="100vh">
             <defs>
               <linearGradient id="network-linear-gradient" x1="439.98" y1="662.35" x2="439.98" y2="539.61" gradientTransform="translate(0.11 -0.24) rotate(0.01)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffc299"/><stop offset="1" stop-color="#ffe299"/></linearGradient><linearGradient id="network-linear-gradient-2" x1="554.44" y1="662.35" x2="554.44" y2="539.61" xlink:href="#network-linear-gradient"/>
               <linearGradient id="network-linear-gradient-3" x1="500.22" y1="589.68" x2="524.32" y2="589.68" gradientTransform="translate(0.11 -0.24) rotate(0.01)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-opacity="0.3"/><stop offset="1" stop-opacity="0"/></linearGradient><linearGradient id="network-linear-gradient-4" x1="521.3" y1="669.69" x2="521.3" y2="511.89" gradientTransform="translate(0.11 -0.24) rotate(0.01)" gradientUnits="userSpaceOnUse">
@@ -309,7 +309,7 @@
 
       <div class="col-md-6 md-lg-display absolute-right">
         <div class="right-col">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500.55 932.12">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500.55 932.12" height="100vh">
             <defs>
               <linearGradient id="network2-linear-gradient" x1="439.98" y1="662.35" x2="439.98" y2="539.61" gradientTransform="translate(0.11 -0.24) rotate(0.01)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffc299"/><stop offset="1" stop-color="#ffe299"/></linearGradient>
               <linearGradient id="network2-linear-gradient-2" x1="554.44" y1="662.35" x2="554.44" y2="539.61" xlink:href="#network2-linear-gradient"/>
@@ -477,9 +477,17 @@
 </section>
 
 <section class="devide-section" #devideSection>
-  <svg class="wave-wrapper" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
+  <div class="wrap">
+    <img class="svg-cover-img" src="./../../assets/img/wave-svg-cover.png" />
+    <div class="svg-box">
+      <svg class="wave-wrapper" preserveAspectRatio="xMinYMin slice" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
+        <path fill="#ffffff" d="M0 30 V12 Q30 17 55 12 T100 11 V30z" />
+      </svg>
+    </div>
+  </div>
+  <!-- <svg class="wave-wrapper" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
 		<path fill="#ffffff" d="M0 30 V12 Q30 17 55 12 T100 11 V30z" />
-	</svg>
+	</svg> -->
   <div class="rocket-icon-box">
     <div class="rocket-icon-wrapper text-center" [ngStyle]="rocketStyle"><img #rocketIcon class="rocket-icon" src="./../../assets/icon/rocket-icon.png" alt=""></div>
   </div>
