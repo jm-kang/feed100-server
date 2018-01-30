@@ -495,9 +495,17 @@
 </section>
 
 <section class="devide-section" #devideSection>
-  <svg class="wave-wrapper" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
+  <div class="wrap">
+    <img class="svg-cover-img" src="./../../assets/img/wave-svg-cover.png" />
+    <div class="svg-box">
+      <svg class="wave-wrapper" preserveAspectRatio="xMinYMin slice" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
+        <path fill="#ffffff" d="M0 30 V12 Q30 17 55 12 T100 11 V30z" />
+      </svg>
+    </div>
+  </div>
+  <!-- <svg class="wave-wrapper" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
 		<path fill="#ffffff" d="M0 30 V12 Q30 17 55 12 T100 11 V30z" />
-	</svg>
+	</svg> -->
   <div class="rocket-icon-box">
     <div class="rocket-icon-wrapper text-center" [ngStyle]="rocketStyle"><img #rocketIcon class="rocket-icon" src="./../../assets/icon/rocket-icon.png" alt=""></div>
   </div>
