@@ -160,7 +160,6 @@ export class HomeComponent implements OnInit {
     // }
 
     this.lastScrollTop = offset;
-    console.log(offset);
 
     if(offset < 150) {
       document.querySelector(".navigation-clean")['style'].backgroundColor = '#0e100f'; // 추가
