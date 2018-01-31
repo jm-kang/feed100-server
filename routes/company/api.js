@@ -24,12 +24,15 @@ module.exports = function(conn, admin) {
     function selectParticipationProjectById(params) {
       return new Promise(
         (resolve, reject) => {
+          // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num,
           1 as is_my_project
           FROM projects_table
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
           WHERE projects_table.company_id = ?
           ORDER BY projects_table.project_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
@@ -126,12 +129,15 @@ module.exports = function(conn, admin) {
     function selectProceedingProjectByUserId() {
       return new Promise(
         (resolve, reject) => {
+          // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num,
           1 as is_my_project
           FROM projects_table
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
           WHERE project_end_date > now() and projects_table.company_id = ?
           ORDER BY projects_table.project_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
@@ -146,6 +152,7 @@ module.exports = function(conn, admin) {
     function selectProjects(params) {
       return new Promise(
         (resolve, reject) => {
+          // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
@@ -153,6 +160,8 @@ module.exports = function(conn, admin) {
           IF(company_id = ?, 1, 0)
           as is_my_project
           FROM projects_table
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
           WHERE is_private = false
           ORDER BY projects_table.project_id DESC LIMIT 3`;
           conn.read.query(sql, user_id, (err, results) => {
@@ -1128,6 +1137,7 @@ module.exports = function(conn, admin) {
     function selectProjects() {
       return new Promise(
         (resolve, reject) => {
+          // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
@@ -1135,6 +1145,8 @@ module.exports = function(conn, admin) {
           IF(company_id = ?, 1, 0)
           as is_my_project
           FROM projects_table
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
           WHERE is_private = false
           ORDER BY projects_table.project_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
