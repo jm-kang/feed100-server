@@ -73,6 +73,8 @@ module.exports = function(conn, admin) {
           // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
+          projects_table.project_id
+          as project_id,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num,
           1 as is_my_project
@@ -267,6 +269,8 @@ module.exports = function(conn, admin) {
           // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
+          projects_table.project_id
+          as project_id,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num,
           1 as is_my_project
@@ -292,6 +296,8 @@ module.exports = function(conn, admin) {
           // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
+          projects_table.project_id
+          as project_id,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num,
           IF(project_participant_id, 1, 0)
@@ -1346,6 +1352,8 @@ module.exports = function(conn, admin) {
           // 1.0.9 LEFT JOIN users_table 제거 필요
           var sql = `
           SELECT *,
+          projects_table.project_id
+          as project_id,
           (SELECT COUNT(*) FROM project_participants_table WHERE project_id = projects_table.project_id)
           as participant_num,
           IF(project_participant_id, 1, 0)
