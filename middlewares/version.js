@@ -34,15 +34,16 @@ module.exports = function(conn) {
       function isUpdateNeeded(server_version, client_version) {
         var server_version_token = server_version.split('.');
         var client_version_token = client_version.split('.');
-        if(server_version_token[0] > client_version_token[0]) {
+
+        if((server_version_token[0] * 1) > (client_version_token[0] * 1)) {
           return true;
         }
-        else if(server_version_token[0] == client_version_token[0]) {
-          if(server_version_token[1] > client_version_token[1]) {
+        else if((server_version_token[0] * 1) == (client_version_token[0] * 1)) {
+          if((server_version_token[1] * 1) > (client_version_token[1] * 1)) {
             return true;
           }
-          else if(server_version_token[1] == client_version_token[1]) {
-            if(server_version_token[2] > client_version_token[2]) {
+          else if((server_version_token[1] * 1) == (client_version_token[1] * 1)) {
+            if((server_version_token[2] * 1) > (client_version_token[2] * 1)) {
               return true;
             }
             else {
