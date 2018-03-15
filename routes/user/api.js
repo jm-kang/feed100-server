@@ -1,6 +1,572 @@
 module.exports = function(conn, admin) {
   var route = require('express').Router();
 
+  // 리뉴얼 이후
+
+  // 마이페이지 유저 정보
+  route.get('/user', (req, res, next) => {
+  });
+
+  // 프로젝트 리스트(보상, 참여중, 추천, 전체)
+  route.get('/projects', (req, res, next) => {
+  });
+
+  // 알림 리스트
+  route.get('/notifications', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function updateNotificationIsNew() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE notifications_table SET is_new = 0
+          WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+    function selectNotifications() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM notifications_table
+          LEFT JOIN projects_table
+          ON notifications_table.project_id = projects_table.project_id
+          WHERE user_id = ? ORDER BY alarm_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateNotificationIsNew()
+    .then(selectNotifications)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select notifications",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 알림 갯수
+  route.get('/notification/num', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function selectNotificationNum() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT COUNT(*) FROM alarms_table
+          WHERE user_id = ? and alarm_is_new = 1`;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectNotificationNum()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select notification num",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 프로젝트 코드 확인 및 프로젝트 id 전달
+  route.get('/redeem/:project_code', (req, res, next) => {
+    var project_code = req.params.project_code;
+
+    function selectProjectByCode() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT project_id FROM projects_table WHERE project_code = ?`;
+          conn.read.query(sql, project_code, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProjectByCode()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project id",
+          "data" : (params[0]) ? params[0] : "{}"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 포인트 적립, 환전 내역
+  route.get('/point-history', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function selectPointHistoryById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM point_history_table
+          WHERE user_id = ?
+          ORDER BY point_history_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectPointHistoryById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select point history",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 유저 프로젝트 참여 정보
+  route.get('/user&project/:project_id', (req, res, next) => {
+  });
+
+  // 프로젝트 상태 정보
+  route.get('/project/:project_id/pre-condition', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          project_end_date > now()
+          as is_proceeding,
+          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = ? and process_condition = 1) >= max_participant_num
+          as is_max
+          FROM projects_table WHERE project_id = ?`;
+          conn.read.query(sql, [project_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(!results[0].is_proceeding) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not proceeding"
+                  });
+              }
+              else if(results[0].is_max) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is max"
+                  });
+              }
+              else if(!results[0].process_condition) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "is not approved"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project precondition",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 프로젝트 내용(데이터, 스토리)
+  route.get('/project/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function updateProjectViewNum() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE projects_table SET project_view_num = project_view_num + 1
+          WHERE project_id = ?`;
+          conn.write.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    updateProjectViewNum()
+    .then(selectProjectById)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 프로젝트 홈 데이터(보상, 기간, 인터뷰)
+  route.get('/project/:project_id/home', (req, res, next) => {
+  });
+
+  // 인터뷰 리스트(답변 안한 것)
+  route.get('/interviews', (req, res, next) => {
+  });
+
+  // 프로필 등록 및 수정
+  route.put('/user/profile', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var gender = req.body.gender;
+    var age = req.body.age;
+    var job = req.body.job;
+    var region = req.body.region;
+    var marriage = req.body.marriage;
+    var interests = req.body.interests;
+    var avatar_image = req.body.avatar_image;
+
+    function selectUserById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `SELECT avatar_image FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              const images = [
+                'assets/img/user-avatar-image.png',
+                'assets/img/user-avatar-image-man1.png',
+                'assets/img/user-avatar-image-man2.png',
+                'assets/img/user-avatar-image-man3.png',
+                'assets/img/user-avatar-image-woman1.png',
+                'assets/img/user-avatar-image-woman2.png',
+                'assets/img/user-avatar-image-woman3.png'
+              ];
+              if(images.indexOf(results[0].avatar_image) < 0) {
+                resolve(results[0].avatar_image);
+              }
+              else {
+                resolve(avatar_image);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateUserProfile(avatar_image) {
+      return new Promise(
+        (resolve, reject) => {
+          var userData = {
+            gender : gender,
+            age : age,
+            job : job,
+            region : region,
+            marriage : marriage,
+            interests : JSON.stringify(interests),
+            avatar_image : avatar_image
+          }
+          var sql = `UPDATE users_table SET ? WHERE user_id = ?`;
+          conn.write.query(sql, [userData, user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+
+    selectUserById()
+    .then(updateUserProfile)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update profile",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 알림 읽음
+  route.put('/notification/read', (req, res, next) => {
+    var alarm_id = req.body.alarm_id;
+
+    function updateNotificationIsRead() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE notifications_table SET is_read = 1
+          WHERE notification_id = ?`;
+          conn.write.query(sql, notification_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    updateNotificationIsRead()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update is_read",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 포인트 환전
+  route.post('/point-exchange', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var is_accumulated = false;
+    var point = req.body.point;
+    var bank_name = req.body.bank_name;
+    var account_number = req.body.account_number;
+    var account_holder_name = req.body.account_holder_name;
+    var total_point;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table
+          WHERE user_id = ?`;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].point < point) {
+                res.json({
+                  "success" : false,
+                  "message" : "more point is needed"
+                });
+              }
+              else {
+                total_point = results[0].point - point;
+                resolve([{}]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function insertPointHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var point_data = {
+            user_id : user_id,
+            is_accumulated : is_accumulated,
+            point : point,
+            total_point : total_point,
+            bank_name : bank_name,
+            account_number : account_number,
+            account_holder_name : account_holder_name
+          }
+          var sql = `
+          INSERT INTO point_history_table SET ?`;
+          conn.write.query(sql, point_data, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function updateUserPoint(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE users_table SET point = ?
+          WHERE user_id = ?`;
+          conn.write.query(sql, [total_point, user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(beginTransaction)
+    .then(insertPointHistory)
+    .then(updateUserPoint)
+    .then(endTransaction)
+    .then(() => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "point exchange"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 프로젝트 참여 조건 통과
+  route.post('/project/process/condition', (req, res, next) => {
+  });
+
+  // 프로젝트 테스트 완료
+  route.put('/project/process/test', (req, res, next) => {
+  });
+
+  // 프로젝트 스토리 퀴즈 통과
+  route.put('/project/process/quiz', (req, res, next) => {
+  });
+
+  // 프로젝트 참여 완료(첫인상 점수, 인터뷰, 선호시간 등록)
+  route.put('/project/process/completion', (req, res, next) => {
+  });
+
+  // 인터뷰 작성
+  route.put('/interview/:interview_id', (req, res, next) => {
+  });
+
+  // 보상 받기
+  route.post('/project/:project_id/reward', (req, res, next) => {
+  });
+
+  // 디바이스 토큰 등록(푸시 관련)
+  route.post('/device-token', (req, res, next) => {
+    var uuid = req.body.uuid;
+    var device_token = req.body.device_token;
+    var user_id = req.decoded.user_id;
+
+    function insertDeviceToken() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          INSERT INTO users_token_table (uuid, device_token, user_id) VALUES (?, ?, ?)
+          ON DUPLICATE KEY UPDATE uuid = ?, device_token = ?, user_id = ?
+          `;
+          conn.write.query(sql, [uuid, device_token, user_id, uuid, device_token, user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    insertDeviceToken()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+
+  // 리뉴얼 이전
   route.get('/user', (req, res, next) => {
     var user_id = req.decoded.user_id;
     function selectByUserId() {

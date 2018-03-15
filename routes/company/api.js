@@ -1,6 +1,62 @@
 module.exports = function(conn, admin) {
   var route = require('express').Router();
 
+  //리뉴얼 이후
+
+  // 기업 정보(프로젝트 등록 이력?)
+  route.get('/company', (req, res, next) => {
+  });
+
+  // 프로젝트 홈
+  route.get('/project/:project_id/home', (req, res, next) => {
+  });
+
+  // 프로젝트 내용(데이터, 스토리)
+  route.get('/project/:project_id', (req, res, next) => {
+  });
+
+  // 알림 리스트
+  route.get('/notifications', (req, res, next) => {
+  });
+
+  // 알림 갯수
+  route.get('/notification/num', (req, res, next) => {
+  });
+
+  // 참여자 목록(그룹 인터뷰)
+  route.get('/participants/:project_id', (req, res, next) => {
+  });
+
+  // 인터뷰 내용
+  route.get('/interview/:project_participant_id', (req, res, next) => {
+  });
+
+  // 종합 보고서
+  route.get('/comprehensive-report/:project_id', (req, res, next) => {
+  });
+
+  // 알림 읽음
+  route.put('/notification/read', (req, res, next) => {
+  });
+
+  // 인터뷰 질문 작성(개인)
+  route.post('/interview/:project_participant_id', (req, res, next) => {
+  });
+
+  // 인터뷰 질문 작성(그룹)
+  route.post('/group-interview', (req, res, next) => {
+  });
+
+  // 인터뷰 피드백 좋아요
+  route.post('/interview/like/:project_participant_id', (req, res, next) => {
+  });
+
+  // 디바이스 토큰 등록(푸시 관련)
+  route.post('/device-token', (req, res, next) => {
+  });
+
+
+  //리뉴얼 이전
   route.get('/company', (req, res, next) => {
     var user_id = req.decoded.user_id;
     function selectByUserId() {

@@ -32,7 +32,7 @@ app.use('/company/api/', authMiddleware);
 app.use('/company/api/', companyApi);
 app.use('/admin/api/', authMiddleware);
 app.use('/admin/api/', adminApi);
-app.use('/common/cron/', cron);
+// app.use('/common/cron/', cron);
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/dist/index.html'));

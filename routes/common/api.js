@@ -9,8 +9,8 @@ module.exports = function(conn) {
   var nodemailer = require('nodemailer');
   var smtpPool = require('nodemailer-smtp-pool');
   var voucher_codes = require('voucher-code-generator');
-  var handlebars = require('handlebars');  
-  var path = require('path');  
+  var handlebars = require('handlebars');
+  var path = require('path');
 
   route.post('/upload/:folder', (req, res, next) => {
     var form = new formidable.IncomingForm();
@@ -340,7 +340,7 @@ module.exports = function(conn) {
   });
 
   route.post('/registration', (req, res, next) => {
-    var rand_key = voucher_codes.generate({
+    var user_code = voucher_codes.generate({
         length: 10,
         count: 1
     });
@@ -399,7 +399,7 @@ module.exports = function(conn) {
           hasher({password:req.body.password}, (err, pass, salt, hash) => {
             var user = {
               role: req.body.role,
-              rand_key: rand_key,
+              user_code: user_code,
               auth_id: 'local:' + req.body.username,
               username: req.body.username,
               password: hash,
@@ -411,7 +411,7 @@ module.exports = function(conn) {
             conn.write.query(sql, user, (err, results) => {
               if(err) reject(err);
               else {
-                sendVerifyEmail(req, req.body.username, rand_key);
+                sendVerifyEmail(req, req.body.username, user_code);
                 resolve();
               }
             })
@@ -438,7 +438,7 @@ module.exports = function(conn) {
   });
 
   route.post('/registration-sns', (req, res, next) => {
-    var rand_key = voucher_codes.generate({
+    var user_code = voucher_codes.generate({
         length: 10,
         count: 1
     });
@@ -496,7 +496,7 @@ module.exports = function(conn) {
         (resolve, reject) => {
           var user = {
             role: req.body.role,
-            rand_key: rand_key,
+            user_code: user_code,
             auth_id: req.body.provider + ':' + req.body.app_id,
             username: req.body.username,
             nickname: req.body.nickname,
@@ -506,7 +506,7 @@ module.exports = function(conn) {
           conn.write.query(sql, user, (err, results) => {
             if(err) reject(err);
             else {
-              sendVerifyEmail(req, req.body.username, rand_key);
+              sendVerifyEmail(req, req.body.username, user_code);
               resolve();
             }
           })
@@ -531,16 +531,16 @@ module.exports = function(conn) {
 
   });
 
-  route.get('/verify/:rand_key', (req, res, next) => {
-    var rand_key = req.params.rand_key;
+  route.get('/verify/:user_code', (req, res, next) => {
+    var user_code = req.params.user_code;
 
     function updateVerify() {
       return new Promise(
         (resolve, reject) => {
           var sql = `UPDATE users_table SET
           is_verified = 1
-          WHERE rand_key = ?`;
-          conn.write.query(sql, rand_key, (err, results) => {
+          WHERE user_code = ?`;
+          conn.write.query(sql, user_code, (err, results) => {
             if(err) reject(err);
             else {
               resolve();
@@ -565,7 +565,7 @@ module.exports = function(conn) {
     // res.json({'id': req.app.get('gmail-id')})
   });
 
-  function sendVerifyEmail(req, email, rand_key) {
+  function sendVerifyEmail(req, email, user_code) {
     var smtpTransport = nodemailer.createTransport(smtpPool({
         service: 'gmail',
         host: 'localhost',
@@ -582,14 +582,14 @@ module.exports = function(conn) {
         maxConnections: 5,
         maxMessages: 10
     }));
-    
+
     require('fs').readFile('public/mail-form.html', {encoding: 'utf-8'}, function (err, html) {
       if (err) {
           throw err;
       }
       else {
         var template = handlebars.compile(html);
-        var link = "https://www.feed100.me/common/api/verify/" + rand_key;        
+        var link = "https://www.feed100.me/common/api/verify/" + user_code;
         var replacements = {
              link: link
         };
@@ -607,9 +607,9 @@ module.exports = function(conn) {
             else {
                 console.log('Message send :'+ res);
             }
-    
+
             smtpTransport.close();
-        });  
+        });
       }
     });
 
