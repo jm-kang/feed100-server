@@ -5,16 +5,189 @@ module.exports = function(conn, admin) {
 
   // 마이페이지 유저 정보
   route.get('/user', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function selectByUserId() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table
+          LEFT JOIN levels_table
+          ON users_table.level = levels_table.level
+          WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              delete results[0].password;
+              delete results[0].salt;
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectByUserId()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select user by user_id",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
   });
 
-  // 프로젝트 리스트(보상, 참여중, 추천, 전체)
+  // 프로젝트 리스트(보상, 참여중, 추천)
   route.get('/projects', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    // 보상받을 프로젝트 (선정중, 선정 완료)
+    // 종료, 참여중, 보상 x
+    function selectRewardProjectsByUserId(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM projects_table
+          LEFT JOIN project_participants_table
+          ON projects_table.project_id = project_participants_table.project_id
+          WHERE projects_table.project_end_date < now()
+          and project_participants_table.user_id = ?
+          and project_participants_table.process_condition = 1
+          and project_participants_table.project_reward_date is null`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].rewardProjects = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    // 참여중인 프로젝트
+    // 인터뷰가 왔는지 안왔는지 확인
+    // 진행중, 참여중
+    // 최근 참여가 앞으로 오게 정렬
+    function selectParticipatingProjectsByUserId(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM interviews_table
+          WHERE interview_answer is null
+          and project_participant_id = project_participants_table.project_participant_id) > 0
+          as is_new_interview
+          FROM projects_table
+          LEFT JOIN project_participants_table
+          ON projects_table.project_id = project_participants_table.project_id
+          WHERE projects_table.project_end_date > now()
+          and project_participants_table.process_condition = 1
+          and project_participants_table.user_id = ?
+          ORDER BY project_participants_table.project_participant_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].participatingProjects = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    // 추천하는 프로젝트
+    // 진행중, 공개, 인원 초과 x, 참여 x
+    function selectRecommendedProjectsByUserId(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM projects_table
+          WHERE projects_table.project_end_date > now()
+          and is_private = 0
+          and (SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id
+          and project_participants_table.process_condition = 1)
+          < projects_table.max_participant_num
+          and project_id not in
+          (SELECT projects_table.project_id FROM projects_table
+          LEFT JOIN project_participants_table
+          ON projects_table.project_id = project_participants_table.project_id
+          WHERE project_participants_table.process_condition = 1
+          and project_participants_table.user_id = ?)`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].recommendedProjects = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectRewardProjectsByUserId([{}])
+    .then(selectParticipatingProjectsByUserId)
+    .then(selectRecommendedProjectsByUserId)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select projects",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+  // 프로젝트 리스트(전체)
+  route.get('/all-projects', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    // 전체 프로젝트
+    // 프로젝트 등록순 정렬
+    function selectAllProjectsByUserId(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM projects_table
+          ORDER BY project_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+
+    selectAllProjectsByUserId()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select all projects",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
   });
 
   // 알림 리스트
   route.get('/notifications', (req, res, next) => {
     var user_id = req.decoded.user_id;
 
+    // 알림 갯수 초기화
     function updateNotificationIsNew() {
       return new Promise(
         (resolve, reject) => {
@@ -37,7 +210,7 @@ module.exports = function(conn, admin) {
           SELECT * FROM notifications_table
           LEFT JOIN projects_table
           ON notifications_table.project_id = projects_table.project_id
-          WHERE user_id = ? ORDER BY alarm_id DESC`;
+          WHERE user_id = ? ORDER BY notification_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
             else {
@@ -72,8 +245,9 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT COUNT(*) FROM alarms_table
-          WHERE user_id = ? and alarm_is_new = 1`;
+          SELECT COUNT(*) as notification_num
+          FROM notifications_table
+          WHERE user_id = ? and is_new = 1`;
           conn.read.query(sql, [user_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -170,11 +344,12 @@ module.exports = function(conn, admin) {
     });
   });
 
-  // 유저 프로젝트 참여 정보
+  // 2018.03.16
+  // 유저 프로젝트 참여 정보 (accessProjectCard)
   route.get('/user&project/:project_id', (req, res, next) => {
   });
 
-  // 프로젝트 상태 정보
+  // 프로젝트 상태 정보 (참여 과정)
   route.get('/project/:project_id/pre-condition', (req, res, next) => {
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
@@ -525,6 +700,7 @@ module.exports = function(conn, admin) {
   });
 
   // 보상 받기
+  // 추천 지수(값 없을때만), 레벨 업
   route.post('/project/:project_id/reward', (req, res, next) => {
   });
 
