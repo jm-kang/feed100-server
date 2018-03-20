@@ -152,7 +152,7 @@ module.exports = function(conn, admin) {
 
     // 전체 프로젝트
     // 프로젝트 등록순 정렬
-    function selectAllProjectsByUserId(params) {
+    function selectAllProjectsByUserId() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
@@ -344,65 +344,58 @@ module.exports = function(conn, admin) {
     });
   });
 
-  // 2018.03.16
   // 유저 프로젝트 참여 정보 (accessProjectCard)
   route.get('/user&project/:project_id', (req, res, next) => {
-  });
-
-  // 프로젝트 상태 정보 (참여 과정)
-  route.get('/project/:project_id/pre-condition', (req, res, next) => {
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
 
-    function selectPreCondition() {
+    // is_end(심사) / is_over / is_proceeding
+    function selectProjectById(params) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
           SELECT *,
-          project_end_date > now()
-          as is_proceeding,
-          (SELECT COUNT(*) FROM project_participants_table WHERE project_id = ? and process_condition = 1) >= max_participant_num
-          as is_max
-          FROM projects_table WHERE project_id = ?`;
-          conn.read.query(sql, [project_id, project_id], (err, results) => {
+          (SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id >= max_participant_num)
+          as is_over,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
             if(err) reject(err);
             else {
-              if(!results[0].is_proceeding) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "project is not proceeding"
-                  });
-              }
-              else if(results[0].is_max) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "project is max"
-                  });
-              }
-              else if(!results[0].process_condition) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "is not approved"
-                  });
-              }
-              else {
-                resolve([results[0]]);
-              }
+              params[0].project_info = results[0];
+              resolve([params[0]]);
             }
           });
         }
-      )
+      );
+    }
+    function selectProjectParticipationInfoById(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM project_participants_table
+          WHERE project_id = ? and user_id = ?`;
+          conn.read.query(sql, [project_id, user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].project_participation_info = results[0];
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
     }
 
-    selectPreCondition()
+    selectProjectById([{}])
+    .then(selectProjectParticipationInfoById)
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "select project precondition",
+          "message" : "select project & project_participation info",
           "data" : params[0]
         });
     })
@@ -410,8 +403,72 @@ module.exports = function(conn, admin) {
       console.log(err);
       return next(err);
     });
-
   });
+
+  // 프로젝트 상태 정보 (참여 과정)
+  // process 과정에서 검사
+  // route.get('/project/:project_id/pre-condition', (req, res, next) => {
+  //   var user_id = req.decoded.user_id;
+  //   var project_id = req.params.project_id;
+  //
+  //   function selectPreCondition() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT *,
+  //         project_end_date > now()
+  //         as is_proceeding,
+  //         (SELECT COUNT(*) FROM project_participants_table WHERE project_id = ? and process_condition = 1) >= max_participant_num
+  //         as is_max
+  //         FROM projects_table WHERE project_id = ?`;
+  //         conn.read.query(sql, [project_id, project_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             if(!results[0].is_proceeding) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "project is not proceeding"
+  //                 });
+  //             }
+  //             else if(results[0].is_max) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "project is max"
+  //                 });
+  //             }
+  //             else if(!results[0].process_condition) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "is not approved"
+  //                 });
+  //             }
+  //             else {
+  //               resolve([results[0]]);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //
+  //   selectPreCondition()
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "select project precondition",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
 
   // 프로젝트 내용(데이터, 스토리)
   route.get('/project/:project_id', (req, res, next) => {
@@ -469,10 +526,175 @@ module.exports = function(conn, admin) {
 
   // 프로젝트 홈 데이터(보상, 기간, 인터뷰)
   route.get('/project/:project_id/home', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    // projects_table - 기간
+    // project_participants_table - 인터뷰 선호시간 등
+    // interviews_table - 보상 및 인터뷰
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (SELECT COUNT(*) FROM interviews_table
+          WHERE project_participant_id = project_participant_id
+          and interview_answer is null) > 0
+          as is_new_interview,
+          (SELECT SUM(interview_reward) FROM interviews_table
+          WHERE project_participant_id = project_participant_id
+          and interview_answer is not null)
+          as interview_reward
+          FROM projects_table
+          LEFT JOIN project_participants_table
+          ON project_participants_table.project_id = projects_table.project_id
+          and project_participants_table.user_id = ?
+          WHERE projects_table.project_id = ?`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectProjectById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project home",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
-  // 인터뷰 리스트(답변 안한 것)
-  route.get('/interviews', (req, res, next) => {
+  // 인터뷰 (답변 안한 최신 인터뷰 & 진행중)
+  // appComponent에서 실행
+  route.get('/new-interview', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function selectNewInterview() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM interviews_table
+          LEFT JOIN project_participants_table
+          ON interviews_table.project_participant_id = project_participants_table.project_participant_id
+          LEFT JOIN projects_table
+          ON project_participants_table.project_id = projects_table.project_id
+          WHERE user_id = ?
+          and interview_answer is null
+          and projects_table.project_end_date > now()
+          ORDER BY interview_id DESC limit 1`;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectNewInterview()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select new interview",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 인터뷰 (프로젝트 홈에서 접근)
+  route.get('/interview/:project_id', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectInterviewById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM interviews_table
+          LEFT JOIN project_participants_table
+          ON interviews_table.project_participant_id = project_participants_table.project_participant_id
+          WHERE user_id = ? and project_id = ?
+          and interview_answer is null
+          ORDER BY interview_id DESC limit 1`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectInterviewById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select interview",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 지난 인터뷰 모두 보기
+  route.get('/interviews/:project_participants_id', (req, res, next) => {
+    var project_participant_id = req.params.project_participant_id;
+
+    function selectInterviewsById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM interviews_table
+          WHERE project_participant_id = ?`;
+          conn.read.query(sql, [project_participant_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+
+    selectInterviewsById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select interviews",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
   // 프로필 등록 및 수정
@@ -554,7 +776,7 @@ module.exports = function(conn, admin) {
 
   // 알림 읽음
   route.put('/notification/read', (req, res, next) => {
-    var alarm_id = req.body.alarm_id;
+    var notification_id = req.body.notification_id;
 
     function updateNotificationIsRead() {
       return new Promise(
@@ -696,7 +918,126 @@ module.exports = function(conn, admin) {
   });
 
   // 인터뷰 작성
+  // 알림 및 푸시 전송
   route.put('/interview/:interview_id', (req, res, next) => {
+    var interview_id = req.params.interview_id;
+    var interview_answer = req.body.interview_answer;
+
+    function updateInterviewAnswer() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE interviews_table
+          SET interview_answer = ?, is_new = 1, interview_response_registration_date = now()
+          WHERE interview_id = ?`;
+          conn.write.query(sql, [interview_answer, interview_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      )
+    }
+    function insertNotification() {
+
+    }
+    function sendPush() {
+
+    }
+
+
+    function selectUserIdAndTokens(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT company_id as user_id, device_token, 1 as is_company, project_id
+          FROM projects_table
+          LEFT JOIN users_token_table
+          ON projects_table.company_id = users_token_table.user_id
+          WHERE project_id =
+          (SELECT project_id FROM project_participants_table
+          LEFT JOIN interviews_table
+          ON project_participants_table.project_participant_id = interviews_table.project_participant_id
+          WHERE interview_id = ?)`;
+          conn.read.query(sql, [interview_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              insertNotificationAndPush(0, results);
+            }
+          });
+
+          var user_ids = [];
+          function insertNotificationAndPush(i, list) {
+            if(i < list.length) {
+              var alarm_user_id = list[i].user_id;
+              var project_id = list[i].project_id;
+              var device_token = list[i].device_token;
+              var is_company = list[i].is_company;
+              var alarmData = {
+                user_id : alarm_user_id,
+                project_id : project_id,
+                alarm_link : 'newInterview',
+                alarm_tag : '새 인터뷰',
+              }
+              if(is_company) {
+                alarmData.alarm_content = '새로운 인터뷰 답변이 도착했습니다. 확인해주세요!';
+                if(device_token) {
+                  sendFCM(device_token, alarmData.alarm_content);
+                }
+                if(user_ids.indexOf(alarm_user_id) < 0) {
+                  var sql = `
+                  INSERT INTO alarms_table SET ?`;
+                  conn.write.query(sql, [alarmData], (err, results) => {
+                    if(err) reject(err);
+                    else {
+                      user_ids.push(alarm_user_id);
+                      insertAlarmAndPush(++i, list);
+                    }
+                  });
+                }
+                else {
+                  insertAlarmAndPush(++i, list);
+                }
+              }
+            }
+            else {
+              resolve([params[0]]);
+            }
+          }
+        }
+      )
+    }
+
+
+    updateInterviewAnswer()
+    .then(selectUserIdAndTokens)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "insert interview response",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  route.get('/test', (req, res, next) => {
+    device_token = [
+      "d8g-8Mjokiw:APA91bE4LNQyx7xi2vKkSH7mGc5jj3HXYLGgGf5hyYDFsD9qbZeCbLM38LffFkQTNHxYgsFTss2TZJvrzEKGnLo3zDq5c3kOZj5dh7bMrdB_ladZUr5K1cxa8d--WjeSEoMTLeT935aG",
+      "f3JYLGdh8Q0:APA91bEc2GbPim53i_IEHv8ZYfwl-8QuClxMiNgg0WD3OlXuML8sPAi0xtpzG53Mfq0OJfYigfhTKOIOscolzW2I6DN6GtWIMQ7W6Cz1xTnUoAtqnT32kX_7kN3dQ27pBej-zaGEq8wX",
+      // "cTwL2lDaC1M:APA91bFRkux34YsX0HovUEsCKzNe4fPv18_FPXWQum_w5GfZqq2OV_msL8jC42OTAH4BB6Dbw7ZS12vV3hiU2F3paXHRbLKR55yXwXehXTr4oHZJL8TA4b-1ZuZsm9J1KqfMrW3GHF6y",
+      // "cqQb5anRa44:APA91bHTmsaR4gJqp3PBvYUmny0mWRgx9xKtIEVrnwBGpFqf5Cf5mJQ4Ip9oqejIqvastN207pf5kv_rY9gc8S8MlC34FfJH6vL0PSGUlthliBF7h9lmR_gC1Xk-xHPeIeKNUAUzky7u",
+      // "d2pTX1mVHzg:APA91bER1VgauSLCjfK1Ss8BEuLshmfPHaf7oXu74oxeBA8phDaSFEthPGA5EBPimU8kN5uoDe4h8PAL_OYdBj0R39XkgulOCjCqavNwY8eG5ZRvcWX9pJZ51dGCJRu53bKrH1qg_Nzw"
+    ]
+    content = "빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파";
+    sendFCM(device_token, content);
+    res.send();
   });
 
   // 보상 받기
