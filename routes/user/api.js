@@ -349,20 +349,20 @@ module.exports = function(conn, admin) {
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
 
-    // is_end(심사) / is_over / is_proceeding
+    // is_end(심사) / is_exceeded / is_proceeding
     function selectProjectById(params) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
           SELECT *,
-          (SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id >= max_participant_num)
-          as is_over,
+          ((SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          as is_exceeded,
           (project_end_date > now())
           as is_proceeding
           FROM projects_table
           WHERE project_id = ?`;
-          conn.read.query(sql, project_id, (err, results) => {
+          conn.read.query(sql, [project_id], (err, results) => {
             if(err) reject(err);
             else {
               params[0].project_info = results[0];
@@ -662,7 +662,7 @@ module.exports = function(conn, admin) {
   });
 
   // 지난 인터뷰 모두 보기
-  route.get('/interviews/:project_participants_id', (req, res, next) => {
+  route.get('/interviews/:project_participant_id', (req, res, next) => {
     var project_participant_id = req.params.project_participant_id;
 
     function selectInterviewsById() {
@@ -902,36 +902,541 @@ module.exports = function(conn, admin) {
   });
 
   // 프로젝트 참여 조건 통과
-  route.post('/project/process/condition', (req, res, next) => {
+  route.post('/project/:project_id/process/condition', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+    var project_participation_objective_conditions = req.body.project_participation_objective_conditions;
+    var phone_os = req.body.phone_os;
+    var phone_model = req.body.phone_model;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          ((SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          as is_exceeded,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          LEFT JOIN users_table
+          ON user_id = ?
+          WHERE project_id = ?`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].warn_count >= 3) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "warning count is exceeded"
+                  }
+                )
+              }
+              else if(!results[0].is_proceeding) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not proceeding"
+                  });
+              }
+              else if(results[0].is_exceeded) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is exceeded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function isApprove(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var isApprovedArray = [];
+          isApprovedArray.push(isApprovedProfile(0, true, params[0].gender, JSON.parse(params[0].project_participation_gender_conditions)));
+          isApprovedArray.push(isApprovedProfile(0, true, params[0].age, JSON.parse(params[0].project_participation_age_conditions)));
+          isApprovedArray.push(isApprovedProfile(0, true, params[0].job, JSON.parse(params[0].project_participation_job_conditions)));
+          isApprovedArray.push(isApprovedProfile(0, true, params[0].region, JSON.parse(params[0].project_participation_region_conditions)));
+          isApprovedArray.push(isApprovedProfile(0, true, params[0].marriage, JSON.parse(params[0].project_participation_marriage_conditions)));
+          isApprovedArray.push(isApprovedProfile(0, true, params[0].phone_os, JSON.parse(params[0].project_participation_phone_os_conditions)));
+          isApprovedArray.push(isApprovedAnswer(0, true, project_participation_objective_conditions));
+          console.log(isApprovedArray);
+          var isApproved = isApprovedArray[0] && isApprovedArray[1] && isApprovedArray[2] && isApprovedArray[3] && isApprovedArray[4] && isApprovedArray[5] && isApprovedArray[6];
+          resolve([params[0], isApproved]);
+
+        }
+      )
+
+      function isApprovedProfile(i, isApproved, profile, options) {
+        if(i < options.length && isApproved) {
+          if((options[i].condition && options[i].condition == profile) || (options[i].option && options[i].option == profile)) {
+            if(options[i].isApproved) {
+              return isApprovedProfile(++i, true, profile, options);
+            }
+            else {
+              return isApprovedProfile(++i, false, profile, options);
+            }
+          }
+          else {
+            return isApprovedProfile(++i, true, profile, options);
+          }
+        }
+        else {
+          console.log(profile, isApproved);
+          return isApproved;
+        }
+      }
+      function isApprovedAnswer(i, isApproved, options) {
+        if(i < options.length && isApproved) {
+          var isTrue = isApprovedProfile(0, true, options[i].value, options[i].options);
+          return isApprovedAnswer(++i, isTrue, options);
+        }
+        else {
+          console.log(options, isApproved);
+          return isApproved;
+        }
+      }
+
+    }
+    function insertProjectParticipant(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var participant_data = {
+            user_id : user_id,
+            project_id : project_id,
+            process_condition : params[1],
+            project_participation_objective_conditions : JSON.stringify(project_participation_objective_conditions),
+            gender : params[0].gender,
+            age : params[0].age,
+            region : params[0].region,
+            marriage : params[0].marriage,
+            interests : params[0].interests,
+            phone_os : phone_os,
+            phone_type : phone_model
+          }
+          var sql = `
+          INSERT INTO project_participants_table SET = ?`;
+          conn.write.query(sql, [participant_data], (err, results) => {
+            if(err) reject(err, sql);
+            else {
+              resolve([params[0]]);
+            }
+          });
+
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(isApprove)
+    .then(insertProjectParticipant)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "insert project participant",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
   });
 
   // 프로젝트 테스트 완료
-  route.put('/project/process/test', (req, res, next) => {
+  route.put('/project/:project_id/process/test', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          ((SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          as is_exceeded,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          LEFT JOIN users_table
+          ON user_id = ?
+          WHERE project_id = ?`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].warn_count >= 3) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "warning count is exceeded"
+                  }
+                )
+              }
+              else if(!results[0].is_proceeding) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not proceeding"
+                  });
+              }
+              else if(results[0].is_exceeded) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is exceeded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateProjectParticipant() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table SET process_test = 1
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err, sql);
+            else {
+              resolve([results[0]]);
+            }
+          });
+
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(updateProjectParticipant)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update project participant",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
   // 프로젝트 스토리 퀴즈 통과
-  route.put('/project/process/quiz', (req, res, next) => {
+  route.put('/project/:project_id/process/quiz', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          ((SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          as is_exceeded,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          LEFT JOIN users_table
+          ON user_id = ?
+          WHERE project_id = ?`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].warn_count >= 3) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "warning count is exceeded"
+                  }
+                )
+              }
+              else if(!results[0].is_proceeding) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not proceeding"
+                  });
+              }
+              else if(results[0].is_exceeded) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is exceeded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateProjectParticipant() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table SET process_quiz = 1
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err, sql);
+            else {
+              resolve([results[0]]);
+            }
+          });
+
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(updateProjectParticipant)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update project participant",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
   // 프로젝트 참여 완료(첫인상 점수, 인터뷰, 선호시간 등록)
-  route.put('/project/process/completion', (req, res, next) => {
+  route.put('/project/:project_id/process/completion', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+    var preferred_interview_time = req.body.preferred_interview_time;
+    var project_first_impression_rate = req.body.project_first_impression_rate;
+    var interviews = req.body.interviews;
+    var interview = [ // 성별, 나이, 직업, 지역, 결혼여부, 폰 OS, 폰 모델, 질문들, 첫인상 점수, 만족스러웠던 점, 아쉬웠던 점, 선호시간
+      {
+        "interview_question" : "안녕하십니까? '닉네임'님. 간단한 자기소개 부탁드릴게요!",
+        "interview_answer" : "안녕하세요! 저는 '지역'에 거주하고 있는 '나이''성별' '닉네임'이라고 합니다. 직업은 '직업'이며, 현재 '결혼여부'인 상태입니다."
+      },
+      {
+        "interview_question" : "반갑습니다. 지금부터 기본적인 질문 몇가지를 드릴텐데요. 우선 현재 사용하고 계신 스마트폰 정보가 어떻게 되시나요?",
+        "interview_answer" : "OS는 'OS'이고, 사용중인 기기는 '기종'입니다."
+      },
+      {
+        "interview_question" : "롤을 해본적이 있으신가요?",
+        "interview_answer" : "네."
+      },
+      {
+        "interview_question" : "롤 관련 방송을 얼마나 자주 시청하시나요?",
+        "interview_answer" : "주 5회 이상입니다."
+      },
+      {
+        "interview_question" : "응답 감사합니다. 앞으로 인터뷰를 진행하게 될텐데 선호하는 인터뷰 시간을 말씀해주세요!",
+        "interview_answer" : "저는 '인터뷰 시간대' 정도가 좋을 것 같습니다."
+      },
+      {
+        "interview_question" : "저희 서비스의 첫 인상은 어떠셨나요? 점수로 표현하자면 1~10점 중 몇점을 주시겠습니까?",
+        "interview_answer" : "저의 솔직한 첫인상 점수는 '첫인상 점수'입니다."
+      },
+      {
+        "interview_question" : "솔직한 평가 감사드립니다. 분명 저희 서비스에 대해 만족스러웠던 부분과 아쉬웠던 부분이 있으셨을텐데요. 우선 만족스럽게 느껴지셨던 점에 대해 구체적으로 말씀해주시곘어요?",
+        "interview_answer" : "저는 ~~~~~이래서 저래서 저러쿵 그래서 좋았고, 그래서 그렇습니다",
+        "interview_reward" : 500
+      },
+      {
+        "interview_question" : "아쉬웠던 부분이 있으셨을 것 같은데, 어떠한 부분이 아쉬우셨나요?",
+        "interview_answer" : "아.. 저는 사실 ~~이래서 저래서 저러쿵 그래서 조금 그랬구요. 솔직히 머 그래서 그런게 좀 아쉬워요",
+        "interview_reward" : 500
+      }
+    ]
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          ((SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          as is_exceeded,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          LEFT JOIN users_table
+          ON user_id = ?
+          WHERE project_id = ?`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].warn_count >= 3) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "warning count is exceeded"
+                  }
+                )
+              }
+              else if(!results[0].is_proceeding) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not proceeding"
+                  });
+              }
+              else if(results[0].is_exceeded) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is exceeded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateProjectParticipant() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table
+          SET process_complete = 1
+          and preferred_interview_time = ?
+          and project_first_impression_rate = ?
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, [preferred_interview_time, project_first_impression_rate, user_id, project_id], (err, results) => {
+            if(err) reject(err, sql);
+            else {
+              resolve([results[0]]);
+            }
+          });
+
+        }
+      )
+    }
+    function selectNicknameAndCompanyId() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT nickname,
+          (SELECT company_id FROM projects_table WHERE project_id = ?)
+          as company_id
+          FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, [project_id, user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+    function insertInterviews(params) {
+
+    }
+    function insertNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var notification_data = {
+            user_id : params[0].company_id,
+            project_id : project_id,
+            project_participant_id : project_participant_id,
+            notification_link : 'user',
+            notification_tag : '새 유저',
+            notification_content : params[0].nickname + '님이 매칭되어 인터뷰가 시작되었습니다. 인터뷰를 진행해주세요!'
+          }
+          var sql = `
+          INSERT INTO notifications_table SET ?`;
+          conn.write.query(sql, [notification_data], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]])
+            }
+          });
+        }
+      )
+    }
+    function selectCompanyTokensAndPush(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT device_token
+          FROM user_tokens_table WHERE user_id = ?`;
+          conn.read.query(sql, [params[0].company_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0]) {
+                var device_tokens = results.map((obj) => {
+                  return obj.device_token;
+                })
+                sendFCM(device_tokens, params[0].nickname + '님이 매칭되어 인터뷰가 시작되었습니다. 인터뷰를 진행해주세요!')
+                resolve([results]);
+              }
+              else {
+                resolve([]);
+              }
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(updateProjectParticipant)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update project participant",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
   // 인터뷰 작성
   // 알림 및 푸시 전송
-  route.put('/interview/:interview_id', (req, res, next) => {
+  route.put('/interview/:project_id/:project_participant_id/:interview_id', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+    var project_participant_id = req.params.project_participant_id;
     var interview_id = req.params.interview_id;
     var interview_answer = req.body.interview_answer;
+    var interview_reward = req.body.interview_reward;
 
     function updateInterviewAnswer() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
           UPDATE interviews_table
-          SET interview_answer = ?, is_new = 1, interview_response_registration_date = now()
+          SET interview_answer = ?, interview_reward = ?,
+          is_new = 1, interview_answer_registration_date = now()
           WHERE interview_id = ?`;
-          conn.write.query(sql, [interview_answer, interview_id], (err, results) => {
-            if(err) reject(err);
+          conn.write.query(sql, [interview_answer, interview_reward, interview_id], (err, results) => {
+            if(err) rollback(reject, err);
             else {
               resolve([results]);
             }
@@ -939,84 +1444,81 @@ module.exports = function(conn, admin) {
         }
       )
     }
-    function insertNotification() {
-
-    }
-    function sendPush() {
-
-    }
-
-
-    function selectUserIdAndTokens(params) {
+    function selectNicknameAndCompanyId() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT company_id as user_id, device_token, 1 as is_company, project_id
-          FROM projects_table
-          LEFT JOIN users_token_table
-          ON projects_table.company_id = users_token_table.user_id
-          WHERE project_id =
-          (SELECT project_id FROM project_participants_table
-          LEFT JOIN interviews_table
-          ON project_participants_table.project_participant_id = interviews_table.project_participant_id
-          WHERE interview_id = ?)`;
-          conn.read.query(sql, [interview_id], (err, results) => {
-            if(err) reject(err);
+          SELECT nickname,
+          (SELECT company_id FROM projects_table WHERE project_id = ?)
+          as company_id
+          FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, [project_id, user_id], (err, results) => {
+            if(err) rollback(reject, err);
             else {
-              insertNotificationAndPush(0, results);
+              resolve([results[0]]);
             }
           });
-
-          var user_ids = [];
-          function insertNotificationAndPush(i, list) {
-            if(i < list.length) {
-              var alarm_user_id = list[i].user_id;
-              var project_id = list[i].project_id;
-              var device_token = list[i].device_token;
-              var is_company = list[i].is_company;
-              var alarmData = {
-                user_id : alarm_user_id,
-                project_id : project_id,
-                alarm_link : 'newInterview',
-                alarm_tag : '새 인터뷰',
-              }
-              if(is_company) {
-                alarmData.alarm_content = '새로운 인터뷰 답변이 도착했습니다. 확인해주세요!';
-                if(device_token) {
-                  sendFCM(device_token, alarmData.alarm_content);
-                }
-                if(user_ids.indexOf(alarm_user_id) < 0) {
-                  var sql = `
-                  INSERT INTO alarms_table SET ?`;
-                  conn.write.query(sql, [alarmData], (err, results) => {
-                    if(err) reject(err);
-                    else {
-                      user_ids.push(alarm_user_id);
-                      insertAlarmAndPush(++i, list);
-                    }
-                  });
-                }
-                else {
-                  insertAlarmAndPush(++i, list);
-                }
-              }
-            }
-            else {
-              resolve([params[0]]);
-            }
+        }
+      )
+    }
+    function insertNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var notification_data = {
+            user_id : params[0].company_id,
+            project_id : project_id,
+            project_participant_id : project_participant_id,
+            notification_link : 'interview',
+            notification_tag : '인터뷰',
+            notification_content : params[0].nickname + '님으로부터 인터뷰 답변이 도착했습니다. 확인해주세요!'
           }
+          var sql = `
+          INSERT INTO notifications_table SET ?`;
+          conn.write.query(sql, [notification_data], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]])
+            }
+          });
+        }
+      )
+    }
+    function selectCompanyTokensAndPush(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT device_token
+          FROM user_tokens_table WHERE user_id = ?`;
+          conn.read.query(sql, [params[0].company_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0]) {
+                var device_tokens = results.map((obj) => {
+                  return obj.device_token;
+                })
+                sendFCM(device_tokens, params[0].nickname + '님으로부터 인터뷰 답변이 도착했습니다. 확인해주세요!')
+                resolve([results]);
+              }
+              else {
+                resolve([]);
+              }
+            }
+          });
         }
       )
     }
 
-
-    updateInterviewAnswer()
-    .then(selectUserIdAndTokens)
+    beginTransaction([{}])
+    .then(updateInterviewAnswer)
+    .then(selectNicknameAndCompanyId)
+    .then(insertNotification)
+    .then(selectCompanyTokensAndPush)
+    .then(endTransaction)
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "insert interview response",
+          "message" : "update interview answer",
           "data" : params[0]
         });
     })
