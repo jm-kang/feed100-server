@@ -57,7 +57,7 @@ module.exports = function(conn, admin) {
           ON projects_table.project_id = project_participants_table.project_id
           WHERE projects_table.project_end_date < now()
           and project_participants_table.user_id = ?
-          and project_participants_table.process_condition = 1
+          and project_participants_table.process_completion = 1
           and project_participants_table.project_reward_date is null`;
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
@@ -86,7 +86,7 @@ module.exports = function(conn, admin) {
           LEFT JOIN project_participants_table
           ON projects_table.project_id = project_participants_table.project_id
           WHERE projects_table.project_end_date > now()
-          and project_participants_table.process_condition = 1
+          and project_participants_table.process_completion = 1
           and project_participants_table.user_id = ?
           ORDER BY project_participants_table.project_participant_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
@@ -110,13 +110,13 @@ module.exports = function(conn, admin) {
           and is_private = 0
           and (SELECT COUNT(*) FROM project_participants_table
           WHERE project_id = projects_table.project_id
-          and project_participants_table.process_condition = 1)
+          and project_participants_table.process_completion = 1)
           < projects_table.max_participant_num
           and project_id not in
           (SELECT projects_table.project_id FROM projects_table
           LEFT JOIN project_participants_table
           ON projects_table.project_id = project_participants_table.project_id
-          WHERE project_participants_table.process_condition = 1
+          WHERE project_participants_table.process_completion = 1
           and project_participants_table.user_id = ?)`;
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
@@ -356,7 +356,7 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT *,
           ((SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
           as is_exceeded,
           (project_end_date > now())
           as is_proceeding
@@ -407,68 +407,123 @@ module.exports = function(conn, admin) {
 
   // 프로젝트 상태 정보 (참여 과정)
   // process 과정에서 검사
-  // route.get('/project/:project_id/pre-condition', (req, res, next) => {
-  //   var user_id = req.decoded.user_id;
-  //   var project_id = req.params.project_id;
-  //
-  //   function selectPreCondition() {
-  //     return new Promise(
-  //       (resolve, reject) => {
-  //         var sql = `
-  //         SELECT *,
-  //         project_end_date > now()
-  //         as is_proceeding,
-  //         (SELECT COUNT(*) FROM project_participants_table WHERE project_id = ? and process_condition = 1) >= max_participant_num
-  //         as is_max
-  //         FROM projects_table WHERE project_id = ?`;
-  //         conn.read.query(sql, [project_id, project_id], (err, results) => {
-  //           if(err) reject(err);
-  //           else {
-  //             if(!results[0].is_proceeding) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "project is not proceeding"
-  //                 });
-  //             }
-  //             else if(results[0].is_max) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "project is max"
-  //                 });
-  //             }
-  //             else if(!results[0].process_condition) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "is not approved"
-  //                 });
-  //             }
-  //             else {
-  //               resolve([results[0]]);
-  //             }
-  //           }
-  //         });
-  //       }
-  //     )
-  //   }
-  //
-  //   selectPreCondition()
-  //   .then((params) => {
-  //     res.json(
-  //       {
-  //         "success" : true,
-  //         "message" : "select project precondition",
-  //         "data" : params[0]
-  //       });
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //     return next(err);
-  //   });
-  //
-  // });
+  // condition, quiz, test, completion
+  route.get('/project/:project_id/pre-condition', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          ((SELECT COUNT(*) FROM project_participants_table
+          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
+          as is_exceeded,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          LEFT JOIN users_table
+          ON user_id = ?
+          WHERE project_id = ?`;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0].warn_count >= 3) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "warning count is exceeded"
+                  }
+                )
+              }
+              else if(!results[0].is_proceeding) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not proceeding"
+                  });
+              }
+              else if(results[0].is_exceeded) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is exceeded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function selectParticipantInfo(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT process_condition, process_quiz, process_test, process_completion
+          FROM project_participants_table
+          WHERE user_id = ? and project_id = ?
+          `;
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(!results[0].process_condition) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "condition is not approved"
+                  }
+                )
+              }
+              else if(!results[0].process_quiz) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "quiz is not approved"
+                  });
+              }
+              else if(!results[0].process_test) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "test is not completed"
+                  });
+              }
+              else if (!results[0].process_completion) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "participation is not completed"
+                  });
+              }
+              else {
+                resolve([params[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+
+    selectPreCondition()
+    .then(selectParticipantInfo)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project pre-condition",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
 
   // 프로젝트 내용(데이터, 스토리)
   route.get('/project/:project_id', (req, res, next) => {
@@ -578,9 +633,34 @@ module.exports = function(conn, admin) {
 
   // 인터뷰 (답변 안한 최신 인터뷰 & 진행중)
   // appComponent에서 실행
+  // tutorial 완료 검사
   route.get('/new-interview', (req, res, next) => {
     var user_id = req.decoded.user_id;
 
+    function selectIsTutorialCompleted() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT is_tutorial_completed FROM users_table WHERE user_id = ?
+          `;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(!results[0].is_tutorial_completed) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "is not tutorial completed"
+                  });
+              }
+              else {
+                resolve();
+              }
+            }
+          });
+        }
+      )
+    }
     function selectNewInterview() {
       return new Promise(
         (resolve, reject) => {
@@ -604,7 +684,8 @@ module.exports = function(conn, admin) {
       )
     }
 
-    selectNewInterview()
+    selectIsTutorialCompleted()
+    .then(selectNewInterview)
     .then((params) => {
       res.json(
         {
@@ -621,23 +702,47 @@ module.exports = function(conn, admin) {
   });
 
   // 인터뷰 (프로젝트 홈에서 접근)
-  route.get('/interview/:project_id', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-    var project_id = req.params.project_id;
+  // 인터뷰 보상 받을 수 있는지 => is_max
+  route.get('/interview/:project_participant_id', (req, res, next) => {
+    var project_participant_id = req.params.project_participant_id;
 
     function selectInterviewById() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM interviews_table
+          SELECT *,
+          (project_first_impression_rate = 7 OR project_first_impression_rate = 8)
+          as is_neutral,
+          (SELECT COUNT(*) FROM interviews_table
+          WHERE project_participant_id = ? and interview_reward > 0)
+          as interview_num
+          FROM interviews_table
           LEFT JOIN project_participants_table
           ON interviews_table.project_participant_id = project_participants_table.project_participant_id
-          WHERE user_id = ? and project_id = ?
+          WHERE interviews_table.project_participant_id = ?
           and interview_answer is null
           ORDER BY interview_id DESC limit 1`;
-          conn.read.query(sql, [user_id, project_id], (err, results) => {
+          conn.read.query(sql, [project_participant_id, project_participant_id], (err, results) => {
             if(err) reject(err);
             else {
+              if(results[0]) {
+                if(results[0].is_neutral) {
+                  if(results[0].interview_num >= 7) {
+                    results[0].is_max = 1;
+                  }
+                  else {
+                    results[0].is_max = 0;
+                  }
+                }
+                else {
+                  if(results[0].interview_num >= 6) {
+                    results[0].is_max = 1;
+                  }
+                  else {
+                    results[0].is_max = 0;
+                  }
+                }
+              }
               resolve([results[0]]);
             }
           });
@@ -915,7 +1020,7 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT *,
           ((SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
           as is_exceeded,
           (project_end_date > now())
           as is_proceeding
@@ -1062,7 +1167,7 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT *,
           ((SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
           as is_exceeded,
           (project_end_date > now())
           as is_proceeding
@@ -1107,7 +1212,8 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          UPDATE project_participants_table SET process_test = 1
+          UPDATE project_participants_table
+          SET process_test = 1
           WHERE user_id = ? and project_id = ?`;
           conn.write.query(sql, [user_id, project_id], (err, results) => {
             if(err) reject(err, sql);
@@ -1148,7 +1254,7 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT *,
           ((SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
           as is_exceeded,
           (project_end_date > now())
           as is_proceeding
@@ -1230,42 +1336,42 @@ module.exports = function(conn, admin) {
     var preferred_interview_time = req.body.preferred_interview_time;
     var project_first_impression_rate = req.body.project_first_impression_rate;
     var interviews = req.body.interviews;
-    var interview = [ // 성별, 나이, 직업, 지역, 결혼여부, 폰 OS, 폰 모델, 질문들, 첫인상 점수, 만족스러웠던 점, 아쉬웠던 점, 선호시간
-      {
-        "interview_question" : "안녕하십니까? '닉네임'님. 간단한 자기소개 부탁드릴게요!",
-        "interview_answer" : "안녕하세요! 저는 '지역'에 거주하고 있는 '나이''성별' '닉네임'이라고 합니다. 직업은 '직업'이며, 현재 '결혼여부'인 상태입니다."
-      },
-      {
-        "interview_question" : "반갑습니다. 지금부터 기본적인 질문 몇가지를 드릴텐데요. 우선 현재 사용하고 계신 스마트폰 정보가 어떻게 되시나요?",
-        "interview_answer" : "OS는 'OS'이고, 사용중인 기기는 '기종'입니다."
-      },
-      {
-        "interview_question" : "롤을 해본적이 있으신가요?",
-        "interview_answer" : "네."
-      },
-      {
-        "interview_question" : "롤 관련 방송을 얼마나 자주 시청하시나요?",
-        "interview_answer" : "주 5회 이상입니다."
-      },
-      {
-        "interview_question" : "응답 감사합니다. 앞으로 인터뷰를 진행하게 될텐데 선호하는 인터뷰 시간을 말씀해주세요!",
-        "interview_answer" : "저는 '인터뷰 시간대' 정도가 좋을 것 같습니다."
-      },
-      {
-        "interview_question" : "저희 서비스의 첫 인상은 어떠셨나요? 점수로 표현하자면 1~10점 중 몇점을 주시겠습니까?",
-        "interview_answer" : "저의 솔직한 첫인상 점수는 '첫인상 점수'입니다."
-      },
-      {
-        "interview_question" : "솔직한 평가 감사드립니다. 분명 저희 서비스에 대해 만족스러웠던 부분과 아쉬웠던 부분이 있으셨을텐데요. 우선 만족스럽게 느껴지셨던 점에 대해 구체적으로 말씀해주시곘어요?",
-        "interview_answer" : "저는 ~~~~~이래서 저래서 저러쿵 그래서 좋았고, 그래서 그렇습니다",
-        "interview_reward" : 500
-      },
-      {
-        "interview_question" : "아쉬웠던 부분이 있으셨을 것 같은데, 어떠한 부분이 아쉬우셨나요?",
-        "interview_answer" : "아.. 저는 사실 ~~이래서 저래서 저러쿵 그래서 조금 그랬구요. 솔직히 머 그래서 그런게 좀 아쉬워요",
-        "interview_reward" : 500
-      }
-    ]
+    // var interviews = [ // 성별, 나이, 직업, 지역, 결혼여부, 폰 OS, 폰 모델, 질문들, 첫인상 점수, 만족스러웠던 점, 아쉬웠던 점, 선호시간
+    //   // {
+    //   //   "interview_question" : "안녕하십니까? '닉네임'님. 간단한 자기소개 부탁드릴게요!",
+    //   //   "interview_answer" : "안녕하세요! 저는 '지역'에 거주하고 있는 '나이''성별' '닉네임'이라고 합니다. 직업은 '직업'이며, 현재 '결혼여부'인 상태입니다."
+    //   // },
+    //   // {
+    //   //   "interview_question" : "반갑습니다. 지금부터 기본적인 질문 몇가지를 드릴텐데요. 우선 현재 사용하고 계신 스마트폰 정보가 어떻게 되시나요?",
+    //   //   "interview_answer" : "OS는 'OS'이고, 사용중인 기기는 '기종'입니다."
+    //   // },
+    //   // {
+    //   //   "interview_question" : "롤을 해본적이 있으신가요?",
+    //   //   "interview_answer" : "네."
+    //   // },
+    //   // {
+    //   //   "interview_question" : "롤 관련 방송을 얼마나 자주 시청하시나요?",
+    //   //   "interview_answer" : "주 5회 이상입니다."
+    //   // },
+    //   // {
+    //   //   "interview_question" : "응답 감사합니다. 앞으로 인터뷰를 진행하게 될텐데 선호하는 인터뷰 시간을 말씀해주세요!",
+    //   //   "interview_answer" : "저는 '인터뷰 시간대' 정도가 좋을 것 같습니다."
+    //   // },
+    //   // {
+    //   //   "interview_question" : "저희 서비스의 첫 인상은 어떠셨나요? 점수로 표현하자면 1~10점 중 몇점을 주시겠습니까?",
+    //   //   "interview_answer" : "저의 솔직한 첫인상 점수는 '첫인상 점수'입니다."
+    //   // },
+    //   {
+    //     "interview_question" : "솔직한 평가 감사드립니다. 분명 저희 서비스에 대해 만족스러웠던 부분과 아쉬웠던 부분이 있으셨을텐데요. 우선 만족스럽게 느껴지셨던 점에 대해 구체적으로 말씀해주시곘어요?",
+    //     "interview_answer" : "저는 ~~~~~이래서 저래서 저러쿵 그래서 좋았고, 그래서 그렇습니다",
+    //     "interview_reward" : 500
+    //   },
+    //   {
+    //     "interview_question" : "아쉬웠던 부분이 있으셨을 것 같은데, 어떠한 부분이 아쉬우셨나요?",
+    //     "interview_answer" : "아.. 저는 사실 ~~이래서 저래서 저러쿵 그래서 조금 그랬구요. 솔직히 머 그래서 그런게 좀 아쉬워요",
+    //     "interview_reward" : 500
+    //   }
+    // ]
 
     function selectPreCondition() {
       return new Promise(
@@ -1273,7 +1379,7 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT *,
           ((SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id) >= max_participant_num)
+          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
           as is_exceeded,
           (project_end_date > now())
           as is_proceeding
@@ -1282,7 +1388,7 @@ module.exports = function(conn, admin) {
           ON user_id = ?
           WHERE project_id = ?`;
           conn.read.query(sql, [user_id, project_id], (err, results) => {
-            if(err) reject(err);
+            if(err) rollback(reject, err);
             else {
               if(results[0].warn_count >= 3) {
                 res.json(
@@ -1319,29 +1425,32 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var sql = `
           UPDATE project_participants_table
-          SET process_complete = 1
-          and preferred_interview_time = ?
-          and project_first_impression_rate = ?
+          SET process_completion = 1,
+          preferred_interview_time = ?,
+          project_first_impression_rate = ?,
+          project_participation_date = now()
           WHERE user_id = ? and project_id = ?`;
           conn.write.query(sql, [preferred_interview_time, project_first_impression_rate, user_id, project_id], (err, results) => {
-            if(err) reject(err, sql);
+            if(err) rollback(reject, err);
             else {
-              resolve([results[0]]);
+              resolve();
             }
           });
 
         }
       )
     }
-    function selectNicknameAndCompanyId() {
+    function selectNicknameAndParticipantIdAndCompanyId() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
           SELECT nickname,
+          (SELECT project_participant_id FROM project_participants_table WHERE user_id = ? and project_id = ?)
+          as project_participant_id,
           (SELECT company_id FROM projects_table WHERE project_id = ?)
           as company_id
           FROM users_table WHERE user_id = ?`;
-          conn.read.query(sql, [project_id, user_id], (err, results) => {
+          conn.read.query(sql, [user_id, project_id, project_id, user_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               resolve([results[0]]);
@@ -1351,7 +1460,23 @@ module.exports = function(conn, admin) {
       )
     }
     function insertInterviews(params) {
-
+      return new Promise(
+        (resolve, reject) => {
+          interviews.forEach((obj) => {
+            var sql = `
+            INSERT INTO interviews_table
+            SET ?, project_participant_id = ?,
+            is_new = 1, interview_answer_registration_date = now()`;
+            conn.write.query(sql, [obj, params[0].project_participant_id], (err, results) => {
+              if(err) rollback(reject, err);
+              else {
+                console.log(obj);
+              }
+            });
+          });
+          resolve([params[0]]);
+        }
+      )
     }
     function insertNotification(params) {
       return new Promise(
@@ -1359,7 +1484,7 @@ module.exports = function(conn, admin) {
           var notification_data = {
             user_id : params[0].company_id,
             project_id : project_id,
-            project_participant_id : project_participant_id,
+            project_participant_id : params[0].project_participant_id,
             notification_link : 'user',
             notification_tag : '새 유저',
             notification_content : params[0].nickname + '님이 매칭되어 인터뷰가 시작되었습니다. 인터뷰를 진행해주세요!'
@@ -1400,8 +1525,14 @@ module.exports = function(conn, admin) {
       )
     }
 
-    selectPreCondition()
+    beginTransaction([{}])
+    .then(selectPreCondition)
     .then(updateProjectParticipant)
+    .then(selectNicknameAndParticipantIdAndCompanyId)
+    .then(insertInterviews)
+    .then(insertNotification)
+    .then(selectCompanyTokensAndPush)
+    .then(endTransaction)
     .then((params) => {
       res.json(
         {
@@ -1529,22 +1660,258 @@ module.exports = function(conn, admin) {
 
   });
 
-  route.get('/test', (req, res, next) => {
-    device_token = [
-      "d8g-8Mjokiw:APA91bE4LNQyx7xi2vKkSH7mGc5jj3HXYLGgGf5hyYDFsD9qbZeCbLM38LffFkQTNHxYgsFTss2TZJvrzEKGnLo3zDq5c3kOZj5dh7bMrdB_ladZUr5K1cxa8d--WjeSEoMTLeT935aG",
-      "f3JYLGdh8Q0:APA91bEc2GbPim53i_IEHv8ZYfwl-8QuClxMiNgg0WD3OlXuML8sPAi0xtpzG53Mfq0OJfYigfhTKOIOscolzW2I6DN6GtWIMQ7W6Cz1xTnUoAtqnT32kX_7kN3dQ27pBej-zaGEq8wX",
-      // "cTwL2lDaC1M:APA91bFRkux34YsX0HovUEsCKzNe4fPv18_FPXWQum_w5GfZqq2OV_msL8jC42OTAH4BB6Dbw7ZS12vV3hiU2F3paXHRbLKR55yXwXehXTr4oHZJL8TA4b-1ZuZsm9J1KqfMrW3GHF6y",
-      // "cqQb5anRa44:APA91bHTmsaR4gJqp3PBvYUmny0mWRgx9xKtIEVrnwBGpFqf5Cf5mJQ4Ip9oqejIqvastN207pf5kv_rY9gc8S8MlC34FfJH6vL0PSGUlthliBF7h9lmR_gC1Xk-xHPeIeKNUAUzky7u",
-      // "d2pTX1mVHzg:APA91bER1VgauSLCjfK1Ss8BEuLshmfPHaf7oXu74oxeBA8phDaSFEthPGA5EBPimU8kN5uoDe4h8PAL_OYdBj0R39XkgulOCjCqavNwY8eG5ZRvcWX9pJZ51dGCJRu53bKrH1qg_Nzw"
-    ]
-    content = "빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파빨리와배고파";
-    sendFCM(device_token, content);
-    res.send();
-  });
-
-  // 보상 받기
+  // 보상 받기 (인터뷰, 선정 포인트 및 경험치)
   // 추천 지수(값 없을때만), 레벨 업
   route.post('/project/:project_id/reward', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    var project_id = req.params.project_id;
+    var project_recommendation_rate = req.body.project_recommendation_rate;
+    const selection_reward = 2000;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          levels_table.level, levels_table.required_experience_point, levels_table.level_class,
+          next_level_table.level as next_level,
+          next_level_table.required_experience_point as next_required_experience_point,
+          next_level_table.level_class as next_level_class,
+          project_participant_id, project_recommendation_rate, project_reward_date,
+          (SELECT SUM(interview_reward) FROM interviews_table
+          WHERE project_participant_id = project_participants_table.project_participant_id)
+          as interview_reward,
+          IF(project_participants_table.is_selected, ?, 0)
+          as selection_reward
+          FROM users_table
+          LEFT JOIN levels_table
+          ON users_table.level = levels_table.level
+          LEFT JOIN levels_table as next_level_table
+          ON next_level_table.level = levels_table.level + 1
+          LEFT JOIN project_participants_table
+          ON users_table.user_id = project_participants_table.user_id
+          WHERE users_table.user_id = ? and project_id = ?`;
+          conn.read.query(sql, [selection_reward, user_id, project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0].project_recommendation_rate) {
+                project_recommendation_rate = results[0].project_recommendation_rate;
+              }
+              if(results[0].project_reward_date) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "is already rewarded"
+                  });
+              }
+              else {
+                results[0].project_point = results[0].interview_reward + results[0].selection_reward;
+                results[0].project_experience_point = (results[0].project_point / 100).toFixed(0) * 1;
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateRewardInfo(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table
+          SET project_recommendation_rate = ?, project_reward_date = now()
+          WHERE project_participant_id = ?`;
+          conn.write.query(sql, [project_recommendation_rate, params[0].project_participant_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function updateLevelAndPoint(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var total_point = params[0].point + params[0].project_point;
+          var total_experience_point = params[0].experience_point + params[0].project_experience_point;
+          var new_level = params[0].level;
+          var new_experience_point = total_experience_point;
+
+          if(total_experience_point >= params[0].required_experience_point) { // 레벨업 필요
+            if(params[0].required_experience_point == 0) { // 최고 레벨일 경우
+              new_experience_point = 0;
+            }
+            else if(params[0].next_required_experience_point == 0) { // 최고 레벨로 업하는 경우
+              new_level = params[0].level + 1;
+              new_experience_point = 0;
+            }
+            else { // 레벨업 하는 경우
+              new_level = params[0].level + 1;
+              new_experience_point = total_experience_point - params[0].required_experience_point;
+            }
+          }
+
+          var sql = `
+          UPDATE users_table
+          SET level = ?, experience_point = ?, point = ?
+          WHERE user_id = ?`;
+          conn.write.query(sql, [new_level, new_experience_point, total_point, user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function insertPointHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var point_data = {
+            user_id : user_id,
+            is_accumulated : true,
+            point : params[0].project_point,
+            total_point : params[0].point + params[0].project_point,
+          }
+          var sql = `
+          INSERT INTO point_history_table
+          SET ?,
+          description = (SELECT project_name FROM projects_table WHERE project_id = ?)`;
+          conn.write.query(sql, [point_data, project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    beginTransaction([{}])
+    .then(selectPreCondition)
+    .then(updateRewardInfo)
+    .then(updateLevelAndPoint)
+    .then(insertPointHistory)
+    .then(endTransaction)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "success project reward",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 튜토리얼 완료 및 보상
+  route.post('/tutorial/reward', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    const tutorial_reward = 1000;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0].is_tutorial_completed) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "is already rewarded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updateRewardInfo(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE users_table
+          SET is_tutorial_completed = 1
+          WHERE user_id = ?`;
+          conn.write.query(sql, [user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function updatePoint(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var total_point = params[0].point + tutorial_reward;
+          var sql = `
+          UPDATE users_table
+          SET point = ?
+          WHERE user_id = ?`;
+          conn.write.query(sql, [total_point, user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function insertPointHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var point_data = {
+            user_id : user_id,
+            is_accumulated : true,
+            point : tutorial_reward,
+            total_point : params[0].point + tutorial_reward,
+          }
+          var sql = `
+          INSERT INTO point_history_table
+          SET ?,
+          description = ?`;
+          conn.write.query(sql, [point_data, "축하합니다! 튜토리얼을 완료하였습니다."], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    beginTransaction([{}])
+    .then(selectPreCondition)
+    .then(updateRewardInfo)
+    .then(updatePoint)
+    .then(insertPointHistory)
+    .then(endTransaction)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "success tutorial reward",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
   });
 
   // 디바이스 토큰 등록(푸시 관련)
