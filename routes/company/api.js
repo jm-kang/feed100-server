@@ -474,9 +474,9 @@ module.exports = function(conn, admin) {
           var notification_data = {
             user_id : params[0].user_id,
             project_id : project_id,
-            notification_link : 'interview',
-            notification_tag : '인터뷰',
-            notification_content : '\'' + params[0].project_name + '\' 로부터 인터뷰 요청이 도착하였습니다. 응답해주세요!'
+            notification_link : 'newInterview',
+            notification_tag : '인터뷰 요청',
+            notification_content : '새로운 인터뷰가 도착했습니다. 응답해주세요!'
           }
           var sql = `
           INSERT INTO notifications_table SET ?`;
@@ -503,7 +503,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 요청]\n\'' + params[0].project_name + '\' 로부터 인터뷰 요청이 도착했습니다. 응답해주세요!')
+                sendFCM(device_tokens, '[인터뷰 요청]', '새로운 인터뷰가 도착했습니다. 응답해주세요!')
                 resolve([results]);
               }
               else {
@@ -539,16 +539,17 @@ module.exports = function(conn, admin) {
   // 인터뷰 질문 작성(그룹)
   // 알림 및 푸시 전송
   route.post('/group-interview/:project_id', (req, res, next) => {
-    // var project_id = req.params.project_id;
-    // var project_participants_id = req.params.project_participants_id;
-    // var interview_question = req.body.interview_question;
-    var project_id = 21;
-    var project_participants_id = [1, 2, 3, 4];
-    var interview_question = "그룹 인터뷰 테스트입니다.";
+    var project_id = req.params.project_id;
+    var project_participants_id = req.params.project_participants_id;
+    var interview_question = req.body.interview_question;
+    // var project_id = 22;
+    // var project_participants_id = [2, 3];
+    // var interview_question = "그룹 인터뷰 테스트입니다.";
 
     function insertInterviewQuestion(params) {
       return new Promise(
         (resolve, reject) => {
+          console.log('insertInterviewQuestion');
           var sql = `
           INSERT INTO interviews_table
           SET interview_question = ?, project_participant_id = ?`;
@@ -564,6 +565,7 @@ module.exports = function(conn, admin) {
     function selectProjectNameAndUserId(params) {
       return new Promise(
         (resolve, reject) => {
+          console.log('selectProjectNameAndUserId');
           var sql = `
           SELECT project_name,
           (SELECT users_table.user_id FROM users_table
@@ -583,12 +585,13 @@ module.exports = function(conn, admin) {
     function insertNotification(params) {
       return new Promise(
         (resolve, reject) => {
+          console.log('insertNotification');
           var notification_data = {
             user_id : params[0].user_id,
             project_id : project_id,
-            notification_link : 'interview',
-            notification_tag : '인터뷰',
-            notification_content : '\'' + params[0].project_name + '\' 로부터 인터뷰 요청이 도착하였습니다. 응답해주세요!'
+            notification_link : 'newInterview',
+            notification_tag : '인터뷰 요청',
+            notification_content : '새로운 인터뷰가 도착했습니다. 응답해주세요!'
           }
           var sql = `
           INSERT INTO notifications_table SET ?`;
@@ -602,24 +605,29 @@ module.exports = function(conn, admin) {
       )
 
     }
-    function selectUserTokensAndPush(params) {
+
+    function selectUserTokensAndPushs(params) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
           SELECT device_token
-          FROM user_tokens_table WHERE user_id = ?`;
-          conn.read.query(sql, [params[0].user_id], (err, results) => {
+          FROM user_tokens_table
+          WHERE user_id in
+          (SELECT user_id FROM project_participants_table
+            WHERE project_participant_id in (?))
+          `;
+          conn.read.query(sql, [project_participants_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               if(results[0]) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 요청]\n\'' + params[0].project_name + '\' 로부터 인터뷰 요청이 도착했습니다. 응답해주세요!')
+                sendFCM(device_tokens, '[인터뷰 요청]', '새로운 인터뷰가 도착했습니다. 응답해주세요!');
                 resolve([results]);
               }
               else {
-                resolve([]);
+                resolve([{}]);
               }
             }
           });
@@ -627,16 +635,48 @@ module.exports = function(conn, admin) {
       )
     }
 
+    function insertInterviews(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var forEachCondition = true;
+          var len = project_participants_id.length;
+          var epoch = 0;
+          project_participants_id.forEach((project_participant_id) => {
+            console.log(project_participant_id);
+            insertInterviewQuestion([{ project_participant_id : project_participant_id }])
+            .then(selectProjectNameAndUserId)
+            .then(insertNotification)
+            .then((params) => {
+              console.log(project_participant_id + " params : " + params);
+              epoch++;
+              if(epoch == len) {
+                console.log('then', forEachCondition, project_participant_id);
+                if(forEachCondition) {
+                  resolve([params[0]]);
+                }
+                else {
+                  rollback(reject, 'insertInterviews error');
+                }
+              }
+            })
+            .catch((err) => {
+              forEachCondition = false;
+              epoch++;
+              if(epoch == len) {
+                console.log('catch', forEachCondition, project_participant_id);
+                rollback(reject, err);
+              }
+            })
+          });
+
+        }
+      )
+    }
+
     beginTransaction([{}])
-    project_participants_id.forEach((project_participant_id) => {
-      insertInterviewQuestion([{ project_participant_id : project_participant_id }])
-      .then(selectProjectNameAndUserId)
-      .then(insertNotification)
-      .then(selectUserTokensAndPush)
-      console.log(project_participant_id);
-    });
-    console.log("end")
-    endTransaction([{}])
+    .then(insertInterviews)
+    .then(selectUserTokensAndPushs)
+    .then(endTransaction)
     .then((params) => {
       res.json(
         {
@@ -2621,7 +2661,7 @@ module.exports = function(conn, admin) {
   //   sendFCM(req.body.device_token, res);
   // });
 
-  function sendFCM(device_token, content) {
+  function sendFCM(device_token, title, content) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
 
@@ -2629,6 +2669,7 @@ module.exports = function(conn, admin) {
     // on how to define a message payload.
     var payload = {
       notification: {
+        title: title,
         body: content,
         sound: "default"
       }

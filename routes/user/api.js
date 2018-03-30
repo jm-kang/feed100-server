@@ -1462,18 +1462,34 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           interviews.forEach((interview) => {
+            var forEachCondition = true;
+            var len = interviews.length;
+            var epoch = 0;
             var sql = `
             INSERT INTO interviews_table
             SET ?, project_participant_id = ?,
             is_new = 1, interview_answer_registration_date = now()`;
             conn.write.query(sql, [interview, params[0].project_participant_id], (err, results) => {
-              if(err) rollback(reject, err);
+              if(err) {
+                forEachCondition = false;
+                epoch++;
+                if(epoch == len) {
+                  rollback(reject, err);
+                }
+              }
               else {
-                console.log(interview);
+                epoch++;
+                if(epoch == len) {
+                  if(forEachCondition) {
+                    resolve([params[0]]);
+                  }
+                  else {
+                    rollback(reject, 'insertInterviews error');
+                  }
+                }
               }
             });
           });
-          resolve([params[0]]);
         }
       )
     }
@@ -1484,9 +1500,9 @@ module.exports = function(conn, admin) {
             user_id : params[0].company_id,
             project_id : project_id,
             project_participant_id : params[0].project_participant_id,
-            notification_link : 'user',
-            notification_tag : '새 유저',
-            notification_content : params[0].nickname + '님이 매칭되어 인터뷰가 시작되었습니다. 인터뷰를 진행해주세요!'
+            notification_link : 'newUser',
+            notification_tag : '유저 참여',
+            notification_content : '새로운 유저와 매칭이 성사되었습니다. 인터뷰를 진행해주세요!'
           }
           var sql = `
           INSERT INTO notifications_table SET ?`;
@@ -1512,7 +1528,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, params[0].nickname + '님이 매칭되어 인터뷰가 시작되었습니다. 인터뷰를 진행해주세요!')
+                sendFCM(device_tokens, '[유저 참여]', '새로운 유저와 매칭이 성사되었습니다. 인터뷰를 진행해주세요!')
                 resolve([results]);
               }
               else {
@@ -1598,9 +1614,9 @@ module.exports = function(conn, admin) {
             user_id : params[0].company_id,
             project_id : project_id,
             project_participant_id : project_participant_id,
-            notification_link : 'interview',
+            notification_link : 'newInterview',
             notification_tag : '인터뷰',
-            notification_content : params[0].nickname + '님으로부터 인터뷰 답변이 도착했습니다. 확인해주세요!'
+            notification_content : '인터뷰 답변이 도착했습니다. 확인해주세요!'
           }
           var sql = `
           INSERT INTO notifications_table SET ?`;
@@ -1626,7 +1642,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, params[0].nickname + '님으로부터 인터뷰 답변이 도착했습니다. 확인해주세요!')
+                sendFCM(device_tokens, '인터뷰', '인터뷰 답변이 도착했습니다. 확인해주세요!')
                 resolve([results]);
               }
               else {
@@ -4669,7 +4685,7 @@ module.exports = function(conn, admin) {
   //
   // });
 
-  function sendFCM(device_token, content) {
+  function sendFCM(device_token, title, content) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
 
@@ -4677,6 +4693,7 @@ module.exports = function(conn, admin) {
     // on how to define a message payload.
     var payload = {
       notification: {
+        title: title,
         body: content,
         sound: "default"
       }

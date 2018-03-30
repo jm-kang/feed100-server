@@ -336,7 +336,7 @@ module.exports = function(conn, admin) {
 
   route.get('/send-test/:device_token', (req, res, next) => {
     console.log(req.params.device_token);
-    sendFCM(req.params.device_token, "Hello FEED100");
+    sendFCM(req.params.device_token, '', "Hello FEED100");
     res.send('send');
   });
 
@@ -819,7 +819,7 @@ module.exports = function(conn, admin) {
               if(!is_company) {
                 alarmData.alarm_content = '해당 프로젝트에서 제외되었습니다.';
                 if(device_token) {
-                  sendFCM(device_token, alarmData.alarm_content);
+                  sendFCM(device_token, '', alarmData.alarm_content);
                 }
                 if(user_ids.indexOf(alarm_user_id) < 0) {
                   var sql = `
@@ -2137,11 +2137,11 @@ module.exports = function(conn, admin) {
 
   route.post('/send-test', (req, res, next) => {
     console.log(req.body);
-    sendFCM(req.body.device_token, res);
+    sendFCM(req.body.device_token, '', res);
   });
   /* mobile */
 
-  function sendFCM(device_token, content) {
+  function sendFCM(device_token, title, content) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
 
@@ -2149,6 +2149,7 @@ module.exports = function(conn, admin) {
     // on how to define a message payload.
     var payload = {
       notification: {
+        title: title,
         body: content,
         sound: "default"
       }
