@@ -24,11 +24,11 @@ app.use(cors);
 
 app.use('/common/api', versionMiddleware);
 app.use('/common/api', commonApi);
-// app.use('/user/api/', versionMiddleware);
-// app.use('/user/api/', authMiddleware);
+app.use('/user/api/', versionMiddleware);
+app.use('/user/api/', authMiddleware);
 app.use('/user/api/', userApi);
-// app.use('/company/api/', versionMiddleware);
-// app.use('/company/api/', authMiddleware);
+app.use('/company/api/', versionMiddleware);
+app.use('/company/api/', authMiddleware);
 app.use('/company/api/', companyApi);
 app.use('/admin/api/', authMiddleware);
 app.use('/admin/api/', adminApi);

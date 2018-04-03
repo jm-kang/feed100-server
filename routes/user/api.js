@@ -207,7 +207,10 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM notifications_table
+          SELECT *,
+          project_main_image as notification_image,
+          project_name as notification_name
+          FROM notifications_table
           LEFT JOIN projects_table
           ON notifications_table.project_id = projects_table.project_id
           WHERE user_id = ? ORDER BY notification_id DESC`;
@@ -1528,7 +1531,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[유저 참여]', '새로운 유저와 매칭이 성사되었습니다. 인터뷰를 진행해주세요!')
+                sendFCM(device_tokens, '[유저 참여] ' + params[0].nickname, '새로운 유저와 매칭이 성사되었습니다. 인터뷰를 진행해주세요!');
                 resolve([results]);
               }
               else {
@@ -1615,7 +1618,7 @@ module.exports = function(conn, admin) {
             project_id : project_id,
             project_participant_id : project_participant_id,
             notification_link : 'newInterview',
-            notification_tag : '인터뷰',
+            notification_tag : '인터뷰 응답',
             notification_content : '인터뷰 답변이 도착했습니다. 확인해주세요!'
           }
           var sql = `
@@ -1642,7 +1645,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '인터뷰', '인터뷰 답변이 도착했습니다. 확인해주세요!')
+                sendFCM(device_tokens, '[인터뷰 응답] ' + params[0].nickname, '인터뷰 답변이 도착했습니다. 확인해주세요!');
                 resolve([results]);
               }
               else {
@@ -1939,7 +1942,7 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          INSERT INTO users_token_table (uuid, device_token, user_id) VALUES (?, ?, ?)
+          INSERT INTO user_tokens_table (uuid, device_token, user_id) VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE uuid = ?, device_token = ?, user_id = ?
           `;
           conn.write.query(sql, [uuid, device_token, user_id, uuid, device_token, user_id], (err, results) => {
@@ -4728,7 +4731,7 @@ module.exports = function(conn, admin) {
     return new Promise(
       (resolve, reject) => {
         var sql = `
-        DELETE FROM users_token_table WHERE device_token = ?
+        DELETE FROM user_tokens_table WHERE device_token = ?
         `;
         conn.write.query(sql, device_token, (err, results) => {
           if(err) reject(err);

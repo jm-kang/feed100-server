@@ -503,7 +503,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 요청]', '새로운 인터뷰가 도착했습니다. 응답해주세요!')
+                sendFCM(device_tokens, '[인터뷰 요청] ' + params[0].project_name, '새로운 인터뷰가 도착했습니다. 응답해주세요!')
                 resolve([results]);
               }
               else {
@@ -623,7 +623,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 요청]', '새로운 인터뷰가 도착했습니다. 응답해주세요!');
+                sendFCM(device_tokens, '[인터뷰 요청] ' + params[0].project_name, '새로운 인터뷰가 도착했습니다. 응답해주세요!');
                 resolve([results]);
               }
               else {
