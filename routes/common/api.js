@@ -176,7 +176,7 @@ module.exports = function(conn) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          DELETE FROM users_token_table WHERE uuid = ?
+          DELETE FROM user_tokens_table WHERE uuid = ?
           `;
           conn.write.query(sql, uuid, (err, results) => {
             if(err) reject(err);

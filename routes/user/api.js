@@ -435,7 +435,7 @@ module.exports = function(conn, admin) {
               if(results[0].warn_count >= 3) {
                 res.json(
                   {
-                    "success" : true,
+                    "success" : false,
                     "message" : "warning count is exceeded"
                   }
                 )
@@ -724,7 +724,7 @@ module.exports = function(conn, admin) {
           ON interviews_table.project_participant_id = project_participants_table.project_participant_id
           WHERE interviews_table.project_participant_id = ?
           and interview_answer is null
-          ORDER BY interview_id DESC limit 1`;
+          ORDER BY interview_id ASC limit 1`;
           conn.read.query(sql, [project_participant_id, project_participant_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -778,7 +778,8 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var sql = `
           SELECT * FROM interviews_table
-          WHERE project_participant_id = ?`;
+          WHERE project_participant_id = ?
+          and interview_answer is not null`;
           conn.read.query(sql, [project_participant_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -1036,7 +1037,7 @@ module.exports = function(conn, admin) {
               if(results[0].warn_count >= 3) {
                 res.json(
                   {
-                    "success" : true,
+                    "success" : false,
                     "message" : "warning count is exceeded"
                   }
                 )
@@ -1072,7 +1073,7 @@ module.exports = function(conn, admin) {
           isApprovedArray.push(isApprovedProfile(0, true, params[0].job, JSON.parse(params[0].project_participation_job_conditions)));
           isApprovedArray.push(isApprovedProfile(0, true, params[0].region, JSON.parse(params[0].project_participation_region_conditions)));
           isApprovedArray.push(isApprovedProfile(0, true, params[0].marriage, JSON.parse(params[0].project_participation_marriage_conditions)));
-          isApprovedArray.push(isApprovedProfile(0, true, params[0].phone_os, JSON.parse(params[0].project_participation_phone_os_conditions)));
+          isApprovedArray.push(isApprovedProfile(0, true, phone_os, JSON.parse(params[0].project_participation_phone_os_conditions)));
           isApprovedArray.push(isApprovedAnswer(0, true, project_participation_objective_conditions));
           console.log(isApprovedArray);
           var isApproved = isApprovedArray[0] && isApprovedArray[1] && isApprovedArray[2] && isApprovedArray[3] && isApprovedArray[4] && isApprovedArray[5] && isApprovedArray[6];
@@ -1122,17 +1123,26 @@ module.exports = function(conn, admin) {
             project_participation_objective_conditions : JSON.stringify(project_participation_objective_conditions),
             gender : params[0].gender,
             age : params[0].age,
+            job : params[0].job,
             region : params[0].region,
             marriage : params[0].marriage,
             interests : params[0].interests,
             phone_os : phone_os,
-            phone_type : phone_model
+            phone_model : phone_model
           }
+          console.log(participant_data);
           var sql = `
-          INSERT INTO project_participants_table SET = ?`;
+          INSERT INTO project_participants_table SET ?`;
           conn.write.query(sql, [participant_data], (err, results) => {
             if(err) reject(err, sql);
             else {
+              if(!params[1]) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "insert project participant, but not approved",
+                  });
+              }
               resolve([params[0]]);
             }
           });
@@ -1183,7 +1193,7 @@ module.exports = function(conn, admin) {
               if(results[0].warn_count >= 3) {
                 res.json(
                   {
-                    "success" : true,
+                    "success" : false,
                     "message" : "warning count is exceeded"
                   }
                 )
@@ -1270,7 +1280,7 @@ module.exports = function(conn, admin) {
               if(results[0].warn_count >= 3) {
                 res.json(
                   {
-                    "success" : true,
+                    "success" : false,
                     "message" : "warning count is exceeded"
                   }
                 )
@@ -1395,7 +1405,7 @@ module.exports = function(conn, admin) {
               if(results[0].warn_count >= 3) {
                 res.json(
                   {
-                    "success" : true,
+                    "success" : false,
                     "message" : "warning count is exceeded"
                   }
                 )

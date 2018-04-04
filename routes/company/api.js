@@ -736,7 +736,7 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          INSERT INTO users_token_table (uuid, device_token, user_id) VALUES (?, ?, ?)
+          INSERT INTO user_tokens_table (uuid, device_token, user_id) VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE uuid = ?, device_token = ?, user_id = ?
           `;
           conn.write.query(sql, [uuid, device_token, user_id, uuid, device_token, user_id], (err, results) => {
@@ -2704,7 +2704,7 @@ module.exports = function(conn, admin) {
     return new Promise(
       (resolve, reject) => {
         var sql = `
-        DELETE FROM users_token_table WHERE device_token = ?
+        DELETE FROM user_tokens_table WHERE device_token = ?
         `;
         conn.write.query(sql, device_token, (err, results) => {
           if(err) reject(err);
