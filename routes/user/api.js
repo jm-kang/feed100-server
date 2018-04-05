@@ -617,10 +617,10 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 인터뷰 (답변 안한 최신 인터뷰 & 진행중)
-  // appComponent에서 실행
+  // 인터뷰 (답변 안한 오래된 인터뷰 & 진행중)
+  // tab에서 실행
   // tutorial 완료 검사
-  route.get('/new-interview', (req, res, next) => {
+  route.get('/new-interview&tutorial', (req, res, next) => {
     var user_id = req.decoded.user_id;
 
     function selectIsTutorialCompleted() {
@@ -659,7 +659,7 @@ module.exports = function(conn, admin) {
           WHERE user_id = ?
           and interview_answer is null
           and projects_table.project_end_date > now()
-          ORDER BY interview_id DESC limit 1`;
+          ORDER BY interview_id ASC limit 1`;
           conn.read.query(sql, [user_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -922,7 +922,7 @@ module.exports = function(conn, admin) {
             else {
               if(results[0].point < point) {
                 res.json({
-                  "success" : false,
+                  "success" : true,
                   "message" : "more point is needed"
                 });
               }
@@ -979,11 +979,12 @@ module.exports = function(conn, admin) {
     .then(insertPointHistory)
     .then(updateUserPoint)
     .then(endTransaction)
-    .then(() => {
+    .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "point exchange"
+          "message" : "point exchange",
+          "data" : params[0]
         });
     })
     .catch((err) => {
@@ -1875,6 +1876,7 @@ module.exports = function(conn, admin) {
   });
 
   // 튜토리얼 완료 및 보상
+  // 프로필 등록으로 잠시 대체
   route.post('/tutorial/reward', (req, res, next) => {
     var user_id = req.decoded.user_id;
     const tutorial_reward = 1000;
@@ -1902,29 +1904,13 @@ module.exports = function(conn, admin) {
         }
       )
     }
-    function updateRewardInfo(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE users_table
-          SET is_tutorial_completed = 1
-          WHERE user_id = ?`;
-          conn.write.query(sql, [user_id], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      )
-    }
     function updatePoint(params) {
       return new Promise(
         (resolve, reject) => {
           var total_point = params[0].point + tutorial_reward;
           var sql = `
           UPDATE users_table
-          SET point = ?
+          SET point = ?, is_tutorial_completed = 1
           WHERE user_id = ?`;
           conn.write.query(sql, [total_point, user_id], (err, results) => {
             if(err) rollback(reject, err);
@@ -1960,7 +1946,6 @@ module.exports = function(conn, admin) {
 
     beginTransaction([{}])
     .then(selectPreCondition)
-    .then(updateRewardInfo)
     .then(updatePoint)
     .then(insertPointHistory)
     .then(endTransaction)
