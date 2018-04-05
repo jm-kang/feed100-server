@@ -411,142 +411,126 @@ module.exports = function(conn, admin) {
   // 프로젝트 상태 정보 (참여 과정)
   // process 과정에서 검사
   // condition, quiz, test, completion
-  route.get('/project/:project_id/pre-condition', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-    var project_id = req.params.project_id;
+  // route.get('/project/:project_id/pre-condition', (req, res, next) => {
+  //   var user_id = req.decoded.user_id;
+  //   var project_id = req.params.project_id;
+  //
+  //   function selectPreCondition() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT *,
+  //         ((SELECT COUNT(*) FROM project_participants_table
+  //         WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
+  //         as is_exceeded,
+  //         (project_end_date > now())
+  //         as is_proceeding
+  //         FROM projects_table
+  //         LEFT JOIN users_table
+  //         ON user_id = ?
+  //         WHERE project_id = ?`;
+  //         conn.read.query(sql, [user_id, project_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             if(results[0].warn_count >= 3) {
+  //               res.json(
+  //                 {
+  //                   "success" : false,
+  //                   "message" : "warning count is exceeded"
+  //                 }
+  //               )
+  //             }
+  //             else if(!results[0].is_proceeding) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "project is not proceeding"
+  //                 });
+  //             }
+  //             else if(results[0].is_exceeded) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "project is exceeded"
+  //                 });
+  //             }
+  //             else {
+  //               resolve([results[0]]);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //   function selectParticipantInfo(params) {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT process_condition, process_quiz, process_test, process_completion
+  //         FROM project_participants_table
+  //         WHERE user_id = ? and project_id = ?
+  //         `;
+  //         conn.read.query(sql, [user_id, project_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             if(!results[0].process_condition) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "condition is not approved"
+  //                 }
+  //               )
+  //             }
+  //             else if(!results[0].process_quiz) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "quiz is not approved"
+  //                 });
+  //             }
+  //             else if(!results[0].process_test) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "test is not completed"
+  //                 });
+  //             }
+  //             else if (!results[0].process_completion) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "participation is not completed"
+  //                 });
+  //             }
+  //             else {
+  //               resolve([params[0]]);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //
+  //   selectPreCondition()
+  //   .then(selectParticipantInfo)
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "select project pre-condition",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
 
-    function selectPreCondition() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT *,
-          ((SELECT COUNT(*) FROM project_participants_table
-          WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
-          as is_exceeded,
-          (project_end_date > now())
-          as is_proceeding
-          FROM projects_table
-          LEFT JOIN users_table
-          ON user_id = ?
-          WHERE project_id = ?`;
-          conn.read.query(sql, [user_id, project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              if(results[0].warn_count >= 3) {
-                res.json(
-                  {
-                    "success" : false,
-                    "message" : "warning count is exceeded"
-                  }
-                )
-              }
-              else if(!results[0].is_proceeding) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "project is not proceeding"
-                  });
-              }
-              else if(results[0].is_exceeded) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "project is exceeded"
-                  });
-              }
-              else {
-                resolve([results[0]]);
-              }
-            }
-          });
-        }
-      )
-    }
-    function selectParticipantInfo(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT process_condition, process_quiz, process_test, process_completion
-          FROM project_participants_table
-          WHERE user_id = ? and project_id = ?
-          `;
-          conn.read.query(sql, [user_id, project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              if(!results[0].process_condition) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "condition is not approved"
-                  }
-                )
-              }
-              else if(!results[0].process_quiz) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "quiz is not approved"
-                  });
-              }
-              else if(!results[0].process_test) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "test is not completed"
-                  });
-              }
-              else if (!results[0].process_completion) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "participation is not completed"
-                  });
-              }
-              else {
-                resolve([params[0]]);
-              }
-            }
-          });
-        }
-      )
-    }
-
-    selectPreCondition()
-    .then(selectParticipantInfo)
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select project pre-condition",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  // 프로젝트 내용(데이터, 스토리)
+  // 프로젝트 내용(데이터)
   route.get('/project/:project_id', (req, res, next) => {
     var project_id = req.params.project_id;
-
-    function updateProjectViewNum() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE projects_table SET project_view_num = project_view_num + 1
-          WHERE project_id = ?`;
-          conn.write.query(sql, project_id, (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve();
-            }
-          });
-        }
-      )
-    }
 
     function selectProjectById() {
       return new Promise(
@@ -566,8 +550,7 @@ module.exports = function(conn, admin) {
       );
     }
 
-    updateProjectViewNum()
-    .then(selectProjectById)
+    selectProjectById()
     .then((params) => {
       res.json(
         {
@@ -596,11 +579,11 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT *,
           (SELECT COUNT(*) FROM interviews_table
-          WHERE project_participant_id = project_participant_id
+          WHERE project_participant_id = project_participants_table.project_participant_id
           and interview_answer is null) > 0
           as is_new_interview,
           (SELECT SUM(interview_reward) FROM interviews_table
-          WHERE project_participant_id = project_participant_id
+          WHERE project_participant_id = project_participants_table.project_participant_id
           and interview_answer is not null)
           as interview_reward
           FROM projects_table
@@ -1009,6 +992,60 @@ module.exports = function(conn, admin) {
     });
   });
 
+  // 프로젝트 내용(스토리) - 조회
+  route.put('/project-story/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function updateProjectViewNum() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE projects_table SET project_view_num = project_view_num + 1
+          WHERE project_id = ?`;
+          conn.write.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    updateProjectViewNum()
+    .then(selectProjectById)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
   // 프로젝트 참여 조건 통과
   route.post('/project/:project_id/process/condition', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -1143,7 +1180,7 @@ module.exports = function(conn, admin) {
                     "message" : "insert project participant, but not approved",
                   });
               }
-              resolve([params[0]]);
+              resolve([results]);
             }
           });
 
@@ -1230,7 +1267,7 @@ module.exports = function(conn, admin) {
           conn.write.query(sql, [user_id, project_id], (err, results) => {
             if(err) reject(err, sql);
             else {
-              resolve([results[0]]);
+              resolve([results]);
             }
           });
 
@@ -1316,7 +1353,7 @@ module.exports = function(conn, admin) {
           conn.write.query(sql, [user_id, project_id], (err, results) => {
             if(err) reject(err, sql);
             else {
-              resolve([results[0]]);
+              resolve([results]);
             }
           });
 
@@ -1474,10 +1511,10 @@ module.exports = function(conn, admin) {
     function insertInterviews(params) {
       return new Promise(
         (resolve, reject) => {
+          var forEachCondition = true;
+          var len = interviews.length;
+          var epoch = 0;
           interviews.forEach((interview) => {
-            var forEachCondition = true;
-            var len = interviews.length;
-            var epoch = 0;
             var sql = `
             INSERT INTO interviews_table
             SET ?, project_participant_id = ?,
@@ -1545,7 +1582,7 @@ module.exports = function(conn, admin) {
                 resolve([results]);
               }
               else {
-                resolve([]);
+                resolve([{}]);
               }
             }
           });
