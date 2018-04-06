@@ -41,8 +41,8 @@ module.exports = function(conn, admin) {
   });
 
   // 프로젝트 홈
-  route.get('/project/:project_id/home', (req, res, next) => {
-    var project_id = req.params.project_id;
+  route.get('/project/home', (req, res, next) => {
+    var user_id = req.decoded.user_id;
 
     // project_main_image, project_name
     // project_first_impression_rate, participant_num, project_end_date
@@ -51,11 +51,22 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM projects_table WHERE project_id = ?`;
-          conn.read.query(sql, [project_id], (err, results) => {
+          SELECT * FROM projects_table
+          WHERE company_id = ?
+          ORDER BY project_id DESC limit 1`;
+          conn.read.query(sql, [user_id], (err, results) => {
             if(err) reject(err);
             else {
-              resolve([results[0]]);
+              if(!results.length) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not registered",
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
             }
           });
         }
@@ -65,9 +76,19 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM project_participants_table
-          WHERE project_id = ? and process_completion = 1`;
-          conn.read.query(sql, [project_id], (err, results) => {
+          SELECT *, interviews_table.interview_answer as content,
+          (SELECT COUNT(*) FROM interviews_table
+          WHERE project_participant_id = project_participants_table.project_participant_id and is_new = 1)
+          as interview_num
+          FROM project_participants_table
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          LEFT JOIN interviews_table
+          ON project_participants_table.project_participant_id = interviews_table.project_participant_id
+          and interview_answer is not null
+          WHERE project_id = ? and process_completion = 1
+          ORDER BY interviews_table.interview_id DESC LIMIT 1`;
+          conn.read.query(sql, [params[0].project_id], (err, results) => {
             if(err) reject(err);
             else {
               params[0].participants = results;
