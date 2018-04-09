@@ -406,18 +406,67 @@ module.exports = function(conn, admin) {
         }
       )
     }
-    function selectInterviews(params) {
+    function selectSatisfiedInterviews(params) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM interviews_table
+          SELECT *, interview_answer as content
+          FROM interviews_table
           LEFT JOIN project_participants_table
           ON interviews_table.project_participant_id = project_participants_table.project_participant_id
-          WHERE project_participants_table.project_id = ?`;
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          WHERE project_participants_table.project_id = ?
+          and interview_answer is not null
+          and interview_question LIKE ?`;
+          conn.read.query(sql, [project_id, '%만족%'], (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].satisfied_interviews = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function selectUnsatisfiedInterviews(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *, interview_answer as content
+          FROM interviews_table
+          LEFT JOIN project_participants_table
+          ON interviews_table.project_participant_id = project_participants_table.project_participant_id
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          WHERE project_participants_table.project_id = ?
+          and interview_answer is not null
+          and interview_question LIKE ?`;
+          conn.read.query(sql, [project_id, '%아쉬웠던%'], (err, results) => {
+            if(err) reject(err);
+            else {
+              params[0].unsatisfied_interviews = results;
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function selectLikeInterviews(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *, interview_answer as content
+          FROM interviews_table
+          LEFT JOIN project_participants_table
+          ON interviews_table.project_participant_id = project_participants_table.project_participant_id
+          LEFT JOIN users_table
+          ON project_participants_table.user_id = users_table.user_id
+          WHERE project_participants_table.project_id = ? and is_like = 1`;
           conn.read.query(sql, [project_id], (err, results) => {
             if(err) reject(err);
             else {
-              params[0].interviews = results;
+              params[0].like_interviews = results;
               resolve([params[0]]);
             }
           });
@@ -425,9 +474,12 @@ module.exports = function(conn, admin) {
       )
     }
 
+
     selectProjectById()
     .then(selectProjectParticipants)
-    .then(selectInterviews)
+    .then(selectSatisfiedInterviews)
+    .then(selectUnsatisfiedInterviews)
+    .then(selectLikeInterviews)
     .then((params) => {
       res.json(
         {
