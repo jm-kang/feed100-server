@@ -528,6 +528,60 @@ module.exports = function(conn, admin) {
   //
   // });
 
+  // 프로젝트 내용(스토리) - 조회
+  route.get('/project-story/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function updateProjectViewNum() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE projects_table SET project_view_num = project_view_num + 1
+          WHERE project_id = ?`;
+          conn.write.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    updateProjectViewNum()
+    .then(selectProjectById)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
   // 프로젝트 내용(데이터)
   route.get('/project/:project_id', (req, res, next) => {
     var project_id = req.params.project_id;
@@ -984,60 +1038,6 @@ module.exports = function(conn, admin) {
         {
           "success" : true,
           "message" : "point exchange",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-  });
-
-  // 프로젝트 내용(스토리) - 조회
-  route.put('/project-story/:project_id', (req, res, next) => {
-    var project_id = req.params.project_id;
-
-    function updateProjectViewNum() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE projects_table SET project_view_num = project_view_num + 1
-          WHERE project_id = ?`;
-          conn.write.query(sql, project_id, (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve();
-            }
-          });
-        }
-      )
-    }
-
-    function selectProjectById() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT *
-          FROM projects_table LEFT JOIN users_table
-          ON projects_table.company_id = users_table.user_id
-          WHERE project_id = ?`;
-          conn.read.query(sql, project_id, (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results[0]]);
-            }
-          });
-        }
-      );
-    }
-
-    updateProjectViewNum()
-    .then(selectProjectById)
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select project",
           "data" : params[0]
         });
     })
@@ -1876,7 +1876,6 @@ module.exports = function(conn, admin) {
   });
 
   // 튜토리얼 완료 및 보상
-  // 프로필 등록으로 잠시 대체
   route.post('/tutorial/reward', (req, res, next) => {
     var user_id = req.decoded.user_id;
     const tutorial_reward = 1000;

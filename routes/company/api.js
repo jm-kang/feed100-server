@@ -4,41 +4,41 @@ module.exports = function(conn, admin) {
   //리뉴얼 이후
 
   // 기업 정보(프로젝트 등록 이력?)
-  route.get('/company', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-
-    function selectProjectById() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT project_id FROM projects_table
-          WHERE company_id = ?
-          ORDER BY project_id DESC limit 1`;
-          conn.read.query(sql, [user_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results[0]]);
-            }
-          });
-        }
-      )
-    }
-
-    selectProjectById()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select project",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
+  // route.get('/company', (req, res, next) => {
+  //   var user_id = req.decoded.user_id;
+  //
+  //   function selectProjectById() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT project_id FROM projects_table
+  //         WHERE company_id = ?
+  //         ORDER BY project_id DESC limit 1`;
+  //         conn.read.query(sql, [user_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             resolve([results[0]]);
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //
+  //   selectProjectById()
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "select project",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
 
   // 프로젝트 홈
   route.get('/project/home', (req, res, next) => {
@@ -84,10 +84,13 @@ module.exports = function(conn, admin) {
           LEFT JOIN users_table
           ON project_participants_table.user_id = users_table.user_id
           LEFT JOIN interviews_table
-          ON project_participants_table.project_participant_id = interviews_table.project_participant_id
-          and interview_answer is not null
+          ON interview_id =
+          (SELECT interview_id FROM interviews_table
+          WHERE project_participant_id = project_participants_table.project_participant_id
+          and interview_answer is not null ORDER BY interview_id DESC LIMIT 1)
           WHERE project_id = ? and process_completion = 1
-          ORDER BY interviews_table.interview_id DESC LIMIT 1`;
+          ORDER BY interview_answer_registration_date DESC
+          `;
           conn.read.query(sql, [params[0].project_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -124,8 +127,8 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM projects_table
-          LEFT JOIN users_table
+          SELECT *
+          FROM projects_table LEFT JOIN users_table
           ON projects_table.company_id = users_table.user_id
           WHERE project_id = ?`;
           conn.read.query(sql, [project_id], (err, results) => {
@@ -181,7 +184,9 @@ module.exports = function(conn, admin) {
           SELECT notifications_table.notification_id, notifications_table.project_id, notifications_table.project_participant_id,
           notifications_table.is_read,notifications_table.notification_link, notifications_table.notification_tag,
           notifications_table.notification_content, notifications_table.notification_registration_date,
-          projects_table.project_main_image, users_table.avatar_image
+          projects_table.project_main_image, users_table.avatar_image,
+          IF(avatar_image is not null, avatar_image, project_main_image) as notification_image,
+          IF(nickname is not null, nickname, project_name) as notification_name
           FROM notifications_table
           LEFT JOIN projects_table
           ON notifications_table.project_id = projects_table.project_id
@@ -261,8 +266,11 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM project_participants_table
-          WHERE project_id = ? and process_completion = 1`;
+          SELECT * FROM users_table
+          LEFT JOIN project_participants_table
+          ON users_table.user_id = project_participants_table.user_id
+          WHERE project_id = ? and process_completion = 1
+          ORDER BY project_participants_table.project_participant_id DESC`;
           conn.read.query(sql, [project_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -293,11 +301,28 @@ module.exports = function(conn, admin) {
   route.get('/interviews/:project_participant_id', (req, res, next) => {
     var project_participant_id = req.params.project_participant_id;
 
+    function updateInterviewIsNew() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE interviews_table SET is_new = 0
+          WHERE project_participant_id = ?`;
+          conn.write.query(sql, project_participant_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
     function selectProjectParticipantById() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM project_participants_table
+          SELECT * FROM users_table
+          LEFT JOIN project_participants_table
+          ON users_table.user_id = project_participants_table.user_id
           WHERE project_participant_id = ?`;
           conn.read.query(sql, [project_participant_id], (err, results) => {
             if(err) reject(err);
@@ -325,7 +350,8 @@ module.exports = function(conn, admin) {
       )
     }
 
-    selectProjectParticipantById()
+    updateInterviewIsNew()
+    .then(selectProjectParticipantById)
     .then(selectInterviewsById)
     .then((params) => {
       res.json(
@@ -344,13 +370,17 @@ module.exports = function(conn, admin) {
 
   // 종합 보고서
   route.get('/comprehensive-report/:project_id', (req, res, next) => {
+    var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
 
     function selectProjectById() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM projects_table WHERE project_id = ?`;
+          SELECT * FROM projects_table
+          LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
           conn.read.query(sql, [project_id], (err, results) => {
             if(err) reject(err);
             else {
@@ -561,7 +591,7 @@ module.exports = function(conn, admin) {
   // 알림 및 푸시 전송
   route.post('/group-interview/:project_id', (req, res, next) => {
     var project_id = req.params.project_id;
-    var project_participants_id = req.params.project_participants_id;
+    var project_participants_id = req.body.project_participants_id;
     var interview_question = req.body.interview_question;
     // var project_id = 22;
     // var project_participants_id = [2, 3];
@@ -714,7 +744,7 @@ module.exports = function(conn, admin) {
   });
 
   // 인터뷰 피드백 좋아요
-  route.post('/interview/:interview_id/like', (req, res, next) => {
+  route.put('/interview/:interview_id/like', (req, res, next) => {
     var interview_id = req.params.interview_id;
 
     function likeInterview() {
