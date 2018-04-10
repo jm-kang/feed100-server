@@ -17,8 +17,8 @@ export class HttpServiceService {
   ) { }
 
   getServerUrl() {
-    // return 'http://localhost:3000';
-    return 'https://www.feed100.me';
+    return 'http://192.168.0.10:3000';    
+    // return 'https://www.feed100.me';
   }
 
   localLogin(username, password, role) {

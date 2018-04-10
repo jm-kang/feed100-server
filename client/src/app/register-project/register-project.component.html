@@ -1,173 +1,169 @@
-<h1>새 프로젝트 등록</h1>
+<div style="text-align: center">
 
-<div>
-  <h3>기업명</h3>
-  <select [(ngModel)]="company_id">
-    <option *ngFor="let company of companies" [value]="company.user_id">{{company.user_id}} / {{company.nickname}}</option>
-  </select>
-</div>
-<br/>
+  <h1>새 프로젝트 등록</h1>
 
-<div>
-  <h3>프로젝트 메인 이미지</h3>
-  <input type="file" (change)="uploadFiles($event, 'project_main_image')">
-  <div><img [src]="project_main_image" style="width:200px;"/></div>
-</div>
-<br/>
+  <div>
+    <h3>기업명</h3>
+    <select [(ngModel)]="company_id">
+      <option *ngFor="let company of companies" [value]="company.user_id">{{company.user_id}} / {{company.nickname}}</option>
+    </select>
+  </div>
+  <br/>
 
-<div>
-  <h3>프로젝트 이름</h3>
-  <input type="text" [(ngModel)]="project_name">
-</div>
-<br/>
+  <div>
+    <h3>프로젝트 메인 이미지</h3>
+    <input type="file" (change)="uploadFiles($event, 'project_main_image')" style="margin: auto;">
+    <div><img [src]="project_main_image" style="width:200px;"/></div>
+  </div>
+  <br/>
 
-<div>
-  <h3>프로젝트 요약</h3>
-  <textarea [(ngModel)]="project_summary"></textarea>
-</div>
-<br/>
+  <div>
+    <h3>프로젝트 이름</h3>
+    <input type="text" [(ngModel)]="project_name">
+  </div>
+  <br/>
 
-<div>
-  <h3>가격 플랜</h3>
-  <input type="text" [(ngModel)]="project_type">
-</div>
-<br/>
+  <div>
+    <h3>최대 보상금액</h3>
+    <input type="text" [(ngModel)]="project_max_reward">
+  </div>
+  <br/>
 
-<div>
-  <h3>결제 금액</h3>
-  <input type="text" [(ngModel)]="project_price">
-</div>
-<br/>
+  <div>
+    <h3>프로젝트 안내</h3>
+    <textarea [(ngModel)]="project_notice"></textarea>
+  </div>
+  <br/>
 
-<div>
-  <h3>결제일</h3>
-  <input type="date" [(ngModel)]="project_payment_date">
-</div>
-<br/>
+  <div>
+    <h3>테스트 안내</h3>
+    <textarea [(ngModel)]="test_notice"></textarea>
+  </div>
+  <br/>
 
-<div>
-  <h3>프로젝트 스토리</h3>
-  <button (click)="addStory()">+</button>
-  <button *ngIf="project_story.length>1" (click)="removeStory()">-</button>
-  <div *ngFor="let story of project_story; let i = index">
-    <h6>story{{i+1}}</h6>
-    <div>
-      <label>스토리 이미지</label>
-      <input type="file" (change)="uploadFiles($event, i)">
-      <div><img [src]="story.storyImage" style="width:200px;"/></div>
-    </div>
-    <div>
-      <label>스토리 영상</label>
-      <input type="text"[(ngModel)]="story.storyVideo">
-    </div>
-    <div>
-      <label>스토리 내용</label>
-      <textarea [(ngModel)]="story.storyContent"></textarea>
+  <div>
+    <h3>프로젝트 스토리</h3>
+    <button (click)="addStory()">+</button>
+    <button *ngIf="project_story.length>1" (click)="removeStory()">-</button>
+    <div *ngFor="let story of project_story; let i = index">
+      <h6>story{{i+1}}</h6>
+      <div>
+        <label>스토리 이미지</label>
+        <input type="file" (change)="uploadFiles($event, i)" style="margin: auto;">
+        <div><img [src]="story.storyImage" style="width:200px;"/></div>
+      </div>
+      <div>
+        <label>스토리 영상</label>
+        <input type="text"[(ngModel)]="story.storyVideo">
+      </div>
+      <div>
+        <label>스토리 내용</label>
+        <textarea [(ngModel)]="story.storyContent"></textarea>
+      </div>
+      <br/>
     </div>
   </div>
-</div>
-<br/>
+  <br/>
 
-<div>
-  <h3>프로젝트 스토리 퀴즈</h3>
-  <button (click)="addStoryQuiz()">+</button>
-  <button *ngIf="project_story_quiz.length>1" (click)="removeStoryQuiz()">-</button>
-  <div *ngFor="let story_quiz of project_story_quiz; let i = index">
-    <h6>질문{{i+1}}</h6>
-    <input type="text" [(ngModel)]="story_quiz.question">
-    <h6>보기</h6>
-    <button (click)="addStoryQuizOption(i)">+</button>
-    <button *ngIf="project_story_quiz[i].options.length>2" (click)="removeStoryQuizOption(i)">-</button>
-    <div *ngFor="let option of story_quiz.options">
-      <input type="text" [(ngModel)]="option.option">
-      <input type="checkbox" [(ngModel)]="option.isApproved">
+  <div>
+    <h3>프로젝트 스토리 퀴즈</h3>
+    <button (click)="addStoryQuiz()">+</button>
+    <button *ngIf="project_story_quiz.length>1" (click)="removeStoryQuiz()">-</button>
+    <div *ngFor="let story_quiz of project_story_quiz; let i = index">
+      <h6>질문{{i+1}}</h6>
+      <input type="text" [(ngModel)]="story_quiz.question">
+      <h6>보기</h6>
+      <button (click)="addStoryQuizOption(i)">+</button>
+      <button *ngIf="project_story_quiz[i].options.length>2" (click)="removeStoryQuizOption(i)">-</button>
+      <div *ngFor="let option of story_quiz.options">
+        <input type="text" [(ngModel)]="option.option">
+        <input type="checkbox" [(ngModel)]="option.isApproved">
+      </div>
+      <br/>
     </div>
   </div>
-</div>
-<br/>
+  <br/>
 
-<div>
-  <h3>최대 모집 인원</h3>
-  <input type="number" [(ngModel)]="max_participant_num">
-</div>
-<br/>
-
-<div>
-  <h3>프로젝트 종료일</h3>
-  <input type="date" [(ngModel)]="project_end_date">
-</div>
-<br/>
-
-<div>
-  <h3>프로젝트 Android 링크</h3>
-  <input type="text" [(ngModel)]="project_android_link">
-</div>
-<br/>
-
-<div>
-  <h3>프로젝트 iOS 링크</h3>
-  <input type="text" [(ngModel)]="project_ios_link">
-</div>
-<br/>
-
-<div>
-  <h3>프로젝트 해시태그</h3>
-  <button (click)="addHashtag()">+</button>
-  <button *ngIf="project_hashtags.length>1" (click)="removeHashtag()">-</button>
-  <div *ngFor="let project_hashtag of project_hashtags; let i = index; trackBy: customTrackBy">
-    <input type="text" [(ngModel)]="project_hashtags[i]">
+  <div>
+    <h3>최대 모집 인원</h3>
+    <input type="number" [(ngModel)]="max_participant_num">
   </div>
-</div>
-<br/>
+  <br/>
 
-<div>
-  <h3>프로젝트 참가 프로필 조건</h3>
-  <h6>성별</h6>
-  <div *ngFor="let project_participation_gender_condition of project_participation_gender_conditions">
-    <label>{{project_participation_gender_condition.condition}}</label>
-    <input type="checkbox" [(ngModel)]="project_participation_gender_condition.isApproved">
+  <div>
+    <h3>프로젝트 종료일</h3>
+    <input type="date" [(ngModel)]="project_end_date">
   </div>
-  <h6>나이</h6>
-  <div *ngFor="let project_participation_age_condition of project_participation_age_conditions">
-    <label>{{project_participation_age_condition.condition}}</label>
-    <input type="checkbox" [(ngModel)]="project_participation_age_condition.isApproved">
-  </div>
-  <h6>직업</h6>
-  <div *ngFor="let project_participation_job_condition of project_participation_job_conditions">
-    <label>{{project_participation_job_condition.condition}}</label>
-    <input type="checkbox" [(ngModel)]="project_participation_job_condition.isApproved">
-  </div>
-  <h6>지역</h6>
-  <div *ngFor="let project_participation_region_condition of project_participation_region_conditions">
-    <label>{{project_participation_region_condition.condition}}</label>
-    <input type="checkbox" [(ngModel)]="project_participation_region_condition.isApproved">
-  </div>
-  <h6>결혼 여부</h6>
-  <div *ngFor="let project_participation_marriage_condition of project_participation_marriage_conditions">
-    <label>{{project_participation_marriage_condition.condition}}</label>
-    <input type="checkbox" [(ngModel)]="project_participation_marriage_condition.isApproved">
-  </div>
-</div>
-<br/>
+  <br/>
 
-<div>
-  <h3>프로젝트 참가 객관식 조건</h3>
-  <button (click)="addObjectiveCondition()">+</button>
-  <button *ngIf="project_participation_objective_conditions.length>1" (click)="removeObjectiveCondition()">-</button>
-  <div *ngFor="let project_participation_objective_condition of project_participation_objective_conditions; let i = index">
-    <h6>질문{{i+1}}</h6>
-    <input type="text" [(ngModel)]="project_participation_objective_condition.question">
-    <h6>보기</h6>
-    <button (click)="addOption(i)">+</button>
-    <button *ngIf="project_participation_objective_conditions[i].options.length>2" (click)="removeOption(i)">-</button>
-    <div *ngFor="let option of project_participation_objective_condition.options">
-      <input type="text" [(ngModel)]="option.option">
-      <input type="checkbox" [(ngModel)]="option.isApproved">
+  <div>
+    <h3>프로젝트 Android 링크</h3>
+    <input type="text" [(ngModel)]="android_link">
+  </div>
+  <br/>
+
+  <div>
+    <h3>프로젝트 iOS 링크</h3>
+    <input type="text" [(ngModel)]="ios_link">
+  </div>
+  <br/>
+
+  <div>
+    <h3>프로젝트 참가 프로필 조건</h3>
+    <h6>성별</h6>
+    <div *ngFor="let project_participation_gender_condition of project_participation_gender_conditions">
+      <label>{{project_participation_gender_condition.condition}}</label>
+      <input type="checkbox" [(ngModel)]="project_participation_gender_condition.isApproved">
+    </div>
+    <h6>나이</h6>
+    <div *ngFor="let project_participation_age_condition of project_participation_age_conditions">
+      <label>{{project_participation_age_condition.condition}}</label>
+      <input type="checkbox" [(ngModel)]="project_participation_age_condition.isApproved">
+    </div>
+    <h6>직업</h6>
+    <div *ngFor="let project_participation_job_condition of project_participation_job_conditions">
+      <label>{{project_participation_job_condition.condition}}</label>
+      <input type="checkbox" [(ngModel)]="project_participation_job_condition.isApproved">
+    </div>
+    <h6>지역</h6>
+    <div *ngFor="let project_participation_region_condition of project_participation_region_conditions">
+      <label>{{project_participation_region_condition.condition}}</label>
+      <input type="checkbox" [(ngModel)]="project_participation_region_condition.isApproved">
+    </div>
+    <h6>결혼 여부</h6>
+    <div *ngFor="let project_participation_marriage_condition of project_participation_marriage_conditions">
+      <label>{{project_participation_marriage_condition.condition}}</label>
+      <input type="checkbox" [(ngModel)]="project_participation_marriage_condition.isApproved">
+    </div>
+    <h6>폰 OS</h6>
+    <div *ngFor="let project_participation_phone_os_condition of project_participation_phone_os_conditions">
+      <label>{{project_participation_phone_os_condition.condition}}</label>
+      <input type="checkbox" [(ngModel)]="project_participation_phone_os_condition.isApproved">
     </div>
   </div>
-</div>
-<br/>
+  <br/>
 
-<div>
-  <button (click)="moveFiles()">등록하기</button>
+  <div>
+    <h3>프로젝트 참가 객관식 조건</h3>
+    <button (click)="addObjectiveCondition()">+</button>
+    <button *ngIf="project_participation_objective_conditions.length>1" (click)="removeObjectiveCondition()">-</button>
+    <div *ngFor="let project_participation_objective_condition of project_participation_objective_conditions; let i = index">
+      <h6>질문{{i+1}}</h6>
+      <input type="text" [(ngModel)]="project_participation_objective_condition.question">
+      <h6>보기</h6>
+      <button (click)="addOption(i)">+</button>
+      <button *ngIf="project_participation_objective_conditions[i].options.length>2" (click)="removeOption(i)">-</button>
+      <div *ngFor="let option of project_participation_objective_condition.options">
+        <input type="text" [(ngModel)]="option.option">
+        <input type="checkbox" [(ngModel)]="option.isApproved">
+      </div>
+      <br/>
+    </div>
+  </div>
+  <br/>
+
+  <div>
+    <button (click)="moveFiles()">등록하기</button>
+  </div>
+
 </div>

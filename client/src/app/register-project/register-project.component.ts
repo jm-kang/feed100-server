@@ -13,19 +13,19 @@ export class RegisterProjectComponent implements OnInit {
   company_id = "";
   project_main_image = "";
   project_name = "";
-  project_summary = "";
-  project_type = "";
-  project_price = "";
-  project_payment_date = "";
+  project_max_reward = 5500;
+  project_notice = "";
+  test_notice = "";
+
   project_story = [{"storyImage" : "", "storyVideo" : "", "storyContent" : ""}];
   project_story_quiz = [
     {"question" : "", "options" : [{"option" : "", "isApproved" : true}, {"option" : "", "isApproved" : false}]}
   ]
-  max_participant_num = 0;
+  max_participant_num = 10;
   project_end_date = "";
-  project_android_link = "";
-  project_ios_link = "";
-  project_hashtags = ["", "기타"];
+  android_link = "";
+  ios_link = "";
+  
   project_participation_gender_conditions = [
     {"condition" : "남자", "isApproved" : true},
     {"condition" : "여자", "isApproved" : true}
@@ -69,6 +69,10 @@ export class RegisterProjectComponent implements OnInit {
   project_participation_marriage_conditions = [
     {"condition" : "미혼", "isApproved" : true},
     {"condition" : "기혼", "isApproved" : true},
+  ];
+  project_participation_phone_os_conditions = [
+    {"condition" : "Android", "isApproved" : true},
+    {"condition" : "iOS", "isApproved" : true},
   ];
   project_participation_objective_conditions = [
     {"question" : "", "options" : [{"option" : "", "isApproved" : true}, {"option" : "", "isApproved" : false}]}
@@ -126,14 +130,6 @@ export class RegisterProjectComponent implements OnInit {
 
   removeStoryQuizOption(i) {
     this.project_story_quiz[i].options.pop();
-  }
-
-  addHashtag() {
-    this.project_hashtags.push("");
-  }
-
-  removeHashtag() {
-    this.project_hashtags.pop();
   }
 
   addObjectiveCondition() {
@@ -227,22 +223,21 @@ export class RegisterProjectComponent implements OnInit {
       "company_id" : this.company_id,
       "project_main_image" : this.project_main_image,
       "project_name" : this.project_name,
-      "project_summary" : this.project_summary,
-      "project_type" : this.project_type,
-      "project_price" : this.project_price,
-      "project_payment_date" : this.project_payment_date,
+      "project_max_reward" : this.project_max_reward,
+      "project_notice" : this.project_notice,
+      "test_notice" : this.test_notice,
       "project_story" : this.project_story,
       "project_story_quiz" : this.project_story_quiz,
       "max_participant_num" : this.max_participant_num,
       "project_end_date" : this.project_end_date,
-      "project_android_link" : this.project_android_link,
-      "project_ios_link" : this.project_ios_link,
-      "project_hashtags" : this.project_hashtags,
+      "android_link" : this.android_link,
+      "ios_link" : this.ios_link,
       "project_participation_gender_conditions" : this.project_participation_gender_conditions,
       "project_participation_age_conditions" : this.project_participation_age_conditions,
       "project_participation_job_conditions" : this.project_participation_job_conditions,
       "project_participation_region_conditions" : this.project_participation_region_conditions,
       "project_participation_marriage_conditions" : this.project_participation_marriage_conditions,
+      "project_participation_phone_os_conditions" : this.project_participation_phone_os_conditions,
       "project_participation_objective_conditions" : this.project_participation_objective_conditions
     }
     this.httpService.registerProject(projectData)
