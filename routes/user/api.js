@@ -157,6 +157,7 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var sql = `
           SELECT * FROM projects_table
+          WHERE is_private = 0
           ORDER BY project_id DESC`;
           conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
