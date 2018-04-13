@@ -378,7 +378,6 @@ module.exports = function(conn, admin) {
 
   // 종합 보고서
   route.get('/comprehensive-report/:project_id', (req, res, next) => {
-    var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
 
     function selectProjectById() {

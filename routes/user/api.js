@@ -148,8 +148,6 @@ module.exports = function(conn, admin) {
 
   // 프로젝트 리스트(전체)
   route.get('/all-projects', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-
     // 전체 프로젝트
     // 프로젝트 등록순 정렬
     function selectAllProjectsByUserId() {
@@ -159,7 +157,7 @@ module.exports = function(conn, admin) {
           SELECT * FROM projects_table
           WHERE is_private = 0
           ORDER BY project_id DESC`;
-          conn.read.query(sql, user_id, (err, results) => {
+          conn.read.query(sql, [], (err, results) => {
             if(err) reject(err);
             else {
               resolve([results]);
