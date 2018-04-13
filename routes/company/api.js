@@ -51,9 +51,10 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM projects_table
+          SELECT *,
           (project_end_date > now())
           as is_proceeding
+          FROM projects_table
           WHERE company_id = ?
           ORDER BY project_id DESC limit 1`;
           conn.read.query(sql, [user_id], (err, results) => {
