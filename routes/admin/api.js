@@ -435,7 +435,8 @@ module.exports = function(conn, admin) {
           ON notifications_table.project_participant_id = project_participants_table.project_participant_id
           LEFT JOIN users_table
           ON project_participants_table.user_id = users_table.user_id
-          WHERE role = 'company' ORDER BY notification_id DESC`;
+          WHERE notifications_table.user_id in
+          (SELECT user_id FROM users_table WHERE role = 'company') ORDER BY notification_id DESC`;
           conn.read.query(sql, [], (err, results) => {
             if(err) reject(err);
             else {
@@ -470,6 +471,8 @@ module.exports = function(conn, admin) {
           var sql = `
           SELECT COUNT(*) as notification_num
           FROM notifications_table
+          LEFT JOIN users_table
+          ON notifications_table.user_id = users_table.user_id
           WHERE role = 'company' and is_new = 1`;
           conn.read.query(sql, [], (err, results) => {
             if(err) reject(err);
@@ -504,6 +507,33 @@ module.exports = function(conn, admin) {
     // project_main_image, project_name
     // project_first_impression_rate, participant_num, project_end_date
     // participant list
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
+          WHERE project_id = ?`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(!results.length) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "project is not registered",
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
     function selectProjectParticipants(params) {
       return new Promise(
         (resolve, reject) => {
@@ -534,7 +564,8 @@ module.exports = function(conn, admin) {
       )
     }
 
-    selectProjectParticipants([{}])
+    selectProjectById()
+    .then(selectProjectParticipants)
     .then((params) => {
       res.json(
         {
@@ -1149,7 +1180,7 @@ module.exports = function(conn, admin) {
       )
     }
 
-    selectUserIdAndTokens()
+    selectUserTokensAndPush()
     .then((params) => {
       res.json(
         {
