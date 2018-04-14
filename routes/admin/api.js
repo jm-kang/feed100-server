@@ -634,6 +634,8 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var sql = `
           SELECT *,
+          project_participants_table.project_participation_objective_conditions
+          as project_participation_objective_conditions,
           (projects_table.project_end_date > now())
           as is_proceeding
           FROM users_table
@@ -970,7 +972,7 @@ module.exports = function(conn, admin) {
 
     beginTransaction([{}])
     .then(selectUserAndProjectId)
-    .then(deleteInterview))
+    .then(deleteInterview)
     .then(updateProcessState)
     .then(updateUserWarningCount)
     .then(updateNotificationLink)
