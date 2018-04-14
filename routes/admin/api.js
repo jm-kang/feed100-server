@@ -131,108 +131,108 @@ module.exports = function(conn, admin) {
 
   });
 
-  route.post('/newsfeed', (req, res, next) => {
-    var newsfeedData = {
-      newsfeed_nickname : req.body.newsfeed_nickname,
-      newsfeed_avatar_image : req.body.newsfeed_avatar_image,
-      newsfeed_source : req.body.newsfeed_source,
-      newsfeed_main_image : req.body.newsfeed_main_image,
-      newsfeed_name : req.body.newsfeed_name,
-      newsfeed_summary : req.body.newsfeed_summary,
-      newsfeed_story : JSON.stringify(req.body.newsfeed_story)
-    }
-    function insertNewsfeed() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          INSERT INTO newsfeeds_table SET ?`;
-          conn.write.query(sql, newsfeedData, (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          });
-        }
-      )
-    }
-
-    insertNewsfeed()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "insert newsfeed success",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  route.get('/reports', (req, res, next) => {
-
-    function selectProjectReports(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT *, project_name,
-          IF(report_id, '심층 피드백',
-          IF(interview_id, '인터뷰',
-          IF(opinion_id, '토론', '피드백')))
-          as what
-          FROM project_report_history_table
-          LEFT JOIN projects_table
-          ON project_report_history_table.project_id = projects_table.project_id
-          ORDER BY project_report_history_id DESC`;
-          conn.read.query(sql, (err, results) => {
-            if(err) reject(err);
-            else {
-              params[0].project_report = results;
-              resolve([params[0]]);
-            }
-          });
-        }
-      );
-    }
-    function selectNewsfeedReports(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT *, newsfeed_name
-          FROM newsfeed_report_history_table
-          LEFT JOIN newsfeeds_table
-          ON newsfeed_report_history_table.newsfeed_id = newsfeeds_table.newsfeed_id
-          ORDER BY newsfeed_report_history_id DESC`;
-          conn.read.query(sql, (err, results) => {
-            if(err) reject(err);
-            else {
-              params[0].newsfeed_report = results;
-              resolve([params[0]]);
-            }
-          });
-        }
-      );
-    }
-
-    selectProjectReports([{}])
-    .then(selectNewsfeedReports)
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select report history",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
+  // route.post('/newsfeed', (req, res, next) => {
+  //   var newsfeedData = {
+  //     newsfeed_nickname : req.body.newsfeed_nickname,
+  //     newsfeed_avatar_image : req.body.newsfeed_avatar_image,
+  //     newsfeed_source : req.body.newsfeed_source,
+  //     newsfeed_main_image : req.body.newsfeed_main_image,
+  //     newsfeed_name : req.body.newsfeed_name,
+  //     newsfeed_summary : req.body.newsfeed_summary,
+  //     newsfeed_story : JSON.stringify(req.body.newsfeed_story)
+  //   }
+  //   function insertNewsfeed() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         INSERT INTO newsfeeds_table SET ?`;
+  //         conn.write.query(sql, newsfeedData, (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             resolve([results]);
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //
+  //   insertNewsfeed()
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "insert newsfeed success",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
+  //
+  // route.get('/reports', (req, res, next) => {
+  //
+  //   function selectProjectReports(params) {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT *, project_name,
+  //         IF(report_id, '심층 피드백',
+  //         IF(interview_id, '인터뷰',
+  //         IF(opinion_id, '토론', '피드백')))
+  //         as what
+  //         FROM project_report_history_table
+  //         LEFT JOIN projects_table
+  //         ON project_report_history_table.project_id = projects_table.project_id
+  //         ORDER BY project_report_history_id DESC`;
+  //         conn.read.query(sql, (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             params[0].project_report = results;
+  //             resolve([params[0]]);
+  //           }
+  //         });
+  //       }
+  //     );
+  //   }
+  //   function selectNewsfeedReports(params) {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT *, newsfeed_name
+  //         FROM newsfeed_report_history_table
+  //         LEFT JOIN newsfeeds_table
+  //         ON newsfeed_report_history_table.newsfeed_id = newsfeeds_table.newsfeed_id
+  //         ORDER BY newsfeed_report_history_id DESC`;
+  //         conn.read.query(sql, (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             params[0].newsfeed_report = results;
+  //             resolve([params[0]]);
+  //           }
+  //         });
+  //       }
+  //     );
+  //   }
+  //
+  //   selectProjectReports([{}])
+  //   .then(selectNewsfeedReports)
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "select report history",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
 
   route.get('/point-histories', (req, res, next) => {
 
@@ -333,11 +333,11 @@ module.exports = function(conn, admin) {
 
   });
 
-  route.get('/send-test/:device_token', (req, res, next) => {
-    console.log(req.params.device_token);
-    sendFCM(req.params.device_token, '', "Hello FEED100");
-    res.send('send');
-  });
+  // route.get('/send-test/:device_token', (req, res, next) => {
+  //   console.log(req.params.device_token);
+  //   sendFCM(req.params.device_token, '', "Hello FEED100");
+  //   res.send('send');
+  // });
 
   /* web */
 
@@ -497,43 +497,6 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 프로젝트 내용(데이터)
-  route.get('/project/:project_id', (req, res, next) => {
-    var project_id = req.params.project_id;
-
-    function selectProjectById() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT *
-          FROM projects_table LEFT JOIN users_table
-          ON projects_table.company_id = users_table.user_id
-          WHERE project_id = ?`;
-          conn.read.query(sql, project_id, (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results[0]]);
-            }
-          });
-        }
-      );
-    }
-
-    selectProjectById()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select project",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-  });
-
   // 프로젝트 홈
   route.get('/project/:project_id/home', (req, res, next) => {
     var project_id = req.params.project_id;
@@ -687,6 +650,43 @@ module.exports = function(conn, admin) {
 
   });
 
+  // 프로젝트 내용(데이터)
+  route.get('/project/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, project_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProjectById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
   // 종합 보고서
   route.get('/comprehensive-report/:project_id', (req, res, next) => {
     var project_id = req.params.project_id;
@@ -813,49 +813,31 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 푸시 보내기
-  route.post('/push-notification/:project_participant_id', (req, res, next) => {
-    var project_participant_id = req.params.project_participant_id;
-    var message = req.body.message;
+  // 인터뷰 피드백 좋아요
+  route.put('/interview/:interview_id/like', (req, res, next) => {
+    var interview_id = req.params.interview_id;
 
-    function selectUserTokensAndPush() {
+    function likeInterview() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT device_token
-          FROM user_tokens_table
-          LEFT JOIN project_participants_table
-          ON user_tokens_table.user_id = project_participants_table.user_id
-          WHERE project_participant_id = ?`;
-          conn.read.query(sql, [project_participant_id], (err, results) => {
+          UPDATE interviews_table SET is_like = 1 WHERE interview_id = ?`;
+          conn.write.query(sql, [interview_id], (err, results) => {
             if(err) reject(err);
             else {
-              if(results[0]) {
-                var device_tokens = results.map((obj) => {
-                  return obj.device_token;
-                })
-                sendFCM(device_tokens, '', message);
-                resolve([results]);
-              }
-              else {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "device_token is not available"
-                  });
-              }
+              resolve();
             }
           });
         }
       )
     }
 
-    selectUserIdAndTokens()
+    likeInterview()
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "device_token is available"
+          "message" : "like interview"
         });
     })
     .catch((err) => {
@@ -863,279 +845,6 @@ module.exports = function(conn, admin) {
       return next(err);
     });
 
-  });
-
-  // 제재하기
-  route.delete('/sanction/:project_participant_id', (req, res, next) => {
-    var project_participant_id = req.params.project_participant_id;
-
-    function selectUserAndProjectId(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT user_id, project_id
-          FROM project_participants_table
-          WHERE project_participant_id = ?`;
-          conn.read.query(sql, project_participant_id, (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([results[0]]);
-            }
-          });
-        }
-      )
-    }
-    function deleteInterview(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          DELETE FROM interviews_table WHERE project_participant_id = ?
-          `;
-          conn.write.query(sql, project_participant_id, (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      );
-    }
-    function updateProcessState(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE project_participants_table
-          SET process_condition = 0, process_quiz = 0, process_test = 0, process_completion = 0
-          WHERE project_participant_id = ?`;
-          conn.write.query(sql, [project_participant_id], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      );
-    }
-    function updateUserWarningCount(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE users_table
-          SET warn_count = warn_count + 1
-          WHERE user_id = ?`;
-          conn.write.query(sql, params[0].user_id, (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      );
-    }
-    function updateNotificationLink(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE notifications_table
-          SET notification_link = ?
-          WHERE user_id = ? and project_id = ?`;
-          conn.write.query(sql, ["warning", params[0].user_id, params[0].project_id], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      );
-    }
-    function insertNotification(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var notification_data = {
-            user_id : params[0].user_id,
-            project_id : params[0].project_id,
-            notification_link : 'warning',
-            notification_tag : '경고',
-            notification_content : '해당 프로젝트에서 제외되었습니다.'
-          }
-          var sql = `
-          INSERT INTO notifications_table SET ?`;
-          conn.write.query(sql, [notification_data], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]])
-            }
-          });
-        }
-      )
-    }
-
-    beginTransaction([{}])
-    .then(selectUserAndProjectId)
-    .then(deleteInterview)
-    .then(updateProcessState)
-    .then(updateUserWarningCount)
-    .then(updateNotificationLink)
-    .then(insertNotification)
-    .then(endTransaction)
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "sanction success",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  // 선정하기
-  route.put('/selection/:project_participant_id', (req, res, next) => {
-    var project_participant_id = req.params.project_participant_id;
-
-    function updateIsSelected() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE project_participants_table
-          SET is_selected = 1
-          WHERE project_participant_id = ?`;
-          conn.read.query(sql, [project_participant_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          });
-        }
-      );
-    }
-
-    updateIsSelected()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "update is_selected",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  // 추천지수 마감
-  route.put('/project/:project_id/recommendation-rate/end', (req, res, next) => {
-    var project_id = req.params.project_id;
-
-    function updateRecommendationRates() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE project_participants_table
-          SET project_recommendation_rate = project_first_impression_rate
-          WHERE project_id = ? and project_recommendation_rate is null`;
-          conn.read.query(sql, [project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          });
-        }
-      );
-    }
-
-    updateRecommendationRates()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "update recommendation rates",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  // 공개 비공개
-  route.put('/project/:project_id/private', (req, res, next) => {
-    var project_id = req.params.project_id;
-    var value = req.body.value;
-
-    function updateProjectPrivateState() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE projects_table SET is_private = ? WHERE project_id = ?`;
-          conn.read.query(sql, [value, project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          });
-        }
-      );
-    }
-
-    updateProjectPrivateState()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "update project private state",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  // 심사 종료
-  route.put('/project/:project_id/judge/end', (req, res, next) => {
-    var project_id = req.params.project_id;
-    var value = req.body.value;
-
-    function updateProjectJudgeEndState() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE projects_table SET is_judge_end = ? WHERE project_id = ?`;
-          conn.read.query(sql, [value, project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          });
-        }
-      );
-    }
-
-    updateProjectPrivateState()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "update project judge end state",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
   });
 
   // 인터뷰 질문 작성(개인)
@@ -1403,31 +1112,49 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 인터뷰 피드백 좋아요
-  route.put('/interview/:interview_id/like', (req, res, next) => {
-    var interview_id = req.params.interview_id;
+  // 푸시 보내기 (유저 관리)
+  route.post('/push-notification/:project_participant_id', (req, res, next) => {
+    var project_participant_id = req.params.project_participant_id;
+    var message = req.body.message;
 
-    function likeInterview() {
+    function selectUserTokensAndPush() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          UPDATE interviews_table SET is_like = 1 WHERE interview_id = ?`;
-          conn.write.query(sql, [interview_id], (err, results) => {
+          SELECT device_token
+          FROM user_tokens_table
+          LEFT JOIN project_participants_table
+          ON user_tokens_table.user_id = project_participants_table.user_id
+          WHERE project_participant_id = ?`;
+          conn.read.query(sql, [project_participant_id], (err, results) => {
             if(err) reject(err);
             else {
-              resolve();
+              if(results[0]) {
+                var device_tokens = results.map((obj) => {
+                  return obj.device_token;
+                })
+                sendFCM(device_tokens, '', message);
+                resolve([results]);
+              }
+              else {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "device_token is not available"
+                  });
+              }
             }
           });
         }
       )
     }
 
-    likeInterview()
+    selectUserIdAndTokens()
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "like interview"
+          "message" : "device_token is available"
         });
     })
     .catch((err) => {
@@ -1435,6 +1162,279 @@ module.exports = function(conn, admin) {
       return next(err);
     });
 
+  });
+
+  // 제재하기 (유저 관리)
+  route.delete('/sanction/:project_participant_id', (req, res, next) => {
+    var project_participant_id = req.params.project_participant_id;
+
+    function selectUserAndProjectId(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT user_id, project_id
+          FROM project_participants_table
+          WHERE project_participant_id = ?`;
+          conn.read.query(sql, project_participant_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+    function deleteInterview(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM interviews_table WHERE project_participant_id = ?
+          `;
+          conn.write.query(sql, project_participant_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function updateProcessState(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table
+          SET process_condition = 0, process_quiz = 0, process_test = 0, process_completion = 0
+          WHERE project_participant_id = ?`;
+          conn.write.query(sql, [project_participant_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function updateUserWarningCount(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE users_table
+          SET warn_count = warn_count + 1
+          WHERE user_id = ?`;
+          conn.write.query(sql, params[0].user_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function updateNotificationLink(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE notifications_table
+          SET notification_link = ?
+          WHERE user_id = ? and project_id = ?`;
+          conn.write.query(sql, ["warning", params[0].user_id, params[0].project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
+    function insertNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var notification_data = {
+            user_id : params[0].user_id,
+            project_id : params[0].project_id,
+            notification_link : 'warning',
+            notification_tag : '경고',
+            notification_content : '해당 프로젝트에서 제외되었습니다.'
+          }
+          var sql = `
+          INSERT INTO notifications_table SET ?`;
+          conn.write.query(sql, [notification_data], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]])
+            }
+          });
+        }
+      )
+    }
+
+    beginTransaction([{}])
+    .then(selectUserAndProjectId)
+    .then(deleteInterview)
+    .then(updateProcessState)
+    .then(updateUserWarningCount)
+    .then(updateNotificationLink)
+    .then(insertNotification)
+    .then(endTransaction)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "sanction success",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 선정하기 (유저 관리)
+  route.put('/selection/:project_participant_id', (req, res, next) => {
+    var project_participant_id = req.params.project_participant_id;
+
+    function updateIsSelected() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table
+          SET is_selected = 1
+          WHERE project_participant_id = ?`;
+          conn.read.query(sql, [project_participant_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateIsSelected()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update is_selected",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 추천지수 마감 (프로젝트 관리)
+  route.put('/project/:project_id/recommendation-rate/end', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function updateRecommendationRates() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE project_participants_table
+          SET project_recommendation_rate = project_first_impression_rate
+          WHERE project_id = ? and project_recommendation_rate is null`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateRecommendationRates()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update recommendation rates",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 공개 / 비공개 (프로젝트 관리)
+  route.put('/project/:project_id/private', (req, res, next) => {
+    var project_id = req.params.project_id;
+    var value = req.body.value;
+
+    function updateProjectPrivateState() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE projects_table SET is_private = ? WHERE project_id = ?`;
+          conn.read.query(sql, [value, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateProjectPrivateState()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update project private state",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 심사 종료 (프로젝트 관리)
+  route.put('/project/:project_id/judge/end', (req, res, next) => {
+    var project_id = req.params.project_id;
+    var value = req.body.value;
+
+    function updateProjectJudgeEndState() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE projects_table SET is_judge_end = ? WHERE project_id = ?`;
+          conn.read.query(sql, [value, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    updateProjectPrivateState()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "update project judge end state",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
   });
 
   // 디바이스 토큰 등록(푸시 관련)

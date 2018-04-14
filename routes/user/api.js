@@ -3,45 +3,6 @@ module.exports = function(conn, admin) {
 
   // 리뉴얼 이후
 
-  // 마이페이지 유저 정보
-  route.get('/user', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-
-    function selectByUserId() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT * FROM users_table
-          LEFT JOIN levels_table
-          ON users_table.level = levels_table.level
-          WHERE user_id = ?`;
-          conn.read.query(sql, user_id, (err, results) => {
-            if(err) reject(err);
-            else {
-              delete results[0].password;
-              delete results[0].salt;
-              resolve([results[0]]);
-            }
-          });
-        }
-      );
-    }
-
-    selectByUserId()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select user by user_id",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-  });
-
   // 프로젝트 리스트(보상, 참여중, 추천)
   route.get('/projects', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -276,18 +237,23 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 프로젝트 코드 확인 및 프로젝트 id 전달
-  route.get('/redeem/:project_code', (req, res, next) => {
-    var project_code = req.params.project_code;
+  // 마이페이지 유저 정보
+  route.get('/user', (req, res, next) => {
+    var user_id = req.decoded.user_id;
 
-    function selectProjectByCode() {
+    function selectByUserId() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT project_id FROM projects_table WHERE project_code = ?`;
-          conn.read.query(sql, project_code, (err, results) => {
+          SELECT * FROM users_table
+          LEFT JOIN levels_table
+          ON users_table.level = levels_table.level
+          WHERE user_id = ?`;
+          conn.read.query(sql, user_id, (err, results) => {
             if(err) reject(err);
             else {
+              delete results[0].password;
+              delete results[0].salt;
               resolve([results[0]]);
             }
           });
@@ -295,48 +261,12 @@ module.exports = function(conn, admin) {
       );
     }
 
-    selectProjectByCode()
+    selectByUserId()
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "select project id",
-          "data" : (params[0]) ? params[0] : "{}"
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-  });
-
-  // 포인트 적립, 환전 내역
-  route.get('/point-history', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-
-    function selectPointHistoryById() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT * FROM point_history_table
-          WHERE user_id = ?
-          ORDER BY point_history_id DESC`;
-          conn.read.query(sql, user_id, (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          });
-        }
-      );
-    }
-
-    selectPointHistoryById()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select point history",
+          "message" : "select user by user_id",
           "data" : params[0]
         });
     })
@@ -407,125 +337,39 @@ module.exports = function(conn, admin) {
     });
   });
 
-  // 프로젝트 상태 정보 (참여 과정)
-  // process 과정에서 검사
-  // condition, quiz, test, completion
-  // route.get('/project/:project_id/pre-condition', (req, res, next) => {
-  //   var user_id = req.decoded.user_id;
-  //   var project_id = req.params.project_id;
-  //
-  //   function selectPreCondition() {
-  //     return new Promise(
-  //       (resolve, reject) => {
-  //         var sql = `
-  //         SELECT *,
-  //         ((SELECT COUNT(*) FROM project_participants_table
-  //         WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
-  //         as is_exceeded,
-  //         (project_end_date > now())
-  //         as is_proceeding
-  //         FROM projects_table
-  //         LEFT JOIN users_table
-  //         ON user_id = ?
-  //         WHERE project_id = ?`;
-  //         conn.read.query(sql, [user_id, project_id], (err, results) => {
-  //           if(err) reject(err);
-  //           else {
-  //             if(results[0].warn_count >= 3) {
-  //               res.json(
-  //                 {
-  //                   "success" : false,
-  //                   "message" : "warning count is exceeded"
-  //                 }
-  //               )
-  //             }
-  //             else if(!results[0].is_proceeding) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "project is not proceeding"
-  //                 });
-  //             }
-  //             else if(results[0].is_exceeded) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "project is exceeded"
-  //                 });
-  //             }
-  //             else {
-  //               resolve([results[0]]);
-  //             }
-  //           }
-  //         });
-  //       }
-  //     )
-  //   }
-  //   function selectParticipantInfo(params) {
-  //     return new Promise(
-  //       (resolve, reject) => {
-  //         var sql = `
-  //         SELECT process_condition, process_quiz, process_test, process_completion
-  //         FROM project_participants_table
-  //         WHERE user_id = ? and project_id = ?
-  //         `;
-  //         conn.read.query(sql, [user_id, project_id], (err, results) => {
-  //           if(err) reject(err);
-  //           else {
-  //             if(!results[0].process_condition) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "condition is not approved"
-  //                 }
-  //               )
-  //             }
-  //             else if(!results[0].process_quiz) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "quiz is not approved"
-  //                 });
-  //             }
-  //             else if(!results[0].process_test) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "test is not completed"
-  //                 });
-  //             }
-  //             else if (!results[0].process_completion) {
-  //               res.json(
-  //                 {
-  //                   "success" : true,
-  //                   "message" : "participation is not completed"
-  //                 });
-  //             }
-  //             else {
-  //               resolve([params[0]]);
-  //             }
-  //           }
-  //         });
-  //       }
-  //     )
-  //   }
-  //
-  //   selectPreCondition()
-  //   .then(selectParticipantInfo)
-  //   .then((params) => {
-  //     res.json(
-  //       {
-  //         "success" : true,
-  //         "message" : "select project pre-condition",
-  //         "data" : params[0]
-  //       });
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //     return next(err);
-  //   });
-  //
-  // });
+  // 프로젝트 코드 확인 및 프로젝트 id 전달
+  route.get('/redeem/:project_code', (req, res, next) => {
+    var project_code = req.params.project_code;
+
+    function selectProjectByCode() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT project_id FROM projects_table WHERE project_code = ?`;
+          conn.read.query(sql, project_code, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      );
+    }
+
+    selectProjectByCode()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project id",
+          "data" : (params[0]) ? params[0] : "{}"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
 
   // 프로젝트 내용(스토리) - 조회
   route.get('/project-story/:project_id', (req, res, next) => {
@@ -670,76 +514,6 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 인터뷰 (답변 안한 오래된 인터뷰 & 진행중)
-  // tab에서 실행
-  // tutorial 완료 검사
-  route.get('/new-interview&tutorial', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-
-    function selectIsTutorialCompleted() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT is_tutorial_completed FROM users_table WHERE user_id = ?
-          `;
-          conn.read.query(sql, [user_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              if(!results[0].is_tutorial_completed) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "is not tutorial completed"
-                  });
-              }
-              else {
-                resolve();
-              }
-            }
-          });
-        }
-      )
-    }
-    function selectNewInterview() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT * FROM interviews_table
-          LEFT JOIN project_participants_table
-          ON interviews_table.project_participant_id = project_participants_table.project_participant_id
-          LEFT JOIN projects_table
-          ON project_participants_table.project_id = projects_table.project_id
-          WHERE user_id = ?
-          and interview_answer is null
-          and projects_table.project_end_date > now()
-          ORDER BY interview_id ASC limit 1`;
-          conn.read.query(sql, [user_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results[0]]);
-            }
-          });
-        }
-      )
-    }
-
-    selectIsTutorialCompleted()
-    .then(selectNewInterview)
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select new interview",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
   // 인터뷰 (프로젝트 홈에서 접근)
   // 인터뷰 보상 받을 수 있는지 => is_max
   route.get('/interview/:project_participant_id', (req, res, next) => {
@@ -842,6 +616,235 @@ module.exports = function(conn, admin) {
 
   });
 
+  // 포인트 적립, 환전 내역
+  route.get('/point-history', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+
+    function selectPointHistoryById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM point_history_table
+          WHERE user_id = ?
+          ORDER BY point_history_id DESC`;
+          conn.read.query(sql, user_id, (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          });
+        }
+      );
+    }
+
+    selectPointHistoryById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select point history",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+  });
+
+
+  // 프로젝트 상태 정보 (참여 과정)
+  // process 과정에서 검사
+  // condition, quiz, test, completion
+  // route.get('/project/:project_id/pre-condition', (req, res, next) => {
+  //   var user_id = req.decoded.user_id;
+  //   var project_id = req.params.project_id;
+  //
+  //   function selectPreCondition() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT *,
+  //         ((SELECT COUNT(*) FROM project_participants_table
+  //         WHERE project_id = projects_table.project_id and process_completion = 1) >= max_participant_num)
+  //         as is_exceeded,
+  //         (project_end_date > now())
+  //         as is_proceeding
+  //         FROM projects_table
+  //         LEFT JOIN users_table
+  //         ON user_id = ?
+  //         WHERE project_id = ?`;
+  //         conn.read.query(sql, [user_id, project_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             if(results[0].warn_count >= 3) {
+  //               res.json(
+  //                 {
+  //                   "success" : false,
+  //                   "message" : "warning count is exceeded"
+  //                 }
+  //               )
+  //             }
+  //             else if(!results[0].is_proceeding) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "project is not proceeding"
+  //                 });
+  //             }
+  //             else if(results[0].is_exceeded) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "project is exceeded"
+  //                 });
+  //             }
+  //             else {
+  //               resolve([results[0]]);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //   function selectParticipantInfo(params) {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT process_condition, process_quiz, process_test, process_completion
+  //         FROM project_participants_table
+  //         WHERE user_id = ? and project_id = ?
+  //         `;
+  //         conn.read.query(sql, [user_id, project_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             if(!results[0].process_condition) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "condition is not approved"
+  //                 }
+  //               )
+  //             }
+  //             else if(!results[0].process_quiz) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "quiz is not approved"
+  //                 });
+  //             }
+  //             else if(!results[0].process_test) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "test is not completed"
+  //                 });
+  //             }
+  //             else if (!results[0].process_completion) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "participation is not completed"
+  //                 });
+  //             }
+  //             else {
+  //               resolve([params[0]]);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //
+  //   selectPreCondition()
+  //   .then(selectParticipantInfo)
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "select project pre-condition",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
+
+
+  // 인터뷰 (답변 안한 오래된 인터뷰 & 진행중)
+  // tab에서 실행
+  // tutorial 완료 검사
+  // route.get('/new-interview&tutorial', (req, res, next) => {
+  //   var user_id = req.decoded.user_id;
+  //
+  //   function selectIsTutorialCompleted() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT is_tutorial_completed FROM users_table WHERE user_id = ?
+  //         `;
+  //         conn.read.query(sql, [user_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             if(!results[0].is_tutorial_completed) {
+  //               res.json(
+  //                 {
+  //                   "success" : true,
+  //                   "message" : "is not tutorial completed"
+  //                 });
+  //             }
+  //             else {
+  //               resolve();
+  //             }
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //   function selectNewInterview() {
+  //     return new Promise(
+  //       (resolve, reject) => {
+  //         var sql = `
+  //         SELECT * FROM interviews_table
+  //         LEFT JOIN project_participants_table
+  //         ON interviews_table.project_participant_id = project_participants_table.project_participant_id
+  //         LEFT JOIN projects_table
+  //         ON project_participants_table.project_id = projects_table.project_id
+  //         WHERE user_id = ?
+  //         and interview_answer is null
+  //         and projects_table.project_end_date > now()
+  //         ORDER BY interview_id ASC limit 1`;
+  //         conn.read.query(sql, [user_id], (err, results) => {
+  //           if(err) reject(err);
+  //           else {
+  //             resolve([results[0]]);
+  //           }
+  //         });
+  //       }
+  //     )
+  //   }
+  //
+  //   selectIsTutorialCompleted()
+  //   .then(selectNewInterview)
+  //   .then((params) => {
+  //     res.json(
+  //       {
+  //         "success" : true,
+  //         "message" : "select new interview",
+  //         "data" : params[0]
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return next(err);
+  //   });
+  //
+  // });
+
+
   // 프로필 등록 및 수정
   route.put('/user/profile', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -919,6 +922,94 @@ module.exports = function(conn, admin) {
     });
   });
 
+  // 튜토리얼 완료 및 보상
+  route.post('/tutorial/reward', (req, res, next) => {
+    var user_id = req.decoded.user_id;
+    const tutorial_reward = 1000;
+
+    function selectPreCondition() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table WHERE user_id = ?`;
+          conn.read.query(sql, [user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0].is_tutorial_completed) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "is already rewarded"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
+            }
+          });
+        }
+      )
+    }
+    function updatePoint(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var total_point = params[0].point + tutorial_reward;
+          var sql = `
+          UPDATE users_table
+          SET point = ?, is_tutorial_completed = 1
+          WHERE user_id = ?`;
+          conn.write.query(sql, [total_point, user_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function insertPointHistory(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var point_data = {
+            user_id : user_id,
+            is_accumulated : true,
+            point : tutorial_reward,
+            total_point : params[0].point + tutorial_reward,
+          }
+          var sql = `
+          INSERT INTO point_history_table
+          SET ?,
+          description = ?`;
+          conn.write.query(sql, [point_data, "축하합니다! 튜토리얼을 완료하였습니다."], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    beginTransaction([{}])
+    .then(selectPreCondition)
+    .then(updatePoint)
+    .then(insertPointHistory)
+    .then(endTransaction)
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "success tutorial reward",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
   // 알림 읽음
   route.put('/notification/:notification_id/read', (req, res, next) => {
     var notification_id = req.params.notification_id;
@@ -952,98 +1043,6 @@ module.exports = function(conn, admin) {
       return next(err);
     });
 
-  });
-
-  // 포인트 환전
-  route.post('/point-exchange', (req, res, next) => {
-    var user_id = req.decoded.user_id;
-    var is_accumulated = false;
-    var point = req.body.point;
-    var bank_name = req.body.bank_name;
-    var account_number = req.body.account_number;
-    var account_holder_name = req.body.account_holder_name;
-    var total_point;
-
-    function selectPreCondition() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT * FROM users_table
-          WHERE user_id = ?`;
-          conn.read.query(sql, [user_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              if(results[0].point < point) {
-                res.json({
-                  "success" : true,
-                  "message" : "more point is needed"
-                });
-              }
-              else {
-                total_point = results[0].point - point;
-                resolve([{}]);
-              }
-            }
-          });
-        }
-      )
-    }
-    function insertPointHistory(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var point_data = {
-            user_id : user_id,
-            is_accumulated : is_accumulated,
-            point : point,
-            total_point : total_point,
-            bank_name : bank_name,
-            account_number : account_number,
-            account_holder_name : account_holder_name
-          }
-          var sql = `
-          INSERT INTO point_history_table SET ?`;
-          conn.write.query(sql, point_data, (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      )
-    }
-    function updateUserPoint(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE users_table SET point = ?
-          WHERE user_id = ?`;
-          conn.write.query(sql, [total_point, user_id], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
-            }
-          });
-        }
-      )
-    }
-
-    selectPreCondition()
-    .then(beginTransaction)
-    .then(insertPointHistory)
-    .then(updateUserPoint)
-    .then(endTransaction)
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "point exchange",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
   });
 
   // 프로젝트 참여 조건 통과
@@ -1874,46 +1873,35 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 튜토리얼 완료 및 보상
-  route.post('/tutorial/reward', (req, res, next) => {
+  // 포인트 환전
+  route.post('/point-exchange', (req, res, next) => {
     var user_id = req.decoded.user_id;
-    const tutorial_reward = 1000;
+    var is_accumulated = false;
+    var point = req.body.point;
+    var bank_name = req.body.bank_name;
+    var account_number = req.body.account_number;
+    var account_holder_name = req.body.account_holder_name;
+    var total_point;
 
     function selectPreCondition() {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM users_table WHERE user_id = ?`;
+          SELECT * FROM users_table
+          WHERE user_id = ?`;
           conn.read.query(sql, [user_id], (err, results) => {
-            if(err) rollback(reject, err);
+            if(err) reject(err);
             else {
-              if(results[0].is_tutorial_completed) {
-                res.json(
-                  {
-                    "success" : true,
-                    "message" : "is already rewarded"
-                  });
+              if(results[0].point < point) {
+                res.json({
+                  "success" : true,
+                  "message" : "more point is needed"
+                });
               }
               else {
-                resolve([results[0]]);
+                total_point = results[0].point - point;
+                resolve([{}]);
               }
-            }
-          });
-        }
-      )
-    }
-    function updatePoint(params) {
-      return new Promise(
-        (resolve, reject) => {
-          var total_point = params[0].point + tutorial_reward;
-          var sql = `
-          UPDATE users_table
-          SET point = ?, is_tutorial_completed = 1
-          WHERE user_id = ?`;
-          conn.write.query(sql, [total_point, user_id], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              resolve([params[0]]);
             }
           });
         }
@@ -1924,15 +1912,31 @@ module.exports = function(conn, admin) {
         (resolve, reject) => {
           var point_data = {
             user_id : user_id,
-            is_accumulated : true,
-            point : tutorial_reward,
-            total_point : params[0].point + tutorial_reward,
+            is_accumulated : is_accumulated,
+            point : point,
+            total_point : total_point,
+            bank_name : bank_name,
+            account_number : account_number,
+            account_holder_name : account_holder_name
           }
           var sql = `
-          INSERT INTO point_history_table
-          SET ?,
-          description = ?`;
-          conn.write.query(sql, [point_data, "축하합니다! 튜토리얼을 완료하였습니다."], (err, results) => {
+          INSERT INTO point_history_table SET ?`;
+          conn.write.query(sql, point_data, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function updateUserPoint(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE users_table SET point = ?
+          WHERE user_id = ?`;
+          conn.write.query(sql, [total_point, user_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               resolve([params[0]]);
@@ -1942,16 +1946,16 @@ module.exports = function(conn, admin) {
       )
     }
 
-    beginTransaction([{}])
-    .then(selectPreCondition)
-    .then(updatePoint)
+    selectPreCondition()
+    .then(beginTransaction)
     .then(insertPointHistory)
+    .then(updateUserPoint)
     .then(endTransaction)
     .then((params) => {
       res.json(
         {
           "success" : true,
-          "message" : "success tutorial reward",
+          "message" : "point exchange",
           "data" : params[0]
         });
     })
@@ -1959,7 +1963,6 @@ module.exports = function(conn, admin) {
       console.log(err);
       return next(err);
     });
-
   });
 
   // 디바이스 토큰 등록(푸시 관련)

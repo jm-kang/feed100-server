@@ -122,44 +122,6 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 프로젝트 내용(데이터, 스토리)
-  route.get('/project/:project_id', (req, res, next) => {
-    var project_id = req.params.project_id;
-
-    function selectProjectById() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT *
-          FROM projects_table LEFT JOIN users_table
-          ON projects_table.company_id = users_table.user_id
-          WHERE project_id = ?`;
-          conn.read.query(sql, [project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results[0]]);
-            }
-          });
-        }
-      )
-    }
-
-    selectProjectById()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select project",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
   // 알림 리스트
   route.get('/notifications', (req, res, next) => {
     var user_id = req.decoded.user_id;
@@ -261,45 +223,6 @@ module.exports = function(conn, admin) {
 
   });
 
-  // 참여자 목록(그룹 인터뷰)
-  route.get('/participants/:project_id', (req, res, next) => {
-    var project_id = req.params.project_id;
-
-    function selectProjectParticipants() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          SELECT * FROM users_table
-          LEFT JOIN project_participants_table
-          ON users_table.user_id = project_participants_table.user_id
-          WHERE project_id = ? and process_completion = 1
-          ORDER BY project_participants_table.project_participant_id DESC`;
-          conn.read.query(sql, [project_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve([results]);
-            }
-          })
-        }
-      )
-    }
-
-    selectProjectParticipants()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "select project participants",
-          "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
   // 인터뷰 내용
   route.get('/interviews/:project_participant_id', (req, res, next) => {
     var project_participant_id = req.params.project_participant_id;
@@ -368,6 +291,83 @@ module.exports = function(conn, admin) {
         {
           "success" : true,
           "message" : "select interviews",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 참여자 목록(그룹 인터뷰)
+  route.get('/participants/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function selectProjectParticipants() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT * FROM users_table
+          LEFT JOIN project_participants_table
+          ON users_table.user_id = project_participants_table.user_id
+          WHERE project_id = ? and process_completion = 1
+          ORDER BY project_participants_table.project_participant_id DESC`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results]);
+            }
+          })
+        }
+      )
+    }
+
+    selectProjectParticipants()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project participants",
+          "data" : params[0]
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 프로젝트 내용(데이터, 스토리)
+  route.get('/project/:project_id', (req, res, next) => {
+    var project_id = req.params.project_id;
+
+    function selectProjectById() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT *
+          FROM projects_table LEFT JOIN users_table
+          ON projects_table.company_id = users_table.user_id
+          WHERE project_id = ?`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+
+    selectProjectById()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "select project",
           "data" : params[0]
         });
     })
@@ -530,6 +530,40 @@ module.exports = function(conn, admin) {
         {
           "success" : true,
           "message" : "update is_read"
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(err);
+    });
+
+  });
+
+  // 인터뷰 피드백 좋아요
+  route.put('/interview/:interview_id/like', (req, res, next) => {
+    var interview_id = req.params.interview_id;
+
+    function likeInterview() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          UPDATE interviews_table SET is_like = 1 WHERE interview_id = ?`;
+          conn.write.query(sql, [interview_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              resolve();
+            }
+          });
+        }
+      )
+    }
+
+    likeInterview()
+    .then((params) => {
+      res.json(
+        {
+          "success" : true,
+          "message" : "like interview"
         });
     })
     .catch((err) => {
@@ -795,40 +829,6 @@ module.exports = function(conn, admin) {
           "success" : true,
           "message" : "insert group interview question",
           "data" : params[0]
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return next(err);
-    });
-
-  });
-
-  // 인터뷰 피드백 좋아요
-  route.put('/interview/:interview_id/like', (req, res, next) => {
-    var interview_id = req.params.interview_id;
-
-    function likeInterview() {
-      return new Promise(
-        (resolve, reject) => {
-          var sql = `
-          UPDATE interviews_table SET is_like = 1 WHERE interview_id = ?`;
-          conn.write.query(sql, [interview_id], (err, results) => {
-            if(err) reject(err);
-            else {
-              resolve();
-            }
-          });
-        }
-      )
-    }
-
-    likeInterview()
-    .then((params) => {
-      res.json(
-        {
-          "success" : true,
-          "message" : "like interview"
         });
     })
     .catch((err) => {
