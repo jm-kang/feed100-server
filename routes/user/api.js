@@ -1577,7 +1577,10 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[유저 참여] ' + params[0].nickname, '새로운 유저와 매칭이 성사되었습니다. 인터뷰를 진행해주세요!');
+                sendFCM(
+                  device_tokens,
+                  '[유저 참여] ' + params[0].nickname, '새로운 유저와 매칭이 성사되었습니다. 인터뷰를 진행해주세요!',
+                  project_id.toString(), params[0].project_participant_id.toString());
                 resolve([results]);
               }
               else {
@@ -1691,7 +1694,10 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 응답] ' + params[0].nickname, '인터뷰 답변이 도착했습니다. 확인해주세요!');
+                sendFCM(
+                  device_tokens,
+                  '[인터뷰 응답] ' + params[0].nickname, '인터뷰 답변이 도착했습니다. 확인해주세요!',
+                  project_id.toString(), project_participant_id.toString());
                 resolve([results]);
               }
               else {
@@ -4721,7 +4727,7 @@ module.exports = function(conn, admin) {
   //
   // });
 
-  function sendFCM(device_token, title, content) {
+  function sendFCM(device_token, title, content, project_id, project_participant_id) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
 
@@ -4732,6 +4738,10 @@ module.exports = function(conn, admin) {
         title: title,
         body: content,
         sound: "default"
+      },
+      data: {
+        project_id: project_id,
+        project_participant_id: project_participant_id
       }
     };
 

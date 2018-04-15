@@ -954,7 +954,10 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 요청] ' + params[0].project_name, '새로운 인터뷰가 도착했습니다. 응답해주세요!')
+                sendFCM(
+                  device_tokens,
+                  '[인터뷰 요청] ' + params[0].project_name, '새로운 인터뷰가 도착했습니다. 응답해주세요!',
+                  project_id.toString(), '');
                 resolve([results]);
               }
               else {
@@ -1074,7 +1077,10 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '[인터뷰 요청] ' + params[0].project_name, '새로운 인터뷰가 도착했습니다. 응답해주세요!');
+                sendFCM(
+                  device_tokens,
+                  '[인터뷰 요청] ' + params[0].project_name, '새로운 인터뷰가 도착했습니다. 응답해주세요!',
+                  project_id.toString(), '');
                 resolve([results]);
               }
               else {
@@ -1164,7 +1170,7 @@ module.exports = function(conn, admin) {
                 var device_tokens = results.map((obj) => {
                   return obj.device_token;
                 })
-                sendFCM(device_tokens, '', message);
+                sendFCM(device_tokens, '', message, '', '');
                 resolve([results]);
               }
               else {
@@ -1361,6 +1367,7 @@ module.exports = function(conn, admin) {
   });
 
   // 추천지수 마감 (프로젝트 관리)
+  // 기업 푸시
   route.put('/project/:project_id/recommendation-rate/end', (req, res, next) => {
     var project_id = req.params.project_id;
 
@@ -1434,6 +1441,7 @@ module.exports = function(conn, admin) {
   });
 
   // 심사 종료 (프로젝트 관리)
+  // 유저 푸시
   route.put('/project/:project_id/judge/end', (req, res, next) => {
     var project_id = req.params.project_id;
     var value = req.body.value;
@@ -3304,7 +3312,7 @@ module.exports = function(conn, admin) {
   // });
   /* mobile */
 
-  function sendFCM(device_token, title, content) {
+  function sendFCM(device_token, title, content, project_id, project_participant_id) {
     // This registration token comes from the client FCM SDKs.
     var registrationToken = device_token;
 
@@ -3315,6 +3323,10 @@ module.exports = function(conn, admin) {
         title: title,
         body: content,
         sound: "default"
+      },
+      data: {
+        project_id: project_id,
+        project_participant_id: project_participant_id
       }
     };
 
