@@ -5,8 +5,8 @@ module.exports = function(conn) {
       var platform = req.headers['platform'];
       var config = {
         'notice' : '',
-        'ios_version' : '1.0.9',
-        'android_version' : '1.0.9'
+        'ios_version' : '1.1.1',
+        'android_version' : '1.1.1'
       }
 
       // if(!version) {
@@ -16,32 +16,39 @@ module.exports = function(conn) {
       function verifyVersion() {
         return new Promise(
           (resolve, reject) => {
-            console.log("version check : " + platform + " " + config.ios_version + " " + config.android_version + " " + version);
-            if(config.notice) {
-              return res.json({
-                "success" : false,
-                "message" : "notice exist",
-                "notice" : config.notice
-              });
-            }
-            else if(platform == 'ios' && isUpdateNeeded(config.ios_version, version)) {
-              return res.json({
-                "success" : false,
-                "message" : "version is not match",
-                "client_version" : version,
-                "server_version" : config.ios_version
-              });
-            }
-            else if(platform == 'android' && isUpdateNeeded(config.android_version, version)) {
-              return res.json({
-                "success" : false,
-                "message" : "version is not match",
-                "client_version" : version,
-                "server_version" : config.android_version
-              });
+            // admin은 검사 x
+            if(!version || !platform || req.body.role == 'admin'
+            || req.originalUrl == '/user/api/user' || req.originalUrl == '/common/api/refresh') {
+              resolve();
             }
             else {
-              resolve();
+              console.log("version check : " + platform + " " + config.ios_version + " " + config.android_version + " " + version);
+              if(config.notice) {
+                return res.json({
+                  "success" : false,
+                  "message" : "notice exist",
+                  "notice" : config.notice
+                });
+              }
+              else if(platform == 'ios' && isUpdateNeeded(config.ios_version, version)) {
+                return res.json({
+                  "success" : false,
+                  "message" : "version is not match",
+                  "client_version" : version,
+                  "server_version" : config.ios_version
+                });
+              }
+              else if(platform == 'android' && isUpdateNeeded(config.android_version, version)) {
+                return res.json({
+                  "success" : false,
+                  "message" : "version is not match",
+                  "client_version" : version,
+                  "server_version" : config.android_version
+                });
+              }
+              else {
+                resolve();
+              }
             }
           }
         );

@@ -10,6 +10,7 @@ import 'rxjs/add/operator/mergeMap';
 
 @Injectable()
 export class HttpServiceService {
+  isDevMode = false;
 
   constructor(
     public http: Http,
@@ -17,8 +18,10 @@ export class HttpServiceService {
   ) { }
 
   getServerUrl() {
-    return 'http://192.168.0.10:3000';    
-    // return 'https://www.feed100.me';
+    if(this.isDevMode) {
+      return 'http://192.168.0.10:3000';
+    }
+    return 'https://www.feed100.me';
   }
 
   localLogin(username, password, role) {
