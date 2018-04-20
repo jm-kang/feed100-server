@@ -101,7 +101,7 @@ export class HomeComponent implements OnInit {
     {
       period: 7,
       personnel: 30,
-      // unsaledPrice: 50,
+      unsaledPrice: 0,
       price: "50"
     }
   ]
@@ -130,7 +130,7 @@ export class HomeComponent implements OnInit {
     } else {
       this.isOpenSideMenu = true;
     }
-  }  
+  }
 
   // nav scroll function
   @HostListener("window:scroll", [])

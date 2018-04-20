@@ -618,7 +618,7 @@
       <div class="col-md-6 col-md-offset-3 col-sm-12">
         <div class="pricing-plan col-sm-12">
           <div class="plan-header text-center">
-            <h1 class="text-uppercase m-b-15">BASIC<span class="sale-tag" *ngIf="priceTable[0].unsaledPrice">SALE</span></h1>
+            <h1 class="text-uppercase m-b-15">BASIC<span class="sale-tag" *ngIf="priceTable[0].unsaledPrice > 0">SALE</span></h1>
             <p>잠재고객 매칭부터 다양한 사용자의 경험을<br />FEED100에서 제공합니다.<br />기간 : {{priceTable[0].period}}일</p>
           </div>
           <div class="width100 border-top-1 border-bottom-1">
@@ -653,7 +653,7 @@
               </table>
             </div>
           </div>
-          <div class="plan-price text-center col-sm-12"><span class="sale-price m-r-10" *ngIf="priceTable[0].unsaledPrice">&thinsp;{{priceTable[0].unsaledPrice}}&thinsp;</span><span class="price feed100-text">{{priceTable[0].price}} </span><span *ngIf="priceTable[0].price != '무료'" class="currency">만원 </span><span *ngIf="priceTable[0].price == '무료'" class="currency">BETA </span><span class="interval"> / 프로젝트 당</span></div>
+          <div class="plan-price text-center col-sm-12"><span class="sale-price m-r-10" *ngIf="priceTable[0].unsaledPrice > 0">&thinsp;{{priceTable[0].unsaledPrice}}&thinsp;</span><span class="price feed100-text">{{priceTable[0].price}} </span><span *ngIf="priceTable[0].price != '무료'" class="currency">만원 </span><span *ngIf="priceTable[0].price == '무료'" class="currency">BETA </span><span class="interval"> / 프로젝트 당</span></div>
           <div class="plan-button col-sm-12"><a class="btn btn-project btn-block" role="button" target="_blank" href="https://feed100.typeform.com/to/tZTmfg">지금 프로젝트 신청하기</a></div>
         </div>
       </div>
