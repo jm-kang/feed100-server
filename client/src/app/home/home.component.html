@@ -519,15 +519,15 @@
       </div>
       <div class="text-center m-t-30 m-t-sm-20">
         <div class="text-shape-wrapper first">
-          <h3 class="m-b-0 sm-display"><small>“우리는 성공할거야! 그냥 해보자”</small>&ensp;<b>스튜핏!!!!</b></h3>
-          <h4 class="m-b-0 sm-display-none"><small>“우리는 성공할거야! 그냥 해보자”</small><br /><b>스튜핏!!!!</b></h4>
+          <h3 class="m-b-0 sm-display"><small>당신의 고객은 무엇을 원하고 있습니까?</small></h3>
+          <h4 class="m-b-0 sm-display-none"><small>당신의 고객은<br>무엇을 원하고 있습니까?</small></h4>
         </div>
         <div class="clearfix"></div>
       </div>
       <div class="text-center m-t-30 m-t-sm-20">
         <div class="text-shape-wrapper second">
-          <h3 class="m-b-0 sm-display"><small>“잠재고객에게 물어보고 맞춰서 준비하자”</small>&ensp;<b>그뤠잇!!!!</b></h3>
-          <h4 class="m-b-0 sm-display-none"><small>“잠재고객에게 물어보고 맞춰서 준비하자”</small><br /><b>그뤠잇!!!!</b></h4>
+          <h3 class="m-b-0 sm-display"><small>스타트업의 성공은 '자기 만족'이 아닌 </small>&ensp;<b>'고객 만족'</b>&ensp;<small>에 있습니다.</small></h3>
+          <h4 class="m-b-0 sm-display-none"><small>스타트업의 성공은 '자기 만족'이 아닌<br></small>&ensp;<b>'고객 만족'</b>&ensp;<small>에 있습니다.</small></h4>
         </div>
         <div class="clearfix"></div>
       </div>
@@ -586,7 +586,7 @@
     </div>
   </div>
 </section>
-<section class="element element-info-box first p-t-130 p-b-0 p-b-sm-100">
+<!-- <section class="element element-info-box first p-t-130 p-b-0 p-b-sm-100">
   <div class="container">
     <div class="row">
       <div class="col-sm-6 p-t-80 p-t-lg-100 p-t-sm-0 col-sm-push-6">
@@ -602,10 +602,10 @@
       <div class="clearfix"></div>
     </div>
   </div>
-</section>
+</section> -->
 
 
-<section id="pricing" class="element last element-info-box element-gray p-b-160 p-b-md-100">
+<section id="pricing" class="element last element-info-box p-b-160 p-b-md-100">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
@@ -618,7 +618,7 @@
       <div class="col-md-6 col-md-offset-3 col-sm-12">
         <div class="pricing-plan col-sm-12">
           <div class="plan-header text-center">
-            <h1 class="text-uppercase m-b-15">BASIC<span class="sale-tag">SALE</span></h1>
+            <h1 class="text-uppercase m-b-15">BASIC<span class="sale-tag" *ngIf="priceTable[0].unsaledPrice">SALE</span></h1>
             <p>잠재고객 매칭부터 다양한 사용자의 경험을<br />FEED100에서 제공합니다.<br />기간 : {{priceTable[0].period}}일</p>
           </div>
           <div class="width100 border-top-1 border-bottom-1">
@@ -630,20 +630,24 @@
                     <td><strong>{{priceTable[0].personnel}}</strong>명</td>
                   </tr>
                   <tr>
-                    <td>피드백</td>
-                    <td><strong>{{priceTable[0].feedback}}</strong>개</td>
+                    <td>대시보드</td>
+                    <td><img src="assets/img/check-icon.png" style="width: 17px; margin-bottom: 5px;"></td>
                   </tr>
                   <tr>
-                    <td>토론</td>
-                    <td><strong>{{priceTable[0].opinion}}</strong>명</td>
+                    <td>유저 분석</td>
+                    <td><img src="assets/img/check-icon.png" style="width: 17px; margin-bottom: 5px;"></td>
                   </tr>
                   <tr>
                     <td>인터뷰</td>
-                    <td><strong>{{priceTable[0].interview}}</strong>개</td>
+                    <td><img src="assets/img/check-icon.png" style="width: 17px; margin-bottom: 5px;"></td>
                   </tr>
                   <tr>
-                    <td>심층피드백</td>
-                    <td><strong>{{priceTable[0].report}}</strong>개</td>
+                    <td>종합보고서 제공</td>
+                    <td><img src="assets/img/check-icon.png" style="width: 17px; margin-bottom: 5px;"></td>
+                  </tr>
+                  <tr>
+                    <td>스토리</td>
+                    <td><img src="assets/img/check-icon.png" style="width: 17px; margin-bottom: 5px;"></td>
                   </tr>
                 </tbody>
               </table>
@@ -687,8 +691,8 @@
         <div class="element-title">
           <h1 class="text-center font-weight-400 white-text sm-display"><span class="text-extend">지금 시작해 보세요!</span></h1>
           <h3 class="text-center font-weight-400 white-text sm-display-none"><span class="text-extend">지금 시작해 보세요!</span></h3>
-          <p class="text-center gray-text font-def font-weight-400 sm-display">잠재고객 매칭 및 피드백 서비스</p>
-          <p class="text-center gray-text font-def font-weight-400 sm-display-none"><small>잠재고객 매칭 및 피드백 서비스</small></p>
+          <p class="text-center gray-text font-def font-weight-400 sm-display">스타트업에 적합한 고객반응조사 플랫폼 FEED100</p>
+          <p class="text-center gray-text font-def font-weight-400 sm-display-none"><small>스타트업에 적합한 고객반응조사 플랫폼 FEED100</small></p>
           <p class="text-center m-t-20 m-b-0">
             <a class="btn btn-default btn-box-shadow font-lg m-t-15 m-r-15 m-l-15" role="button" target="_blank" href="https://play.google.com/store/apps/details?id=com.potenbrothers.feed100">
               <svg width="22px" height="24px" class="vertical-align-sub m-r-10" viewBox="0 0 22 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
