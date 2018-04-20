@@ -72,28 +72,28 @@ export class HomeComponent implements OnInit {
 
   features = [
     {
-      title: "원하는 잠재고객으로부터\n리얼 피드백을!",
-      content: "경험과 이해를 바탕으로 작성하는 피드백!\n매칭된 잠재고객들이 서로 의견을 나누는 토론!\n잠재고객이 프로젝트를 진행하며 겪은 경험을 종합한 심층 피드백!",
-      phoneImg: "assets/img/phone-mokup-1.png",
-      illust: "assets/illust/illust-1.png",
-    },
-    {
       title: "1:1 인터뷰를 통해 잠재고객의\n심층적인 의견을 풍부하게 수집!",
       content: "잠재고객과 자유롭게 이야기함으로써 감정이나 욕구, 태도 등을\n이끌어내 다양하고 풍부한 의견을 수집해 보세요!",
-      phoneImg: "assets/img/phone-mokup-2.png",
+      phoneImg: "assets/img/phone-mokup-1.png",
       illust: "assets/illust/illust-2.png",
     },
     {
-      title: "클릭 몇 번으로 모든 정보를\n보기 쉽게 정리하여 제공!",
-      content: "잠재고객 정보와 피드백 정보부터 NPS지수와 만족도 평가까지!\n다양한 정보들을 도식화하여 손쉽게 확인할 수 있습니다.",
-      phoneImg: "assets/img/phone-mokup-3.png",
+      title: "모든 정보를 보기 쉽게 정리하여\n종합 보고서 제공!",
+      content: "잠재고객 정보와 피드백 정보부터 추천지수까지!\n다양한 정보들을 도식화하여 쉽게 확인할 수 있습니다.",
+      phoneImg: "assets/img/phone-mokup-2.png",
       illust: "assets/illust/illust-3.png",
     },
     {
       title: "서비스 소개 뿐만 아니라\nSNS 홍보까지!",
-      content: "프로젝트의 스토리 등록 뿐만 아니라 FEED100의 네이버 블로그,\n페이스북 페이지, 카카오톡 등 SNS를 통해 서비스를 홍보해 드립니다!",
-      phoneImg: "assets/img/phone-mokup-4.png",
+      content: "프로젝트의 스토리 등록 뿐만 아니라 FEED100의 네이버 블로그,\n페이스북 페이지 등 SNS를 통해 서비스를 홍보해 드립니다!",
+      phoneImg: "assets/img/phone-mokup-3.png",
       illust: "assets/illust/illust-4.png",
+    },
+    {
+      title: "원하는 잠재고객으로부터\n리얼 피드백을!",
+      content: "경험과 이해를 바탕으로 작성하는 피드백!\n매칭된 잠재고객들이 서로 의견을 나누는 토론!\n잠재고객이 프로젝트를 진행하며 겪은 경험을 종합한 심층 피드백!",
+      phoneImg: "assets/img/phone-mokup-4.png",
+      illust: "assets/illust/illust-1.png",
     }
   ]
 
@@ -101,12 +101,8 @@ export class HomeComponent implements OnInit {
     {
       period: 7,
       personnel: 30,
-      feedback: 30,
-      opinion: 870,
-      interview: 30,
-      report: 30,
-      unsaledPrice: 50,
-      price: "무료"
+      // unsaledPrice: 50,
+      price: "50"
     }
   ]
 
