@@ -1381,7 +1381,7 @@ module.exports = function(conn, admin) {
           conn.read.query(sql, [project_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
-              resolve([results]);
+              resolve();
             }
           });
         }
@@ -1455,7 +1455,7 @@ module.exports = function(conn, admin) {
     .then(updateRecommendationRates)
     .then(selectProjectNameAndCompanyId)
     .then(insertNotification)
-    .then(selectUserTokensAndPush)
+    .then(selectCompanyTokensAndPush)
     .then(endTransaction)
     .then((params) => {
       res.json(
