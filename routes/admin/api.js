@@ -1379,7 +1379,7 @@ module.exports = function(conn, admin) {
           SET project_recommendation_rate = project_first_impression_rate
           WHERE project_id = ? and project_recommendation_rate is null`;
           conn.read.query(sql, [project_id], (err, results) => {
-            if(err) reject(err);
+            if(err) rollback(reject, err);
             else {
               resolve([results]);
             }
@@ -1387,8 +1387,76 @@ module.exports = function(conn, admin) {
         }
       );
     }
+    function selectProjectNameAndCompanyId() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT project_name, company_id FROM projects_table WHERE project_id = ?
+          `;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([results[0]]);
+            }
+          });
+        }
+      )
+    }
+    function insertNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var notification_data = {
+            user_id : params[0].company_id,
+            project_id : project_id,
+            notification_link : 'endProject',
+            notification_tag : '프로젝트 종료',
+            notification_content : '프로젝트가 종료되었습니다. 종합 보고서를 확인해주세요!'
+          }
+          var sql = `
+          INSERT INTO notifications_table SET ?`;
+          conn.write.query(sql, [notification_data], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]])
+            }
+          });
+        }
+      )
+    }
+    function selectCompanyTokensAndPush(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT device_token
+          FROM user_tokens_table WHERE user_id = ?`;
+          conn.read.query(sql, [params[0].company_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0]) {
+                var device_tokens = results.map((obj) => {
+                  return obj.device_token;
+                })
+                sendFCM(
+                  device_tokens,
+                  '[프로젝트 종료] ' + params[0].project_name, '프로젝트가 종료되었습니다. 종합 보고서를 확인해주세요!',
+                  project_id.toString(), '');
+                resolve([results]);
+              }
+              else {
+                resolve([]);
+              }
+            }
+          });
+        }
+      )
+    }
 
-    updateRecommendationRates()
+    beginTransaction([{}])
+    .then(updateRecommendationRates)
+    .then(selectProjectNameAndCompanyId)
+    .then(insertNotification)
+    .then(selectUserTokensAndPush)
+    .then(endTransaction)
     .then((params) => {
       res.json(
         {
