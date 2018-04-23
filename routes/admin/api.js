@@ -1057,7 +1057,6 @@ module.exports = function(conn, admin) {
           });
         }
       )
-
     }
 
     function selectUserTokensAndPushs(params) {
@@ -1510,6 +1509,7 @@ module.exports = function(conn, admin) {
 
   // 심사 종료 (프로젝트 관리)
   // 유저 푸시
+  // 종료 -> 진행중으로 바꾸는 경우 막기 (알림 및 푸시 중복)
   route.put('/project/:project_id/judge/end', (req, res, next) => {
     var project_id = req.params.project_id;
     var value = req.body.value;
@@ -1520,16 +1520,160 @@ module.exports = function(conn, admin) {
           var sql = `
           UPDATE projects_table SET is_judge_end = ? WHERE project_id = ?`;
           conn.read.query(sql, [value, project_id], (err, results) => {
-            if(err) reject(err);
+            if(err) rollback(reject, err);
             else {
-              resolve([results]);
+              if(value) {
+                resolve();
+              }
+              else { // 종료 -> 진행중으로 바꾸는 경우 막기 (알림 및 푸시 중복)
+                reject();
+              }
             }
           });
         }
       );
     }
+    function selectProjectNameAndUserId(params) {
+      return new Promise(
+        (resolve, reject) => {
+          console.log('selectProjectNameAndUserId');
+          var sql = `
+          SELECT project_name,
+          (SELECT users_table.user_id FROM users_table
+          LEFT JOIN project_participants_table
+          ON users_table.user_id = project_participants_table.user_id
+          WHERE project_participant_id = ?) as user_id
+          FROM projects_table WHERE project_id = ?`;
+          conn.read.query(sql, [params[0].project_participant_id, project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              params[0].project_name = results[0].project_name;
+              params[0].user_id = results[0].user_id;
+              resolve([params[0]]);
+            }
+          });
+        }
+      )
+    }
+    function insertNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          console.log('insertNotification');
+          var notification_data = {
+            user_id : params[0].user_id,
+            project_id : project_id,
+            notification_link : 'endProject',
+            notification_tag : '프로젝트 종료',
+            notification_content : '프로젝트가 종료되었습니다. 보상을 획득하세요!'
+          }
+          var sql = `
+          INSERT INTO notifications_table SET ?`;
+          conn.write.query(sql, [notification_data], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]])
+            }
+          });
+        }
+      )
+    }
 
-    updateProjectPrivateState()
+    function selectUserTokensAndPushs(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT device_token
+          FROM user_tokens_table
+          WHERE user_id in
+          (SELECT user_id FROM project_participants_table
+            WHERE project_participant_id in (?))
+          `;
+          conn.read.query(sql, [params[0].project_participants_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              if(results[0]) {
+                var device_tokens = results.map((obj) => {
+                  return obj.device_token;
+                })
+                sendFCM(
+                  device_tokens,
+                  '[프로젝트 종료] ' + params[0].project_name, '프로젝트가 종료되었습니다. 보상을 획득하세요!',
+                  project_id.toString(), '');
+                resolve([results]);
+              }
+              else {
+                rsolve([{}]);
+              }
+            }
+          });
+        }
+      )
+    }
+
+    function selectProjectParticipantsId() {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          SELECT project_participant_id
+          FROM project_participants_table
+          WHERE project_id = ? and process_completion = 1`;
+          conn.read.query(sql, [project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              var project_participants_id = results.map((obj) => {
+                return obj.project_participant_id;
+              })
+              resolve([{ project_participants_id : project_participants_id }]);
+            }
+          });
+        }
+      )
+    }
+    function insertNotifications(params) {
+      return new Promise(
+        (resolve, reject) => {
+          console.log(params);
+          var forEachCondition = true;
+          var len = params[0].project_participants_id.length;
+          var epoch = 0;
+          params[0].project_participants_id.forEach((project_participant_id) => {
+            console.log(params[0].project_participant_id);
+            selectProjectNameAndUserId([{ project_participants_id : params[0].project_participants_id,
+              project_participant_id : project_participant_id }])
+            .then(insertNotification)
+            .then((params) => {
+              console.log(project_participant_id + " params : " + params);
+              epoch++;
+              if(epoch == len) {
+                console.log('then', forEachCondition, project_participant_id);
+                if(forEachCondition) {
+                  resolve([params[0]]);
+                }
+                else {
+                  rollback(reject, 'insertNotifications error');
+                }
+              }
+            })
+            .catch((err) => {
+              forEachCondition = false;
+              epoch++;
+              if(epoch == len) {
+                console.log('catch', forEachCondition, project_participant_id);
+                rollback(reject, err);
+              }
+            })
+          });
+
+        }
+      )
+    }
+
+    beginTransaction([{}])
+    .then(updateProjectJudgeEndState)
+    .then(selectProjectParticipantsId)
+    .then(insertNotifications)
+    .then(selectUserTokensAndPushs)
+    .then(endTransaction)
     .then((params) => {
       res.json(
         {
