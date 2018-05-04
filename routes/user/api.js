@@ -929,6 +929,7 @@ module.exports = function(conn, admin) {
   route.post('/tutorial/reward', (req, res, next) => {
     var user_id = req.decoded.user_id;
     const tutorial_reward = 1000;
+    const experience_point = 10;
 
     function selectPreCondition() {
       return new Promise(
@@ -959,9 +960,9 @@ module.exports = function(conn, admin) {
           var total_point = params[0].point + tutorial_reward;
           var sql = `
           UPDATE users_table
-          SET point = ?, is_tutorial_completed = 1
+          SET point = ?, experience_point = ?, is_tutorial_completed = 1
           WHERE user_id = ?`;
-          conn.write.query(sql, [total_point, user_id], (err, results) => {
+          conn.write.query(sql, [total_point, experience_point, user_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               resolve([params[0]]);
