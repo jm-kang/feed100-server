@@ -928,8 +928,8 @@ module.exports = function(conn, admin) {
   // 튜토리얼 완료 및 보상
   route.post('/tutorial/reward', (req, res, next) => {
     var user_id = req.decoded.user_id;
-    const tutorial_reward = 1000;
-    const experience_point = 10;
+    const tutorial_point = 1000;
+    const tutorial_experience_point = 10;
 
     function selectPreCondition() {
       return new Promise(
@@ -957,12 +957,13 @@ module.exports = function(conn, admin) {
     function updatePoint(params) {
       return new Promise(
         (resolve, reject) => {
-          var total_point = params[0].point + tutorial_reward;
+          var total_point = params[0].point + tutorial_point;
+          var total_experience_point = params[0].experience_point + tutorial_experience_point;
           var sql = `
           UPDATE users_table
           SET point = ?, experience_point = ?, is_tutorial_completed = 1
           WHERE user_id = ?`;
-          conn.write.query(sql, [total_point, experience_point, user_id], (err, results) => {
+          conn.write.query(sql, [total_point, total_experience_point, user_id], (err, results) => {
             if(err) rollback(reject, err);
             else {
               resolve([params[0]]);
@@ -977,8 +978,8 @@ module.exports = function(conn, admin) {
           var point_data = {
             user_id : user_id,
             is_accumulated : true,
-            point : tutorial_reward,
-            total_point : params[0].point + tutorial_reward,
+            point : tutorial_point,
+            total_point : params[0].point + tutorial_point,
           }
           var sql = `
           INSERT INTO point_history_table
