@@ -115,7 +115,10 @@ module.exports = function(conn, admin) {
       return new Promise(
         (resolve, reject) => {
           var sql = `
-          SELECT * FROM projects_table
+          SELECT *,
+          (project_end_date > now())
+          as is_proceeding
+          FROM projects_table
           WHERE is_private = 0
           ORDER BY project_id DESC`;
           conn.read.query(sql, [], (err, results) => {
