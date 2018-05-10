@@ -5,8 +5,8 @@ module.exports = function(conn) {
       var platform = req.headers['platform'];
       var config = {
         'notice' : '',
-        'ios_version' : '1.1.1',
-        'android_version' : '1.1.1'
+        'ios_version' : '1.1.8',
+        'android_version' : '1.1.8'
       }
 
       // if(!version) {
