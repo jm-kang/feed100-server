@@ -1109,18 +1109,34 @@ module.exports = function(conn, admin) {
     function isApprove(params) {
       return new Promise(
         (resolve, reject) => {
-          var isApprovedArray = [];
-          isApprovedArray.push(isApprovedProfile(0, true, params[0].gender, JSON.parse(params[0].project_participation_gender_conditions)));
-          isApprovedArray.push(isApprovedProfile(0, true, params[0].age, JSON.parse(params[0].project_participation_age_conditions)));
-          isApprovedArray.push(isApprovedProfile(0, true, params[0].job, JSON.parse(params[0].project_participation_job_conditions)));
-          isApprovedArray.push(isApprovedProfile(0, true, params[0].region, JSON.parse(params[0].project_participation_region_conditions)));
-          isApprovedArray.push(isApprovedProfile(0, true, params[0].marriage, JSON.parse(params[0].project_participation_marriage_conditions)));
-          isApprovedArray.push(isApprovedProfile(0, true, phone_os, JSON.parse(params[0].project_participation_phone_os_conditions)));
-          isApprovedArray.push(isApprovedAnswer(0, true, project_participation_objective_conditions));
-          console.log(isApprovedArray);
-          var isApproved = isApprovedArray[0] && isApprovedArray[1] && isApprovedArray[2] && isApprovedArray[3] && isApprovedArray[4] && isApprovedArray[5] && isApprovedArray[6];
-          resolve([params[0], isApproved]);
-
+          var sql = `
+          SELECT * FROM project_participants_table
+          WHERE user_id = ? and project_id = ?`
+          conn.read.query(sql, [user_id, project_id], (err, results) => {
+            if(err) reject(err);
+            else {
+              if(results[0]) {
+                res.json(
+                  {
+                    "success" : true,
+                    "message" : "already participated"
+                  });
+              }
+              else {
+                var isApprovedArray = [];
+                isApprovedArray.push(isApprovedProfile(0, true, params[0].gender, JSON.parse(params[0].project_participation_gender_conditions)));
+                isApprovedArray.push(isApprovedProfile(0, true, params[0].age, JSON.parse(params[0].project_participation_age_conditions)));
+                isApprovedArray.push(isApprovedProfile(0, true, params[0].job, JSON.parse(params[0].project_participation_job_conditions)));
+                isApprovedArray.push(isApprovedProfile(0, true, params[0].region, JSON.parse(params[0].project_participation_region_conditions)));
+                isApprovedArray.push(isApprovedProfile(0, true, params[0].marriage, JSON.parse(params[0].project_participation_marriage_conditions)));
+                isApprovedArray.push(isApprovedProfile(0, true, phone_os, JSON.parse(params[0].project_participation_phone_os_conditions)));
+                isApprovedArray.push(isApprovedAnswer(0, true, project_participation_objective_conditions));
+                console.log(isApprovedArray);
+                var isApproved = isApprovedArray[0] && isApprovedArray[1] && isApprovedArray[2] && isApprovedArray[3] && isApprovedArray[4] && isApprovedArray[5] && isApprovedArray[6];
+                resolve([params[0], isApproved]);
+              }
+            }
+          });
         }
       )
 
