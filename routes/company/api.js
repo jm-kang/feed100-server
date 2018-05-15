@@ -256,11 +256,20 @@ module.exports = function(conn, admin) {
           ON users_table.user_id = project_participants_table.user_id
           LEFT JOIN projects_table
           ON project_participants_table.project_id = projects_table.project_id
-          WHERE project_participant_id = ?`;
+          WHERE project_participant_id = ? and process_completion = 1`;
           conn.read.query(sql, [project_participant_id], (err, results) => {
             if(err) reject(err);
             else {
-              resolve([results[0]]);
+              if(!results[0]) {
+                res.json(
+                  {
+                    "success" : false,
+                    "message" : "not participated"
+                  });
+              }
+              else {
+                resolve([results[0]]);
+              }
             }
           })
         }
