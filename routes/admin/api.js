@@ -1247,6 +1247,21 @@ module.exports = function(conn, admin) {
         }
       );
     }
+    function deleteNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM notifications_table WHERE project_participant_id = ?
+          `;
+          conn.write.query(sql, project_participant_id, (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
     function updateProcessState(params) {
       return new Promise(
         (resolve, reject) => {
@@ -1320,6 +1335,7 @@ module.exports = function(conn, admin) {
     beginTransaction([{}])
     .then(selectUserAndProjectId)
     .then(deleteInterview)
+    .then(deleteNotification)
     .then(updateProcessState)
     .then(updateUserWarningCount)
     .then(updateNotificationLink)
