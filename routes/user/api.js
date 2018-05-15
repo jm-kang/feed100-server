@@ -1051,6 +1051,7 @@ module.exports = function(conn, admin) {
   });
 
   // 프로젝트 참여 조건 통과
+  // project_id & user_id 중복 검사
   route.post('/project/:project_id/process/condition', (req, res, next) => {
     var user_id = req.decoded.user_id;
     var project_id = req.params.project_id;
@@ -1184,7 +1185,9 @@ module.exports = function(conn, admin) {
                     "message" : "insert project participant, but not approved",
                   });
               }
-              resolve([results]);
+              else {
+                resolve([results]);
+              }
             }
           });
 
