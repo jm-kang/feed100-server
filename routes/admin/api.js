@@ -1545,19 +1545,19 @@ module.exports = function(conn, admin) {
     function updateProjectJudgeEndState() {
       return new Promise(
         (resolve, reject) => {
-          var sql = `
-          UPDATE projects_table SET is_judge_end = ? WHERE project_id = ?`;
-          conn.read.query(sql, [value, project_id], (err, results) => {
-            if(err) rollback(reject, err);
-            else {
-              if(value) {
+          if(value) {
+            var sql = `
+            UPDATE projects_table SET is_judge_end = ? WHERE project_id = ?`;
+            conn.read.query(sql, [value, project_id], (err, results) => {
+              if(err) rollback(reject, err);
+              else {
                 resolve();
               }
-              else { // 종료 -> 진행중으로 바꾸는 경우 막기 (알림 및 푸시 중복)
-                reject();
-              }
-            }
-          });
+            });
+          }
+          else { // 종료 -> 진행중으로 바꾸는 경우 막기 (알림 및 푸시 중복)
+            reject();
+          }
         }
       );
     }
@@ -1630,7 +1630,7 @@ module.exports = function(conn, admin) {
                 resolve([results]);
               }
               else {
-                rsolve([{}]);
+                resolve([{}]);
               }
             }
           });

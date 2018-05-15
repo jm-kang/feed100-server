@@ -1808,6 +1808,22 @@ module.exports = function(conn, admin) {
         }
       )
     }
+    function deleteNotification(params) {
+      return new Promise(
+        (resolve, reject) => {
+          var sql = `
+          DELETE FROM notifications_table
+          WHERE user_id = ? and project_id = ?
+          `;
+          conn.write.query(sql, [user_id, project_id], (err, results) => {
+            if(err) rollback(reject, err);
+            else {
+              resolve([params[0]]);
+            }
+          });
+        }
+      );
+    }
     function updateRewardInfo(params) {
       return new Promise(
         (resolve, reject) => {
@@ -1884,6 +1900,7 @@ module.exports = function(conn, admin) {
 
     beginTransaction([{}])
     .then(selectPreCondition)
+    .then(deleteNotification)
     .then(updateRewardInfo)
     .then(updateLevelAndPoint)
     .then(insertPointHistory)
