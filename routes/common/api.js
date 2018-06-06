@@ -565,6 +565,13 @@ module.exports = function(conn) {
     // res.json({'id': req.app.get('gmail-id')})
   });
 
+  // route.get('/send/:email/:user_code', (req, res, next) => {
+  //   var email = req.params.email;
+  //   var user_code = req.params.user_code;
+  //   sendVerifyEmail(req, email, user_code);
+  //   res.send(email + ' ' + user_code);
+  // });
+
   function sendVerifyEmail(req, email, user_code) {
     var smtpTransport = nodemailer.createTransport(smtpPool({
         service: 'gmail',
