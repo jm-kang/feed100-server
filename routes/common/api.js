@@ -561,10 +561,6 @@ module.exports = function(conn) {
 
   });
 
-  route.get('/test', (req, res, next) => {
-    // res.json({'id': req.app.get('gmail-id')})
-  });
-
   // route.get('/send/:email/:user_code', (req, res, next) => {
   //   var email = req.params.email;
   //   var user_code = req.params.user_code;
